@@ -8,27 +8,21 @@ export default async function DealsPage() {
     await Promise.all([
       supabase
         .from("deals")
-        .select(
-          "id,title,company_id,contact_id,stage,amount,expected_close_date,probability,created_at,companies(name),contacts(full_name)"
-        )
+        .select("id,title,company_id,contact_id,owner_id,stage,amount,expected_close_date,probability,created_at,companies(id,name),contacts(id,full_name,company_id)")
         .order("created_at", { ascending: false }),
-
       supabase
         .from("companies")
         .select("id,name")
-        .eq("status", "active")
         .order("name", { ascending: true }),
-
       supabase
         .from("contacts")
         .select("id,full_name,company_id")
-        .eq("status", "active")
         .order("full_name", { ascending: true }),
     ]);
 
   return (
     <DealsClient
-      initialDeals={(deals ?? []) as never[]}
+      initialDeals={deals ?? []}
       companies={companies ?? []}
       contacts={contacts ?? []}
       currentUserId={user.id}
@@ -38,4 +32,3 @@ export default async function DealsPage() {
     />
   );
 }
-
