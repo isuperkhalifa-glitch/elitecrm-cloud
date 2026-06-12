@@ -22,6 +22,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/language-provider";
 import { LanguageToggle } from "@/components/language-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
@@ -234,6 +235,7 @@ export function AppShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <NotificationBell />
               <LanguageToggle />
               <ThemeToggle />
               <button
@@ -256,5 +258,6 @@ export function AppShell({
     </main>
   );
 }
+
 
 
