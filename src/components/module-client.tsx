@@ -26,7 +26,7 @@ export function ModuleClient({
       fullName={fullName}
       role={role}
     >
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-2xl">
+      <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-2xl">
         <p className="text-sm text-emerald-300">{t("readyForData")}</p>
         <h2 className="mt-3 text-3xl font-bold">{t(titleKey)}</h2>
         <p className="mt-3 max-w-2xl text-slate-400">{t("comingSoon")}</p>

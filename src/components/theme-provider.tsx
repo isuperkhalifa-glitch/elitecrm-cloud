@@ -1,6 +1,13 @@
 ﻿"use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 type Theme = "dark" | "light";
 
@@ -10,21 +17,33 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+const themeStorageKey = "elitecrm-theme";
+
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("elitecrm-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
-    }
+    const savedTheme = window.localStorage.getItem(themeStorageKey);
+    const initialTheme =
+      savedTheme === "dark" || savedTheme === "light" ? savedTheme : "dark";
+
+    applyTheme(initialTheme);
+    setTheme(initialTheme);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("elitecrm-theme", theme);
-  }, [theme]);
+    if (!mounted) return;
+
+    applyTheme(theme);
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [mounted, theme]);
 
   function toggleTheme() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));

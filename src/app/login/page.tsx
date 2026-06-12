@@ -72,7 +72,7 @@ export default function LoginPage() {
 
   return (
     <main
-      className="elite-login-stage relative min-h-[100svh] overflow-hidden bg-slate-950 text-white"
+      className="elite-login-stage relative min-h-[100svh] overflow-x-hidden bg-slate-950 text-white"
       dir={dir}
     >
       <div className="elite-cyber-grid" />
@@ -89,8 +89,8 @@ export default function LoginPage() {
         <span className="elite-particle left-[48%] top-[42%]" />
       </div>
 
-      <section className="relative z-10 grid min-h-[100svh] items-center gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 lg:px-12 xl:px-20">
-        <div className="elite-login-hero mx-auto w-full max-w-3xl text-center lg:text-start">
+      <section className="relative z-10 grid min-h-[100svh] w-full max-w-full items-center gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 lg:px-12 xl:px-20">
+        <div className="elite-login-hero mx-auto w-full min-w-0 max-w-3xl text-center lg:text-start">
           <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs text-emerald-200 sm:text-sm lg:mx-0">
             <Sparkles className="h-4 w-4" />
             <span>
@@ -98,7 +98,7 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h1 className="elite-glow-title text-3xl font-black leading-tight sm:text-5xl xl:text-7xl">
+          <h1 className="elite-glow-title break-words text-3xl font-black leading-tight sm:text-5xl xl:text-7xl">
             {isArabic
               ? "تحكم في المبيعات من مركز واحد"
               : "Control your sales from one command center"}
@@ -133,22 +133,22 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full min-w-0 max-w-[28rem]">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-emerald-300">{t("appName")}</p>
-              <p className="text-xs text-slate-500">
+              <p className="truncate text-xs text-slate-500">
                 {isArabic ? "بوابة الدخول الآمنة" : "Secure access gateway"}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <LanguageToggle />
               <ThemeToggle />
             </div>
           </div>
 
-          <section className="elite-login-card relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:p-8">
+          <section className="elite-login-card relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.055] p-4 shadow-2xl backdrop-blur-2xl sm:rounded-[2rem] sm:p-8">
             <div className="elite-card-border-flow" />
 
             <div className="relative z-10">
@@ -160,7 +160,7 @@ export default function LoginPage() {
                   </p>
                 </div>
 
-                <div className="elite-core-pulse flex h-13 w-13 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300 sm:h-14 sm:w-14">
+                <div className="elite-core-pulse flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300 sm:h-14 sm:w-14">
                   <Fingerprint className="h-7 w-7" />
                 </div>
               </div>

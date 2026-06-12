@@ -72,13 +72,13 @@ export function AppShell({
   const router = useRouter();
   const pathname = usePathname();
   const { t, dir } = useI18n();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("elitecrm-sidebar-open");
-    if (saved === "false") {
-      setSidebarOpen(false);
-    }
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+
+    setSidebarOpen(saved === "false" ? false : isDesktop);
   }, []);
 
   function toggleSidebar() {
@@ -170,7 +170,7 @@ export function AppShell({
 
   return (
     <main
-      className="relative min-h-screen overflow-x-hidden bg-slate-950 text-white"
+      className="relative min-h-screen max-w-full overflow-x-hidden bg-slate-950 text-white"
       dir={dir}
     >
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_start,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_end,rgba(56,189,248,0.10),transparent_34%),linear-gradient(135deg,#020617_0%,#07111f_55%,#020617_100%)]" />
@@ -200,7 +200,7 @@ export function AppShell({
       ) : null}
 
       <section
-        className={`relative z-10 min-h-screen transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`relative z-10 min-h-screen w-full max-w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           sidebarOpen ? "lg:ps-72" : "lg:ps-0"
         }`}
       >
@@ -209,11 +209,11 @@ export function AppShell({
             sidebarOpen ? "lg:start-72" : "lg:start-0"
           }`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 lg:px-6">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 onClick={toggleSidebar}
-                className="elite-icon-button rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm hover:bg-white/10"
+                className="elite-icon-button shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm hover:bg-white/10"
                 type="button"
                 aria-label={t("menu")}
               >
@@ -226,29 +226,30 @@ export function AppShell({
               </div>
             </div>
 
-            <div className="order-3 w-full md:order-none md:flex md:w-auto md:flex-1 md:justify-center md:px-6">
+            <div className="order-3 min-w-0 basis-full md:order-none md:flex md:min-w-[14rem] md:flex-1 md:basis-0 md:justify-center md:px-6">
               <div className="flex w-full items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-500 md:max-w-md">
                 <Search className="h-4 w-4 shrink-0 text-slate-500" />
                 <span className="truncate">{t("searchPlaceholder")}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <LanguageToggle />
               <ThemeToggle />
               <button
                 onClick={signOut}
                 className="elite-action-button flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:px-4"
                 type="button"
+                aria-label={t("signOut")}
               >
                 <LogOut className="h-4 w-4" />
-                <span>{t("signOut")}</span>
+                <span className="hidden sm:inline">{t("signOut")}</span>
               </button>
             </div>
           </div>
         </header>
 
-        <div className="elitecrm-page-width safe-page p-3 pt-28 sm:p-4 sm:pt-28 lg:p-6 lg:pt-28 xl:p-8 xl:pt-28">
+        <div className="elitecrm-page-width safe-page p-3 pt-32 sm:p-4 sm:pt-32 lg:p-6 lg:pt-24 xl:p-8 xl:pt-24">
           <div className="elite-page-enter">{children}</div>
         </div>
       </section>

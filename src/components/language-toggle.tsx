@@ -9,7 +9,7 @@ export function LanguageToggle() {
   return (
     <button
       onClick={toggleLanguage}
-      className="elite-action-button flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+      className="elite-action-button flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
       type="button"
       aria-label={language === "ar" ? "تغيير اللغة" : "Change language"}
       title={language === "ar" ? "تغيير اللغة" : "Change language"}

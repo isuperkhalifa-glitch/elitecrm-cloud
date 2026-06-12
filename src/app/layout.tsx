@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { I18nProvider } from "@/components/language-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TiltProvider } from "@/components/tilt-provider";
 
 export const metadata: Metadata = {
   title: "EliteCRM",
@@ -18,7 +19,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body>
         <ThemeProvider>
-          <I18nProvider>{children}</I18nProvider>
+          <I18nProvider>
+            <TiltProvider>{children}</TiltProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>
