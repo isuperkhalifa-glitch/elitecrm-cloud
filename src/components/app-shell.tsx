@@ -3,9 +3,26 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import {
+  BadgeDollarSign,
+  Building2,
+  CheckSquare,
+  ContactRound,
+  Handshake,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Receipt,
+  Search,
+  Settings,
+  UsersRound,
+  UserRoundPlus,
+  type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/language-provider";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { TranslationKey } from "@/lib/i18n/translations";
 
 type AppShellProps = {
@@ -18,29 +35,29 @@ type AppShellProps = {
 
 const navigationGroups: {
   labelKey: TranslationKey;
-  items: { href: string; labelKey: TranslationKey; icon: string }[];
+  items: { href: string; labelKey: TranslationKey; icon: LucideIcon }[];
 }[] = [
   {
     labelKey: "overview",
-    items: [{ href: "/dashboard", labelKey: "dashboard", icon: "◈" }],
+    items: [{ href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard }],
   },
   {
     labelKey: "workspace",
     items: [
-      { href: "/companies", labelKey: "companies", icon: "▣" },
-      { href: "/contacts", labelKey: "contacts", icon: "◎" },
-      { href: "/leads", labelKey: "leads", icon: "◇" },
-      { href: "/deals", labelKey: "deals", icon: "◆" },
-      { href: "/tasks", labelKey: "tasks", icon: "□" },
-      { href: "/invoices", labelKey: "invoices", icon: "▤" },
-      { href: "/commissions", labelKey: "commissions", icon: "◌" },
+      { href: "/companies", labelKey: "companies", icon: Building2 },
+      { href: "/contacts", labelKey: "contacts", icon: ContactRound },
+      { href: "/leads", labelKey: "leads", icon: UserRoundPlus },
+      { href: "/deals", labelKey: "deals", icon: Handshake },
+      { href: "/tasks", labelKey: "tasks", icon: CheckSquare },
+      { href: "/invoices", labelKey: "invoices", icon: Receipt },
+      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign },
     ],
   },
   {
     labelKey: "management",
     items: [
-      { href: "/users", labelKey: "users", icon: "◍" },
-      { href: "/settings", labelKey: "settings", icon: "⚙" },
+      { href: "/users", labelKey: "users", icon: UsersRound },
+      { href: "/settings", labelKey: "settings", icon: Settings },
     ],
   },
 ];
@@ -80,8 +97,14 @@ export function AppShell({
     router.refresh();
   }
 
+  const sidebarTransform = sidebarOpen
+    ? "translateX(0)"
+    : dir === "rtl"
+      ? "translateX(105%)"
+      : "translateX(-105%)";
+
   const sidebar = (
-    <aside className="flex h-full w-72 flex-col border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-black/20 backdrop-blur-2xl lg:border-e">
+    <aside className="elite-sidebar flex h-full w-72 flex-col border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-black/20 backdrop-blur-2xl lg:border-e">
       <div className="mb-6 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-4">
         <p className="truncate text-sm text-emerald-300">{t("appName")}</p>
         <h2 className="mt-1 truncate text-xl font-bold text-white">
@@ -99,6 +122,7 @@ export function AppShell({
             <div className="space-y-1">
               {group.items.map((item) => {
                 const active = pathname === item.href;
+                const Icon = item.icon;
 
                 return (
                   <Link
@@ -110,13 +134,20 @@ export function AppShell({
                         window.localStorage.setItem("elitecrm-sidebar-open", "false");
                       }
                     }}
-                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${
+                    className={`elite-nav-link group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${
                       active
-                        ? "bg-emerald-400 text-slate-950"
+                        ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-400/20"
                         : "text-slate-300 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <span className="w-5 shrink-0 text-center">{item.icon}</span>
+                    <Icon
+                      className={`h-5 w-5 shrink-0 transition ${
+                        active
+                          ? "text-slate-950"
+                          : "text-slate-400 group-hover:text-emerald-300"
+                      }`}
+                      strokeWidth={2}
+                    />
                     <span className="truncate">{t(item.labelKey)}</span>
                   </Link>
                 );
@@ -145,9 +176,8 @@ export function AppShell({
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_start,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_end,rgba(56,189,248,0.10),transparent_34%),linear-gradient(135deg,#020617_0%,#07111f_55%,#020617_100%)]" />
 
       <div
-        className={`fixed inset-y-0 start-0 z-40 hidden transition-transform duration-300 lg:block ${
-          sidebarOpen ? "translate-x-0" : "rtl:translate-x-full ltr:-translate-x-full"
-        }`}
+        className="fixed inset-y-0 start-0 z-40 hidden transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block"
+        style={{ transform: sidebarTransform }}
       >
         {sidebar}
       </div>
@@ -163,25 +193,31 @@ export function AppShell({
             }}
             type="button"
           />
-          <div className="relative h-full w-72 max-w-[86vw]">{sidebar}</div>
+          <div className="relative h-full w-72 max-w-[86vw] animate-[eliteSlideIn_0.35s_ease-out]">
+            {sidebar}
+          </div>
         </div>
       ) : null}
 
       <section
-        className={`relative z-10 min-h-screen transition-all duration-300 ${
+        className={`relative z-10 min-h-screen transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           sidebarOpen ? "lg:ps-72" : "lg:ps-0"
         }`}
       >
-        <header className={`fixed top-0 end-0 start-0 z-[90] border-b border-white/10 bg-slate-950/95 shadow-lg shadow-black/20 backdrop-blur-2xl transition-all duration-300 ${sidebarOpen ? "lg:start-72" : "lg:start-0"}`}>
+        <header
+          className={`fixed top-0 end-0 start-0 z-[90] border-b border-white/10 bg-slate-950/95 shadow-lg shadow-black/20 backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            sidebarOpen ? "lg:start-72" : "lg:start-0"
+          }`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 onClick={toggleSidebar}
-                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm hover:bg-white/10"
+                className="elite-icon-button rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm hover:bg-white/10"
                 type="button"
                 aria-label={t("menu")}
               >
-                ☰
+                <Menu className="h-5 w-5" />
               </button>
 
               <div className="min-w-0">
@@ -191,30 +227,33 @@ export function AppShell({
             </div>
 
             <div className="order-3 w-full md:order-none md:flex md:w-auto md:flex-1 md:justify-center md:px-6">
-              <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-500 md:max-w-md">
-                {t("searchPlaceholder")}
+              <div className="flex w-full items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-500 md:max-w-md">
+                <Search className="h-4 w-4 shrink-0 text-slate-500" />
+                <span className="truncate">{t("searchPlaceholder")}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <LanguageToggle />
+              <ThemeToggle />
               <button
                 onClick={signOut}
-                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:px-4"
+                className="elite-action-button flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:px-4"
                 type="button"
               >
-                {t("signOut")}
+                <LogOut className="h-4 w-4" />
+                <span>{t("signOut")}</span>
               </button>
             </div>
           </div>
         </header>
 
-        <div className="elitecrm-page-width safe-page p-3 pt-28 sm:p-4 sm:pt-28 lg:p-6 lg:pt-28 xl:p-8 xl:pt-28">{children}</div>
+        <div className="elitecrm-page-width safe-page p-3 pt-28 sm:p-4 sm:pt-28 lg:p-6 lg:pt-28 xl:p-8 xl:pt-28">
+          <div className="elite-page-enter">{children}</div>
+        </div>
       </section>
     </main>
   );
 }
-
-
 
 

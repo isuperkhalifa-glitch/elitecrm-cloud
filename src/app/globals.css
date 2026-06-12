@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -105,3 +105,741 @@ canvas {
     margin-inline: auto;
   }
 }
+
+/* EliteCRM Premium Motion Layer */
+@keyframes eliteFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes eliteSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes eliteSoftGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(52, 211, 153, 0.12);
+  }
+}
+
+.elite-page-enter {
+  animation: eliteFadeUp 0.42s ease-out both;
+}
+
+.elite-sidebar {
+  animation: eliteFadeUp 0.38s ease-out both;
+}
+
+.elite-nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.elite-nav-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(
+    110deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+  transform: translateX(-120%);
+  transition:
+    opacity 0.25s ease,
+    transform 0.55s ease;
+}
+
+.elite-nav-link:hover::after {
+  opacity: 1;
+  transform: translateX(120%);
+}
+
+.elite-icon-button,
+.elite-action-button,
+button,
+a {
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.elite-icon-button:hover,
+.elite-action-button:hover,
+button:hover {
+  transform: translateY(-1px);
+}
+
+.elite-icon-button:active,
+.elite-action-button:active,
+button:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.safe-card,
+.elite-motion-card {
+  animation: eliteFadeUp 0.42s ease-out both;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.safe-card:hover,
+.elite-motion-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 211, 153, 0.22);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* EliteCRM Cyber Gaming Login + Premium System Feel */
+@keyframes eliteGridMove {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 72px 72px;
+  }
+}
+
+@keyframes eliteOrbFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(24px, -18px, 0) scale(1.08);
+  }
+}
+
+@keyframes eliteScanMove {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes eliteParticleFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.4);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.15;
+  }
+}
+
+@keyframes eliteHeroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.985);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes eliteCardFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes eliteBorderFlow {
+  0% {
+    transform: translateX(-120%) rotate(8deg);
+  }
+  100% {
+    transform: translateX(120%) rotate(8deg);
+  }
+}
+
+@keyframes eliteCorePulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(52, 211, 153, 0.22),
+      0 0 40px rgba(52, 211, 153, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 12px rgba(52, 211, 153, 0),
+      0 0 70px rgba(52, 211, 153, 0.28);
+  }
+}
+
+.elite-login-stage {
+  isolation: isolate;
+}
+
+.elite-cyber-grid {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(52, 211, 153, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52, 211, 153, 0.12) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+  animation: eliteGridMove 9s linear infinite;
+}
+
+.elite-login-scan {
+  pointer-events: none;
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(52, 211, 153, 0.08),
+    transparent
+  );
+  animation: eliteScanMove 5s ease-in-out infinite;
+}
+
+.elite-login-orb {
+  pointer-events: none;
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(44px);
+  opacity: 0.5;
+  animation: eliteOrbFloat 8s ease-in-out infinite;
+}
+
+.elite-login-orb-one {
+  width: 360px;
+  height: 360px;
+  top: -90px;
+  inset-inline-start: -90px;
+  background: rgba(16, 185, 129, 0.32);
+}
+
+.elite-login-orb-two {
+  width: 420px;
+  height: 420px;
+  bottom: -160px;
+  inset-inline-end: -120px;
+  background: rgba(56, 189, 248, 0.22);
+  animation-delay: -2s;
+}
+
+.elite-login-orb-three {
+  width: 260px;
+  height: 260px;
+  top: 38%;
+  inset-inline-start: 45%;
+  background: rgba(168, 85, 247, 0.16);
+  animation-delay: -4s;
+}
+
+.elite-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(52, 211, 153, 0.8);
+  box-shadow: 0 0 22px rgba(52, 211, 153, 0.7);
+  animation: eliteParticleFloat 5s ease-in-out infinite;
+}
+
+.elite-particle:nth-child(2) {
+  animation-delay: -1s;
+}
+
+.elite-particle:nth-child(3) {
+  animation-delay: -2s;
+}
+
+.elite-particle:nth-child(4) {
+  animation-delay: -3s;
+}
+
+.elite-particle:nth-child(5) {
+  animation-delay: -4s;
+}
+
+.elite-login-hero {
+  animation: eliteHeroEnter 0.7s ease-out both;
+}
+
+.elite-glow-title {
+  text-shadow:
+    0 0 24px rgba(52, 211, 153, 0.16),
+    0 0 64px rgba(56, 189, 248, 0.08);
+}
+
+.elite-floating-card {
+  animation:
+    eliteHeroEnter 0.65s ease-out both,
+    eliteCardFloat 4.5s ease-in-out infinite;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.elite-floating-card:hover {
+  transform: translateY(-8px) scale(1.015);
+  border-color: rgba(52, 211, 153, 0.35);
+  background-color: rgba(255, 255, 255, 0.075);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+}
+
+.elite-login-card {
+  animation: eliteHeroEnter 0.72s ease-out both;
+}
+
+.elite-card-border-flow {
+  pointer-events: none;
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(52, 211, 153, 0.16),
+    rgba(56, 189, 248, 0.14),
+    transparent
+  );
+  animation: eliteBorderFlow 4.5s linear infinite;
+}
+
+.elite-login-card::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: calc(2rem - 1px);
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.elite-core-pulse {
+  animation: eliteCorePulse 2.6s ease-in-out infinite;
+}
+
+.elite-login-button {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 18px 50px rgba(52, 211, 153, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.elite-login-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: translateX(-120%);
+  transition: transform 0.65s ease;
+}
+
+.elite-login-button:hover::after {
+  transform: translateX(120%);
+}
+
+.elite-input {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.elite-input:focus {
+  box-shadow:
+    0 0 0 4px rgba(52, 211, 153, 0.08),
+    0 0 36px rgba(52, 211, 153, 0.1);
+}
+
+/* Stronger premium feel across the system */
+.safe-card,
+.elite-motion-card,
+.rounded-\[2rem\] {
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.safe-card:hover,
+.elite-motion-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 211, 153, 0.22);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+tbody tr {
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+tbody tr:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 1024px) {
+  .elite-login-stage {
+    background:
+      radial-gradient(circle at top, rgba(16, 185, 129, 0.18), transparent 34%),
+      linear-gradient(135deg, #020617, #07111f 55%, #020617);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elite-cyber-grid,
+  .elite-login-scan,
+  .elite-login-orb,
+  .elite-particle,
+  .elite-floating-card,
+  .elite-login-card,
+  .elite-core-pulse,
+  .elite-login-hero,
+  .elite-card-border-flow {
+    animation: none !important;
+  }
+}
+
+/* EliteCRM Theme Toggle */
+html[data-theme="light"] body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html[data-theme="light"] .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+html[data-theme="light"] .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+html[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .text-slate-200,
+html[data-theme="light"] .text-slate-300,
+html[data-theme="light"] .text-slate-400 {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+
+html[data-theme="light"] .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme="light"] .elite-sidebar,
+html[data-theme="light"] header {
+  background: rgba(248, 250, 252, 0.92) !important;
+}
+
+html[data-theme="light"] .elite-login-stage {
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.14), transparent 34%),
+    linear-gradient(135deg, #f8fafc, #eef2ff 55%, #f8fafc) !important;
+}
+
+html[data-theme="light"] .elite-login-card::before {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+html[data-theme="light"] .elite-cyber-grid {
+  opacity: 0.18;
+}
+
+html[data-theme="light"] .elite-input {
+  background: rgba(255, 255, 255, 0.78) !important;
+  color: #0f172a !important;
+}
+
+/* Stronger mobile fit */
+@media (max-width: 1024px) {
+  .elite-login-stage section {
+    align-content: center;
+  }
+
+  .elite-login-hero {
+    padding-top: 8px;
+  }
+
+  .elite-glow-title {
+    text-align: center;
+  }
+
+  .elite-floating-card {
+    animation-duration: 0.45s, 5.5s;
+  }
+}
+
+@media (max-width: 640px) {
+  .elite-login-stage {
+    min-height: 100svh;
+  }
+
+  .elite-login-stage section {
+    min-height: 100svh;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .elite-glow-title {
+    font-size: 2rem;
+    line-height: 1.18;
+  }
+
+  .elite-login-card {
+    border-radius: 1.5rem;
+  }
+
+  .elite-login-orb-one,
+  .elite-login-orb-two {
+    width: 240px;
+    height: 240px;
+  }
+
+  .elite-cyber-grid {
+    background-size: 44px 44px;
+  }
+}
+
+/* ELITECRM_LIGHT_THEME_FIX_START */
+
+html[data-theme="light"] body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html[data-theme="light"] .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+html[data-theme="light"] .bg-slate-900 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+html[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .text-slate-200,
+html[data-theme="light"] .text-slate-300,
+html[data-theme="light"] .text-slate-400 {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+
+html[data-theme="light"] .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme="light"] .bg-white\/\[0\.04\],
+html[data-theme="light"] .bg-white\/\[0\.045\],
+html[data-theme="light"] .bg-white\/\[0\.055\] {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme="light"] .elite-sidebar,
+html[data-theme="light"] header {
+  background: rgba(248, 250, 252, 0.88) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme="light"] .elite-login-stage {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(16, 185, 129, 0.28), transparent 30%),
+    radial-gradient(circle at 88% 88%, rgba(14, 165, 233, 0.22), transparent 34%),
+    radial-gradient(circle at 50% 40%, rgba(168, 85, 247, 0.12), transparent 26%),
+    linear-gradient(135deg, #f8fafc, #eef2ff 55%, #f8fafc) !important;
+}
+
+html[data-theme="light"] .elite-cyber-grid {
+  opacity: 0.32;
+  background-image:
+    linear-gradient(rgba(15, 118, 110, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.18) 1px, transparent 1px);
+}
+
+html[data-theme="light"] .elite-login-scan {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(16, 185, 129, 0.18),
+    transparent
+  );
+}
+
+html[data-theme="light"] .elite-login-orb {
+  opacity: 0.72;
+  filter: blur(42px);
+}
+
+html[data-theme="light"] .elite-login-orb-one {
+  background: rgba(16, 185, 129, 0.34);
+}
+
+html[data-theme="light"] .elite-login-orb-two {
+  background: rgba(14, 165, 233, 0.28);
+}
+
+html[data-theme="light"] .elite-login-orb-three {
+  background: rgba(168, 85, 247, 0.2);
+}
+
+html[data-theme="light"] .elite-login-card {
+  background: rgba(255, 255, 255, 0.64) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  box-shadow:
+    0 32px 100px rgba(15, 23, 42, 0.18),
+    0 0 90px rgba(16, 185, 129, 0.12);
+}
+
+html[data-theme="light"] .elite-login-card::before {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+html[data-theme="light"] .elite-card-border-flow {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.26),
+    rgba(14, 165, 233, 0.22),
+    transparent
+  );
+}
+
+html[data-theme="light"] .elite-floating-card,
+html[data-theme="light"] .safe-card,
+html[data-theme="light"] .elite-motion-card {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 18px 70px rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme="light"] .elite-floating-card:hover,
+html[data-theme="light"] .safe-card:hover,
+html[data-theme="light"] .elite-motion-card:hover {
+  border-color: rgba(16, 185, 129, 0.42) !important;
+  box-shadow:
+    0 28px 90px rgba(15, 23, 42, 0.16),
+    0 0 70px rgba(16, 185, 129, 0.14);
+}
+
+html[data-theme="light"] .elite-input,
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+html[data-theme="light"] .elite-action-button,
+html[data-theme="light"] .elite-icon-button {
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+html[data-theme="light"] .elite-action-button:hover,
+html[data-theme="light"] .elite-icon-button:hover {
+  background: rgba(236, 253, 245, 0.92) !important;
+  border-color: rgba(16, 185, 129, 0.38) !important;
+}
+
+html[data-theme="light"] tbody tr {
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme="light"] tbody tr:hover {
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.12),
+    0 0 50px rgba(16, 185, 129, 0.08);
+}
+
+/* ELITECRM_LIGHT_THEME_FIX_END */

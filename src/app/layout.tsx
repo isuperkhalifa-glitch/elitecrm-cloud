@@ -1,6 +1,8 @@
 ﻿import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import { I18nProvider } from "@/components/language-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "EliteCRM",
@@ -10,14 +12,15 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="ar" dir="rtl">
       <body>
-        <I18nProvider>{children}</I18nProvider>
+        <ThemeProvider>
+          <I18nProvider>{children}</I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-

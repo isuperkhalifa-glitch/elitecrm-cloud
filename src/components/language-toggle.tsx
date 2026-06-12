@@ -1,18 +1,21 @@
 ﻿"use client";
 
+import { Languages } from "lucide-react";
 import { useI18n } from "@/components/language-provider";
 
 export function LanguageToggle() {
-  const { t, toggleLanguage } = useI18n();
+  const { language, toggleLanguage } = useI18n();
 
   return (
     <button
       onClick={toggleLanguage}
-      className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+      className="elite-action-button flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
       type="button"
+      aria-label={language === "ar" ? "تغيير اللغة" : "Change language"}
+      title={language === "ar" ? "تغيير اللغة" : "Change language"}
     >
-      {t("switchLanguage")}
+      <Languages className="h-4 w-4" />
+      <span>{language === "ar" ? "EN" : "ع"}</span>
     </button>
   );
 }
-
