@@ -172,7 +172,7 @@ export function AppShell({
           sidebarOpen ? "lg:ps-72" : "lg:ps-0"
         }`}
       >
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/70 backdrop-blur-2xl">
+        <header className={`fixed top-0 end-0 start-0 z-[90] border-b border-white/10 bg-slate-950/95 shadow-lg shadow-black/20 backdrop-blur-2xl transition-all duration-300 ${sidebarOpen ? "lg:start-72" : "lg:start-0"}`}>
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -209,8 +209,12 @@ export function AppShell({
           </div>
         </header>
 
-        <div className="p-4 lg:p-8">{children}</div>
+        <div className="elitecrm-page-width safe-page p-3 pt-28 sm:p-4 sm:pt-28 lg:p-6 lg:pt-28 xl:p-8 xl:pt-28">{children}</div>
       </section>
     </main>
   );
 }
+
+
+
+

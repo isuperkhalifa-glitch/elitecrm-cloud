@@ -156,7 +156,7 @@ export function CompaniesClient({
       setSaving(false);
 
       if (error || !data) {
-        setError(t("companySaveError"));
+        console.error(error); setError(error?.message ?? t("companySaveError"));
         return;
       }
 
@@ -184,7 +184,7 @@ export function CompaniesClient({
     setSaving(false);
 
     if (error || !data) {
-      setError(t("companySaveError"));
+      console.error(error); setError(error?.message ?? t("companySaveError"));
       return;
     }
 
@@ -208,7 +208,7 @@ export function CompaniesClient({
       .single();
 
     if (error || !data) {
-      setError(t("companySaveError"));
+      console.error(error); setError(error?.message ?? t("companySaveError"));
       return;
     }
 
@@ -236,7 +236,7 @@ export function CompaniesClient({
       .single();
 
     if (error || !data) {
-      setError(t("companySaveError"));
+      console.error(error); setError(error?.message ?? t("companySaveError"));
       return;
     }
 
@@ -257,7 +257,7 @@ export function CompaniesClient({
     const { error } = await supabase.from("companies").delete().eq("id", companyId);
 
     if (error) {
-      setError(t("companySaveError"));
+      console.error(error); setError(error?.message ?? t("companySaveError"));
       return;
     }
 
@@ -272,8 +272,8 @@ export function CompaniesClient({
       fullName={fullName}
       role={role}
     >
-      <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl">
+      <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl sm:p-6">
           <p className="text-sm text-emerald-300">
             {editingId ? t("editCompany") : t("addCompany")}
           </p>
@@ -413,7 +413,7 @@ export function CompaniesClient({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl">
+        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl sm:p-6">
           <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm text-emerald-300">{t("totalCompanies")}</p>
@@ -428,8 +428,8 @@ export function CompaniesClient({
             />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] border-separate border-spacing-y-3">
+          <div className="safe-scroll">
+            <table className="w-full min-w-[760px] border-separate border-spacing-y-3">
               <thead>
                 <tr className="text-sm text-slate-400">
                   <th className="px-4 py-2 text-start">{t("companyName")}</th>
@@ -528,3 +528,5 @@ export function CompaniesClient({
     </AppShell>
   );
 }
+
+
