@@ -35,6 +35,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = dir;
+    document.title = language === "ar" ? "إيليت سي آر إم" : "EliteCRM";
   }, [language, dir]);
 
   function setLanguage(nextLanguage: Language) {
@@ -64,7 +65,7 @@ export function useI18n() {
   const context = useContext(I18nContext);
 
   if (!context) {
-    throw new Error("useI18n must be used inside I18nProvider");
+    throw new Error("Missing I18nProvider");
   }
 
   return context;

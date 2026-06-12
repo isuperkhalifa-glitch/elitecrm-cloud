@@ -1,68 +1,65 @@
 ﻿"use client";
 
-import { LanguageToggle } from "@/components/language-toggle";
+import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
-import { SignOutButton } from "./sign-out-button";
 
 type DashboardClientProps = {
   userEmail: string | null;
   fullName: string | null;
   role: string | null;
+  stats: {
+    companies: number;
+    contacts: number;
+    leads: number;
+    deals: number;
+    tasks: number;
+    invoices: number;
+    commissions: number;
+  };
 };
 
-export function DashboardClient({ userEmail, fullName, role }: DashboardClientProps) {
-  const { t, dir } = useI18n();
+export function DashboardClient({
+  userEmail,
+  fullName,
+  role,
+  stats,
+}: DashboardClientProps) {
+  const { t } = useI18n();
 
-  const roleLabel =
-    role === "admin" ? t("admin") : role === "sales" ? t("sales") : role ?? "-";
+  const cards = [
+    { label: t("totalCompanies"), value: stats.companies },
+    { label: t("totalContacts"), value: stats.contacts },
+    { label: t("totalLeads"), value: stats.leads },
+    { label: t("totalDeals"), value: stats.deals },
+    { label: t("totalTasks"), value: stats.tasks },
+    { label: t("totalInvoices"), value: stats.invoices },
+    { label: t("totalCommissions"), value: stats.commissions },
+  ];
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white" dir={dir}>
-      <header className="border-b border-white/10 bg-white/[0.03]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-5">
-          <div>
-            <p className="text-sm text-emerald-400">{t("appName")}</p>
-            <h1 className="text-2xl font-bold">{t("dashboard")}</h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <LanguageToggle />
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-6 text-emerald-100">
-          <h2 className="text-xl font-semibold">{t("activeSystem")}</h2>
-          <p className="mt-2 text-sm text-emerald-100/80">{t("protectedArea")}</p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm text-slate-400">{t("user")}</p>
-            <h2 className="mt-2 text-xl font-semibold">{fullName ?? userEmail}</h2>
-            <p className="mt-1 text-sm text-emerald-400">
-              {t("role")}: {roleLabel}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm text-slate-400">{t("companies")}</p>
-            <h2 className="mt-2 text-3xl font-bold">0</h2>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm text-slate-400">{t("leads")}</p>
-            <h2 className="mt-2 text-3xl font-bold">0</h2>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm text-slate-400">{t("deals")}</p>
-            <h2 className="mt-2 text-3xl font-bold">0</h2>
-          </div>
-        </div>
+    <AppShell
+      titleKey="dashboard"
+      userEmail={userEmail}
+      fullName={fullName}
+      role={role}
+    >
+      <section className="mb-6 rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6 text-emerald-100">
+        <p className="text-sm text-emerald-300">{t("systemStatus")}</p>
+        <h2 className="mt-2 text-2xl font-bold">{t("activeSystem")}</h2>
+        <p className="mt-2 text-sm text-emerald-100/80">{t("protectedArea")}</p>
       </section>
-    </main>
+
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => (
+          <div
+            key={card.label}
+            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-xl"
+          >
+            <p className="text-sm text-slate-400">{card.label}</p>
+            <h3 className="mt-3 text-4xl font-bold">{card.value}</h3>
+          </div>
+        ))}
+      </section>
+    </AppShell>
   );
 }
