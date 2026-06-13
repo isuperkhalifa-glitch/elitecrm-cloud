@@ -67,11 +67,11 @@ export function LeadsClient({
 
   const scopedLeads = useMemo(() => {
     if (scope.mode === "user" && scope.targetId) {
-      return scopedLeads.filter((lead) => lead.owner_id === scope.targetId);
+      return leads.filter((lead) => lead.owner_id === scope.targetId);
     }
 
     if (scope.mode === "company" && scope.targetName) {
-      return scopedLeads.filter((lead) =>
+      return leads.filter((lead) =>
         (lead.company_name ?? "").toLowerCase().includes(scope.targetName.toLowerCase())
       );
     }
@@ -448,6 +448,7 @@ export function LeadsClient({
     </AppShell>
   );
 }
+
 
 
 
