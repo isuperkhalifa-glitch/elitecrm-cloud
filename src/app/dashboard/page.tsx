@@ -5,38 +5,68 @@ export default async function DashboardPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
 
   const [
-    companies,
-    contacts,
-    leads,
-    deals,
-    tasks,
-    invoices,
-    commissions,
+    { data: leads },
+    { data: tasks },
+    { data: deals },
+    { data: invoices },
+    { data: commissions },
+    { data: profiles },
+    { data: companies },
   ] = await Promise.all([
-    supabase.from("companies").select("id", { count: "exact", head: true }),
-    supabase.from("contacts").select("id", { count: "exact", head: true }),
-    supabase.from("leads").select("id", { count: "exact", head: true }),
-    supabase.from("deals").select("id", { count: "exact", head: true }),
-    supabase.from("tasks").select("id", { count: "exact", head: true }),
-    supabase.from("invoices").select("id", { count: "exact", head: true }),
-    supabase.from("commissions").select("id", { count: "exact", head: true }),
+    supabase
+      .from("leads")
+      .select("id,full_name,phone,company_name,source,status,priority,owner_id,created_at,program")
+      .order("created_at", { ascending: false })
+      .limit(1000),
+
+    supabase
+      .from("tasks")
+      .select("id,title,status,priority,due_date,owner_id,related_type,related_id,created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000),
+
+    supabase
+      .from("deals")
+      .select("id,title,company_id,owner_id,stage,amount,probability,expected_close_date,created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000),
+
+    supabase
+      .from("invoices")
+      .select("id,invoice_number,company_id,deal_id,owner_id,amount,status,paid_at,due_date,created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000),
+
+    supabase
+      .from("commissions")
+      .select("id,sales_id,company_id,invoice_id,commission_amount,status,paid_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000),
+
+    supabase
+      .from("profiles")
+      .select("id,full_name,role,is_active")
+      .order("full_name", { ascending: true }),
+
+    supabase
+      .from("companies")
+      .select("id,name")
+      .order("name", { ascending: true }),
   ]);
 
   return (
     <DashboardClient
+      currentUserId={user.id}
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
-      stats={{
-        companies: companies.count ?? 0,
-        contacts: contacts.count ?? 0,
-        leads: leads.count ?? 0,
-        deals: deals.count ?? 0,
-        tasks: tasks.count ?? 0,
-        invoices: invoices.count ?? 0,
-        commissions: commissions.count ?? 0,
-      }}
+      leads={(leads ?? []) as any}
+      tasks={(tasks ?? []) as any}
+      deals={(deals ?? []) as any}
+      invoices={(invoices ?? []) as any}
+      commissions={(commissions ?? []) as any}
+      profiles={(profiles ?? []) as any}
+      companies={(companies ?? []) as any}
     />
   );
 }
-

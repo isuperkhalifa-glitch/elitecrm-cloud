@@ -4,6 +4,7 @@ import "./globals.css";
 import { I18nProvider } from "@/components/language-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TiltProvider } from "@/components/tilt-provider";
+import { ScopeProvider } from "@/components/scope-provider";
 
 export const metadata: Metadata = {
   title: "EliteCRM",
@@ -20,7 +21,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <I18nProvider>
-            <TiltProvider>{children}</TiltProvider>
+            <ScopeProvider>
+              <TiltProvider>{children}</TiltProvider>
+            </ScopeProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>

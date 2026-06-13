@@ -22,6 +22,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/language-provider";
 import { LanguageToggle } from "@/components/language-toggle";
+import { GlobalScopeSwitcher, ScopeBanner } from "@/components/global-scope-switcher";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { TranslationKey } from "@/lib/i18n/translations";
@@ -235,6 +236,7 @@ export function AppShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <GlobalScopeSwitcher role={role} />
               <NotificationBell />
               <LanguageToggle />
               <ThemeToggle />
@@ -252,12 +254,16 @@ export function AppShell({
         </header>
 
         <div className="elitecrm-page-width safe-page p-3 pt-32 sm:p-4 sm:pt-32 lg:p-6 lg:pt-24 xl:p-8 xl:pt-24">
+          <ScopeBanner />
           <div className="elite-page-enter">{children}</div>
         </div>
       </section>
     </main>
   );
 }
+
+
+
 
 
 
