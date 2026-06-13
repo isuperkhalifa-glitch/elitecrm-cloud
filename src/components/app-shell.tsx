@@ -119,6 +119,12 @@ const navGroups: NavGroup[] = [
     labelEn: "Admin",
     items: [
       {
+        href: "/distribution",
+        labelKey: "distribution",
+        icon: UsersRound,
+        roles: ["admin", "manager", "moderator"],
+      },
+      {
         href: "/imports",
         labelKey: "imports",
         icon: FileSpreadsheet,
@@ -350,4 +356,5 @@ export function AppShell({
     </div>
   );
 }
+
 
