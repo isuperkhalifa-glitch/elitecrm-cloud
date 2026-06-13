@@ -59,9 +59,7 @@ export function TasksClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-
-  const scopedTasks = useMemo(() => {
+  const scopedTasks = useMemo<Task[]>(() => {
     if (scope.mode === "user" && scope.targetId) {
       return tasks.filter((task) => task.owner_id === scope.targetId);
     }
@@ -76,6 +74,7 @@ export function TasksClient({
 
     return tasks;
   }, [tasks, scope]);
+
   const filteredTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -529,6 +528,8 @@ export function TasksClient({
     </AppShell>
   );
 }
+
+
 
 
 
