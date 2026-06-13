@@ -6,7 +6,7 @@ export default async function LeadsPage() {
 
   const { data: leads } = await supabase
     .from("leads")
-    .select("id,full_name,phone,email,company_name,source,status,priority,created_at")
+    .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -19,4 +19,5 @@ export default async function LeadsPage() {
     />
   );
 }
+
 

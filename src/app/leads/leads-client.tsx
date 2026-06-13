@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
+import { useScope } from "@/components/scope-provider";
 import { createClient } from "@/lib/supabase/client";
 
 type Lead = {
@@ -14,6 +15,8 @@ type Lead = {
   source: string | null;
   status: string;
   priority: string;
+  owner_id: string | null;
+  program?: string | null;
   created_at: string;
 };
 
@@ -53,6 +56,7 @@ export function LeadsClient({
   role,
 }: LeadsClientProps) {
   const { t } = useI18n();
+  const { scope } = useScope();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [form, setForm] = useState<LeadForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -61,12 +65,26 @@ export function LeadsClient({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const scopedLeads = useMemo(() => {
+    if (scope.mode === "user" && scope.targetId) {
+      return scopedLeads.filter((lead) => lead.owner_id === scope.targetId);
+    }
+
+    if (scope.mode === "company" && scope.targetName) {
+      return scopedLeads.filter((lead) =>
+        (lead.company_name ?? "").toLowerCase().includes(scope.targetName.toLowerCase())
+      );
+    }
+
+    return leads;
+  }, [leads, scope]);
+
   const filteredLeads = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
     if (!keyword) return leads;
 
-    return leads.filter((lead) =>
+    return scopedLeads.filter((lead) =>
       [
         lead.full_name,
         lead.phone,
@@ -81,7 +99,7 @@ export function LeadsClient({
         .toLowerCase()
         .includes(keyword)
     );
-  }, [leads, search]);
+  }, [scopedLeads, search]);
 
   function getStatusLabel(status: string) {
     if (status === "contacted") return t("contactedLead");
@@ -144,7 +162,7 @@ export function LeadsClient({
       source: form.source.trim() || null,
       status: form.status,
       priority: form.priority,
-      owner_id: currentUserId,
+      owner_id: scope.mode === "user" && scope.targetId ? scope.targetId : currentUserId,
     };
 
     if (editingId) {
@@ -430,5 +448,6 @@ export function LeadsClient({
     </AppShell>
   );
 }
+
 
 
