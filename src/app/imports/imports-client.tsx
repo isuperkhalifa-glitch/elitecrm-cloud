@@ -112,7 +112,7 @@ function mapStatus(value: string) {
     new: "new",
   };
 
-  return map[status] ?? status || "new";
+  return (map[status] ?? status) || "new";
 }
 
 function buildLeadPayload(
@@ -492,3 +492,6 @@ export function ImportsClient({
     </AppShell>
   );
 }
+
+
+

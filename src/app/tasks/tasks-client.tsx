@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
+import { useScope } from "@/components/scope-provider";
 import { createClient } from "@/lib/supabase/client";
 
 type Task = {
@@ -12,6 +13,9 @@ type Task = {
   status: string;
   priority: string;
   due_date: string | null;
+  owner_id: string | null;
+  related_type?: string | null;
+  related_id?: string | null;
   created_at: string;
 };
 
@@ -47,6 +51,7 @@ export function TasksClient({
   role,
 }: TasksClientProps) {
   const { t } = useI18n();
+  const { scope } = useScope();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [form, setForm] = useState<TaskForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,12 +60,28 @@ export function TasksClient({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+
+  const scopedTasks = useMemo(() => {
+    if (scope.mode === "user" && scope.targetId) {
+      return tasks.filter((task) => task.owner_id === scope.targetId);
+    }
+
+    if (scope.mode === "company" && scope.targetId) {
+      return tasks.filter(
+        (task) =>
+          task.related_type === "company" &&
+          task.related_id === scope.targetId
+      );
+    }
+
+    return tasks;
+  }, [tasks, scope]);
   const filteredTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    if (!keyword) return tasks;
+    if (!keyword) return scopedTasks;
 
-    return tasks.filter((task) =>
+    return scopedTasks.filter((task) =>
       [
         task.title,
         task.description,
@@ -73,7 +94,7 @@ export function TasksClient({
         .toLowerCase()
         .includes(keyword)
     );
-  }, [tasks, search]);
+  }, [scopedTasks, search]);
 
   const summary = useMemo(() => {
     const now = new Date();
@@ -91,7 +112,7 @@ export function TasksClient({
         return new Date(task.due_date) < now;
       }).length,
     };
-  }, [tasks]);
+  }, [scopedTasks]);
 
   function getStatusLabel(status: string) {
     if (status === "in_progress") return t("inProgressTask");
@@ -174,7 +195,7 @@ export function TasksClient({
       status: form.status,
       priority: form.priority,
       due_date: form.due_date ? new Date(form.due_date).toISOString() : null,
-      owner_id: currentUserId,
+      owner_id: scope.mode === "user" && scope.targetId ? scope.targetId : currentUserId,
     };
 
     if (editingId) {
@@ -508,3 +529,7 @@ export function TasksClient({
     </AppShell>
   );
 }
+
+
+
+

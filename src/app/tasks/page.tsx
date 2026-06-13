@@ -6,7 +6,7 @@ export default async function TasksPage() {
 
   const { data: tasks } = await supabase
     .from("tasks")
-    .select("id,title,description,status,priority,due_date,created_at")
+    .select("id,title,description,related_type,related_id,owner_id,status,priority,due_date,created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -19,3 +19,4 @@ export default async function TasksPage() {
     />
   );
 }
+

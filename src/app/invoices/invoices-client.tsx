@@ -345,7 +345,7 @@ export function InvoicesClient({
 
       setInvoices((current) =>
         current.map((invoice) =>
-          invoice.id === data.id ? (data as Invoice) : invoice
+          invoice.id === data.id ? (data as unknown as Invoice) : invoice
         )
       );
 
@@ -368,7 +368,7 @@ export function InvoicesClient({
       return;
     }
 
-    setInvoices((current) => [data as Invoice, ...current]);
+    setInvoices((current) => [data as unknown as Invoice, ...current]);
     setMessage(tx("تم إنشاء الفاتورة بنجاح.", "Invoice created successfully."));
     resetForm();
   }
@@ -419,7 +419,7 @@ export function InvoicesClient({
     }
 
     setInvoices((current) =>
-      current.map((item) => (item.id === data.id ? (data as Invoice) : item))
+      current.map((item) => (item.id === data.id ? (data as unknown as Invoice) : item))
     );
 
     setMessage(tx("تم تسجيل الفاتورة كمدفوعة.", "Invoice marked as paid."));
@@ -769,3 +769,4 @@ export function InvoicesClient({
     </AppShell>
   );
 }
+

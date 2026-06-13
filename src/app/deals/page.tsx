@@ -22,9 +22,9 @@ export default async function DealsPage() {
 
   return (
     <DealsClient
-      initialDeals={deals ?? []}
-      companies={companies ?? []}
-      contacts={contacts ?? []}
+      initialDeals={(deals ?? []) as any}
+      companies={(companies ?? []) as any}
+      contacts={(contacts ?? []) as any}
       currentUserId={user.id}
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
@@ -32,3 +32,4 @@ export default async function DealsPage() {
     />
   );
 }
+

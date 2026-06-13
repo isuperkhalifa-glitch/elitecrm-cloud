@@ -262,7 +262,7 @@ export function DealsClient({
       }
 
       setDeals((current) =>
-        current.map((deal) => (deal.id === data.id ? (data as Deal) : deal))
+        current.map((deal) => (deal.id === data.id ? (data as unknown as Deal) : deal))
       );
 
       setMessage(tx("تم تعديل الصفقة بنجاح.", "Deal updated successfully."));
@@ -284,7 +284,7 @@ export function DealsClient({
       return;
     }
 
-    setDeals((current) => [data as Deal, ...current]);
+    setDeals((current) => [data as unknown as Deal, ...current]);
     setMessage(tx("تم إضافة الصفقة بنجاح.", "Deal added successfully."));
     resetForm();
   }
@@ -340,7 +340,7 @@ export function DealsClient({
     }
 
     setDeals((current) =>
-      current.map((deal) => (deal.id === dealId ? (data as Deal) : deal))
+      current.map((deal) => (deal.id === dealId ? (data as unknown as Deal) : deal))
     );
   }
 
@@ -692,3 +692,5 @@ export function DealsClient({
     </AppShell>
   );
 }
+
+
