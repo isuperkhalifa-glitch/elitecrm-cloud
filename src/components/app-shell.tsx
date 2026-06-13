@@ -71,6 +71,12 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       {
+        href: "/my-customers",
+        labelKey: "myCustomers",
+        icon: UsersRound,
+        roles: ["admin", "manager", "sales"],
+      },
+      {
         href: "/leads",
         labelKey: "leads",
         icon: UsersRound,
@@ -344,3 +350,4 @@ export function AppShell({
     </div>
   );
 }
+

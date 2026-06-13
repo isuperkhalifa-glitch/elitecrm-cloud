@@ -183,6 +183,7 @@ export const translations = {
     role: "Role",
     companies: "Companies",
     leads: "Leads",
+    myCustomers: "My Customers",
     deals: "Deals",
     tasks: "Tasks",
     contacts: "Contacts",
@@ -336,6 +337,7 @@ export const translations = {
 } as const;
 
 export type TranslationKey = keyof typeof translations.ar;
+
 
 
 
