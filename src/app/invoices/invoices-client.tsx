@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useI18n } from "@/components/language-provider";
+import { useScope } from "@/components/scope-provider";
 
 type Company = {
   id: string;
@@ -107,6 +108,7 @@ export function InvoicesClient({
   role,
 }: InvoicesClientProps) {
   const { language } = useI18n();
+  const { scope } = useScope();
   const isArabic = language === "ar";
 
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
@@ -178,10 +180,22 @@ export function InvoicesClient({
     return due < today;
   }
 
+  const scopedInvoices = useMemo(() => {
+    if (scope.mode === "user" && scope.targetId) {
+      return invoices.filter((invoice) => invoice.owner_id === scope.targetId);
+    }
+
+    if (scope.mode === "company" && scope.targetId) {
+      return invoices.filter((invoice) => invoice.company_id === scope.targetId);
+    }
+
+    return invoices;
+  }, [invoices, scope]);
+
   const filteredInvoices = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    return invoices.filter((invoice) => {
+    return scopedInvoices.filter((invoice) => {
       const statusMatch =
         statusFilter === "all" || invoice.status === statusFilter;
 
@@ -202,7 +216,7 @@ export function InvoicesClient({
 
       return statusMatch && keywordMatch;
     });
-  }, [invoices, search, statusFilter]);
+  }, [scopedInvoices, search, statusFilter]);
 
   const stats = useMemo(() => {
     const totalAmount = invoices.reduce(
@@ -324,7 +338,7 @@ export function InvoicesClient({
       paid_at: paidAt,
       notes: form.notes.trim() || null,
       currency: "SAR",
-      owner_id: currentUserId,
+      owner_id: scope.mode === "user" && scope.targetId ? scope.targetId : currentUserId,
     };
 
     if (editingId) {
@@ -769,4 +783,5 @@ export function InvoicesClient({
     </AppShell>
   );
 }
+
 
