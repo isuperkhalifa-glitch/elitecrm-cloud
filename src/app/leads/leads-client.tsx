@@ -17,6 +17,17 @@ type Lead = {
   priority: string;
   owner_id: string | null;
   program?: string | null;
+  assigned_at: string | null;
+  last_contact_at: string | null;
+  next_follow_up_at: string | null;
+  last_note: string | null;
+  customer_status: string | null;
+  registration_status: string | null;
+  payment_status: string | null;
+  transferred_from: string | null;
+  transferred_to: string | null;
+  transfer_reason: string | null;
+  transferred_at: string | null;
   created_at: string;
 };
 
@@ -79,6 +90,44 @@ export function LeadsClient({
     return leads;
   }, [leads, scope]);
 
+  function getJourneyLabel(value: string | null) {
+    const map: Record<string, string> = {
+      new: "جديد",
+      assigned: "موزع",
+      contacted: "تم التواصل",
+      interested: "مهتم",
+      follow_up: "متابعة",
+      not_interested: "غير مهتم",
+      no_answer: "لا يرد",
+      wrong_number: "رقم خطأ",
+      registered: "مسجل",
+      paid: "مدفوع",
+      canceled: "ملغي",
+    };
+
+    return map[value ?? ""] ?? value ?? "-";
+  }
+
+  function getPaymentLabel(value: string | null) {
+    const map: Record<string, string> = {
+      unpaid: "غير مدفوع",
+      partial: "دفع جزئي",
+      paid: "مدفوع",
+      refunded: "مسترد",
+    };
+
+    return map[value ?? ""] ?? value ?? "-";
+  }
+
+  function getRegistrationLabel(value: string | null) {
+    const map: Record<string, string> = {
+      not_registered: "غير مسجل",
+      registered: "مسجل",
+      canceled: "ملغي",
+    };
+
+    return map[value ?? ""] ?? value ?? "-";
+  }
   const filteredLeads = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
@@ -163,6 +212,10 @@ export function LeadsClient({
       status: form.status,
       priority: form.priority,
       owner_id: scope.mode === "user" && scope.targetId ? scope.targetId : currentUserId,
+        assigned_at: new Date().toISOString(),
+        customer_status: form.status,
+        registration_status: "not_registered",
+        payment_status: "unpaid",
     };
 
     if (editingId) {
@@ -448,6 +501,7 @@ export function LeadsClient({
     </AppShell>
   );
 }
+
 
 
 

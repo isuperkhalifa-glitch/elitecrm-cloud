@@ -2,269 +2,345 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   BadgeDollarSign,
   Building2,
   CheckSquare,
   ContactRound,
-  Handshake,
+  FileSpreadsheet,
   LayoutDashboard,
   LogOut,
   Menu,
   Receipt,
-  Search,
   Settings,
+  UserCog,
   UsersRound,
-  UserRoundPlus,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/components/language-provider";
 import { LanguageToggle } from "@/components/language-toggle";
-import { GlobalScopeSwitcher, ScopeBanner } from "@/components/global-scope-switcher";
-import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
-import type { TranslationKey } from "@/lib/i18n/translations";
+import { NotificationBell } from "@/components/notification-bell";
+import { GlobalScopeSwitcher, ScopeBanner } from "@/components/global-scope-switcher";
+import { useScope } from "@/components/scope-provider";
 
 type AppShellProps = {
-  children: ReactNode;
+  titleKey: string;
   userEmail: string | null;
-  fullName: string | null;
-  role: string | null;
-  titleKey: TranslationKey;
+  fullName?: string | null;
+  role?: string | null;
+  children: ReactNode;
 };
 
-const navigationGroups: {
-  labelKey: TranslationKey;
-  items: { href: string; labelKey: TranslationKey; icon: LucideIcon }[];
-}[] = [
+type Role = "admin" | "manager" | "moderator" | "sales" | "finance";
+
+type NavItem = {
+  href: string;
+  labelKey: string;
+  icon: LucideIcon;
+  roles: Role[];
+};
+
+type NavGroup = {
+  labelAr: string;
+  labelEn: string;
+  items: NavItem[];
+};
+
+const allRoles: Role[] = ["admin", "manager", "moderator", "sales", "finance"];
+const adminRoles: Role[] = ["admin", "manager"];
+
+const navGroups: NavGroup[] = [
   {
-    labelKey: "overview",
-    items: [{ href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard }],
-  },
-  {
-    labelKey: "workspace",
+    labelAr: "نظرة عامة",
+    labelEn: "Overview",
     items: [
-      { href: "/companies", labelKey: "companies", icon: Building2 },
-      { href: "/contacts", labelKey: "contacts", icon: ContactRound },
-      { href: "/leads", labelKey: "leads", icon: UserRoundPlus },
-      { href: "/deals", labelKey: "deals", icon: Handshake },
-      { href: "/tasks", labelKey: "tasks", icon: CheckSquare },
-      { href: "/invoices", labelKey: "invoices", icon: Receipt },
-      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign },
+      {
+        href: "/dashboard",
+        labelKey: "dashboard",
+        icon: LayoutDashboard,
+        roles: allRoles,
+      },
     ],
   },
   {
-    labelKey: "management",
+    labelAr: "مساحة العمل",
+    labelEn: "Workspace",
     items: [
-      { href: "/users", labelKey: "users", icon: UsersRound },
-      { href: "/settings", labelKey: "settings", icon: Settings },
+      {
+        href: "/leads",
+        labelKey: "leads",
+        icon: UsersRound,
+        roles: ["admin", "manager", "moderator", "sales"],
+      },
+      {
+        href: "/tasks",
+        labelKey: "tasks",
+        icon: CheckSquare,
+        roles: ["admin", "manager", "sales"],
+      },
+      {
+        href: "/deals",
+        labelKey: "deals",
+        icon: BadgeDollarSign,
+        roles: ["admin", "manager", "sales"],
+      },
+    ],
+  },
+  {
+    labelAr: "المالية",
+    labelEn: "Finance",
+    items: [
+      {
+        href: "/invoices",
+        labelKey: "invoices",
+        icon: Receipt,
+        roles: ["admin", "manager", "finance", "sales"],
+      },
+      {
+        href: "/commissions",
+        labelKey: "commissions",
+        icon: BadgeDollarSign,
+        roles: ["admin", "manager", "finance", "sales"],
+      },
+    ],
+  },
+  {
+    labelAr: "الإدارة",
+    labelEn: "Admin",
+    items: [
+      {
+        href: "/imports",
+        labelKey: "imports",
+        icon: FileSpreadsheet,
+        roles: ["admin", "manager", "moderator"],
+      },
+      {
+        href: "/companies",
+        labelKey: "companies",
+        icon: Building2,
+        roles: ["admin", "manager"],
+      },
+      {
+        href: "/contacts",
+        labelKey: "contacts",
+        icon: ContactRound,
+        roles: ["admin", "manager"],
+      },
+      {
+        href: "/users",
+        labelKey: "users",
+        icon: UserCog,
+        roles: ["admin", "manager"],
+      },
+      {
+        href: "/settings",
+        labelKey: "settings",
+        icon: Settings,
+        roles: ["admin", "manager"],
+      },
     ],
   },
 ];
 
+function normalizeRole(role?: string | null): Role {
+  if (role === "admin") return "admin";
+  if (role === "manager") return "manager";
+  if (role === "moderator") return "moderator";
+  if (role === "finance") return "finance";
+  return "sales";
+}
+
+function roleName(role: Role, isArabic: boolean) {
+  const labels: Record<Role, { ar: string; en: string }> = {
+    admin: { ar: "مدير النظام", en: "Admin" },
+    manager: { ar: "مدير", en: "Manager" },
+    moderator: { ar: "موديريتور", en: "Moderator" },
+    sales: { ar: "سيلز", en: "Sales" },
+    finance: { ar: "مالية", en: "Finance" },
+  };
+
+  return isArabic ? labels[role].ar : labels[role].en;
+}
+
 export function AppShell({
-  children,
+  titleKey,
   userEmail,
   fullName,
   role,
-  titleKey,
+  children,
 }: AppShellProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { t, dir } = useI18n();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const { t, language } = useI18n();
+  const { scope } = useScope();
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("elitecrm-sidebar-open");
-    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+  const isArabic = language === "ar";
+  const realRole = normalizeRole(role);
+  const isRealAdmin = adminRoles.includes(realRole);
 
-    setSidebarOpen(saved === "false" ? false : isDesktop);
-  }, []);
+  const previewRole =
+    isRealAdmin &&
+    scope.mode === "user" &&
+    scope.previewMode === "selected" &&
+    scope.targetRole
+      ? normalizeRole(scope.targetRole)
+      : realRole;
 
-  function toggleSidebar() {
-    const nextValue = !sidebarOpen;
-    setSidebarOpen(nextValue);
-    window.localStorage.setItem("elitecrm-sidebar-open", String(nextValue));
+  const isPreviewMode =
+    isRealAdmin &&
+    scope.mode === "user" &&
+    scope.previewMode === "selected";
+
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.roles.includes(previewRole)),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  function label(key: string) {
+    try {
+      return t(key as never);
+    } catch {
+      return key;
+    }
   }
-
-  const roleLabel =
-    role === "admin" ? t("admin") : role === "sales" ? t("sales") : role ?? "-";
 
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.replace("/login");
+    router.push("/login");
     router.refresh();
   }
 
-  const sidebarTransform = sidebarOpen
-    ? "translateX(0)"
-    : dir === "rtl"
-      ? "translateX(105%)"
-      : "translateX(-105%)";
-
-  const sidebar = (
-    <aside className="elite-sidebar flex h-full w-72 flex-col border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-black/20 backdrop-blur-2xl lg:border-e">
-      <div className="mb-6 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-        <p className="truncate text-sm text-emerald-300">{t("appName")}</p>
-        <h2 className="mt-1 truncate text-xl font-bold text-white">
-          {t("workspace")}
-        </h2>
-      </div>
-
-      <nav className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden">
-        {navigationGroups.map((group) => (
-          <div key={group.labelKey}>
-            <p className="mb-2 px-3 text-xs font-semibold text-slate-500">
-              {t(group.labelKey)}
-            </p>
-
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const active = pathname === item.href;
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    href={item.href}
-                    key={item.href}
-                    onClick={() => {
-                      if (window.innerWidth < 1024) {
-                        setSidebarOpen(false);
-                        window.localStorage.setItem("elitecrm-sidebar-open", "false");
-                      }
-                    }}
-                    className={`elite-nav-link group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${
-                      active
-                        ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-400/20"
-                        : "text-slate-300 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <Icon
-                      className={`h-5 w-5 shrink-0 transition ${
-                        active
-                          ? "text-slate-950"
-                          : "text-slate-400 group-hover:text-emerald-300"
-                      }`}
-                      strokeWidth={2}
-                    />
-                    <span className="truncate">{t(item.labelKey)}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="truncate text-sm font-semibold text-white">
-          {fullName ?? userEmail}
-        </p>
-        <p className="mt-1 text-xs text-emerald-300">
-          {t("role")}: {roleLabel}
-        </p>
-      </div>
-    </aside>
-  );
-
   return (
-    <main
-      className="relative min-h-screen max-w-full overflow-x-hidden bg-slate-950 text-white"
-      dir={dir}
-    >
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_start,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_end,rgba(56,189,248,0.10),transparent_34%),linear-gradient(135deg,#020617_0%,#07111f_55%,#020617_100%)]" />
-
-      <div
-        className="fixed inset-y-0 start-0 z-40 hidden transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block"
-        style={{ transform: sidebarTransform }}
-      >
-        {sidebar}
-      </div>
-
-      {sidebarOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="min-h-screen bg-slate-950 text-white">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
+        <div className="flex min-h-20 items-center gap-3 px-4 lg:px-6">
           <button
-            aria-label={t("close")}
-            className="absolute inset-0 bg-black/65 backdrop-blur-sm"
-            onClick={() => {
-              setSidebarOpen(false);
-              window.localStorage.setItem("elitecrm-sidebar-open", "false");
-            }}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:hidden"
             type="button"
-          />
-          <div className="relative h-full w-72 max-w-[86vw] animate-[eliteSlideIn_0.35s_ease-out]">
-            {sidebar}
+            aria-label="menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-emerald-300">
+              {isPreviewMode
+                ? isArabic
+                  ? "معاينة مستخدم"
+                  : "User preview"
+                : isArabic
+                  ? "رؤية النظام"
+                  : "System view"}
+            </p>
+            <h1 className="truncate text-lg font-black md:text-xl">
+              {label(titleKey)}
+            </h1>
+          </div>
+
+          <div className="hidden min-w-0 flex-1 justify-center xl:flex">
+            <GlobalScopeSwitcher role={role ?? null} />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <LanguageToggle />
+            <ThemeToggle />
+
+            <button
+              onClick={signOut}
+              className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:flex"
+              type="button"
+            >
+              <LogOut className="h-4 w-4" />
+              {isArabic ? "تسجيل الخروج" : "Logout"}
+            </button>
           </div>
         </div>
-      ) : null}
 
-      <section
-        className={`relative z-10 min-h-screen w-full max-w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          sidebarOpen ? "lg:ps-72" : "lg:ps-0"
-        }`}
-      >
-        <header
-          className={`fixed top-0 end-0 start-0 z-[90] border-b border-white/10 bg-slate-950/95 shadow-lg shadow-black/20 backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            sidebarOpen ? "lg:start-72" : "lg:start-0"
-          }`}
-        >
-          <div className="flex flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <button
-                onClick={toggleSidebar}
-                className="elite-icon-button shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm hover:bg-white/10"
-                type="button"
-                aria-label={t("menu")}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+        <div className="block border-t border-white/10 px-4 py-3 xl:hidden">
+          <GlobalScopeSwitcher role={role ?? null} />
+        </div>
+      </header>
 
-              <div className="min-w-0">
-                <p className="text-xs text-emerald-300">{t("currentPage")}</p>
-                <h1 className="truncate text-xl font-bold">{t(titleKey)}</h1>
-              </div>
-            </div>
+      <aside className="fixed bottom-0 top-0 z-40 hidden w-72 border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl lg:block rtl:right-0 rtl:border-l ltr:left-0 ltr:border-r">
+        <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
+          <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
+            <p className="text-xs text-emerald-300">
+              {isArabic ? "مساحة العمل" : "Workspace"}
+            </p>
+            <h2 className="mt-1 truncate text-lg font-black">
+              {fullName ?? userEmail ?? "-"}
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">
+                {roleName(realRole, isArabic)}
+              </span>
 
-            <div className="order-3 min-w-0 basis-full md:order-none md:flex md:min-w-[14rem] md:flex-1 md:basis-0 md:justify-center md:px-6">
-              <div className="flex w-full items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-500 md:max-w-md">
-                <Search className="h-4 w-4 shrink-0 text-slate-500" />
-                <span className="truncate">{t("searchPlaceholder")}</span>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <GlobalScopeSwitcher role={role} />
-              <NotificationBell />
-              <LanguageToggle />
-              <ThemeToggle />
-              <button
-                onClick={signOut}
-                className="elite-action-button flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:px-4"
-                type="button"
-                aria-label={t("signOut")}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("signOut")}</span>
-              </button>
+              {isPreviewMode ? (
+                <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">
+                  {roleName(previewRole, isArabic)}
+                </span>
+              ) : null}
             </div>
           </div>
-        </header>
 
-        <div className="elitecrm-page-width safe-page p-3 pt-32 sm:p-4 sm:pt-32 lg:p-6 lg:pt-24 xl:p-8 xl:pt-24">
+          <nav className="space-y-5">
+            {visibleGroups.map((group) => (
+              <div key={group.labelEn}>
+                <p className="mb-2 px-3 text-xs font-bold text-slate-500">
+                  {isArabic ? group.labelAr : group.labelEn}
+                </p>
+
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active =
+                      pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                          active
+                            ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
+                            : "text-slate-300 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" />
+                        <span>{label(item.labelKey)}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          {isPreviewMode ? (
+            <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
+              {isArabic
+                ? "أنت الآن تشاهد القائمة والصلاحيات كما تظهر للمستخدم المختار."
+                : "You are previewing the menu and permissions as the selected user."}
+            </div>
+          ) : null}
+        </div>
+      </aside>
+
+      <main className="min-h-screen pt-32 lg:rtl:pr-72 lg:ltr:pl-72">
+        <div className="elitecrm-page-width safe-page px-4 pb-10 lg:px-6">
           <ScopeBanner />
           <div className="elite-page-enter">{children}</div>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
-
-
-
-
-
-
-
