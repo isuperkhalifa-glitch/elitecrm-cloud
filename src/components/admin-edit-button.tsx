@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,7 +17,6 @@ export function AdminEditButton({ role }: Props) {
 
   useEffect(() => {
     if (!canEdit) return;
-
     setEnabled(localStorage.getItem("elitecrm-admin-edit-mode") === "true");
   }, [canEdit]);
 
@@ -52,7 +51,7 @@ export function AdminEditButton({ role }: Props) {
 
         <button
           type="button"
-          onClick={() => router.push(`/settings?page=${encodeURIComponent(pageKey)}`)}
+          onClick={() => router.push("/settings?page=" + encodeURIComponent(pageKey))}
           className="flex items-center gap-2 rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 shadow-2xl transition hover:bg-emerald-300"
         >
           <Settings2 className="h-4 w-4" />

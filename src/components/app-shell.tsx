@@ -1,5 +1,4 @@
-﻿"use client";
-import { AdminEditButton } from "@/components/admin-edit-button";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,17 +16,17 @@ import {
   Settings,
   UserCog,
   UsersRound,
-  X,
   type LucideIcon,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useI18n } from "@/components/language-provider";
-import { LanguageToggle } from "@/components/language-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { NotificationBell } from "@/components/notification-bell";
+import { AdminEditButton } from "@/components/admin-edit-button";
 import { GlobalScopeSwitcher, ScopeBanner } from "@/components/global-scope-switcher";
+import { LanguageToggle } from "@/components/language-toggle";
+import { useI18n } from "@/components/language-provider";
+import { NotificationBell } from "@/components/notification-bell";
 import { useScope } from "@/components/scope-provider";
 import { useSystemSettings } from "@/components/system-settings-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { createClient } from "@/lib/supabase/client";
 
 type AppShellProps = {
   titleKey: string;
@@ -54,7 +53,7 @@ type NavGroup = {
 };
 
 const allRoles: Role[] = ["admin", "manager", "moderator", "sales", "finance"];
-const adminRoles: Role[] = ["admin", "manager"];
+const previewAdminRoles: Role[] = ["admin", "manager"];
 
 const navGroups: NavGroup[] = [
   {
@@ -198,7 +197,7 @@ export function AppShell({
 
   const isArabic = language === "ar";
   const realRole = normalizeRole(role);
-  const isRealAdmin = adminRoles.includes(realRole);
+  const isRealAdmin = previewAdminRoles.includes(realRole);
 
   const previewRole =
     isRealAdmin &&
@@ -216,9 +215,10 @@ export function AppShell({
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) =>
-        item.roles.includes(previewRole) &&
-        (!item.featureKey || getBooleanSetting(item.featureKey, true))
+      items: group.items.filter(
+        (item) =>
+          item.roles.includes(previewRole) &&
+          (!item.featureKey || getBooleanSetting(item.featureKey, true))
       ),
     }))
     .filter((group) => group.items.length > 0);
@@ -324,17 +324,16 @@ export function AppShell({
                     const Icon = item.icon;
                     const active =
                       pathname === item.href ||
-                      pathname.startsWith(`${item.href}/`);
+                      pathname.startsWith(item.href + "/");
 
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-                          active
+                        className={"elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
+                          (active
                             ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
-                            : "text-slate-300 hover:bg-white/10 hover:text-white"
-                        }`}
+                            : "text-slate-300 hover:bg-white/10 hover:text-white")}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
                         <span>{label(item.labelKey)}</span>
@@ -359,13 +358,10 @@ export function AppShell({
       <main className="min-h-screen pt-32 lg:rtl:pr-72 lg:ltr:pl-72">
         <div className="elitecrm-page-width safe-page px-4 pb-10 lg:px-6">
           <ScopeBanner />
-        <AdminEditButton role={role ?? null} />
+          <AdminEditButton role={role ?? null} />
           <div className="elite-page-enter">{children}</div>
         </div>
       </main>
     </div>
   );
 }
-
-
-

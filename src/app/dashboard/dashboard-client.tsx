@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
 import { useScope } from "@/components/scope-provider";
+import { usePageText } from "@/components/page-settings";
+import { useSystemSettings } from "@/components/system-settings-provider";
 import {
   BadgeDollarSign,
   Banknote,
@@ -143,6 +145,17 @@ export function DashboardClient({
   function tx(ar: string, en: string) {
     return isArabic ? ar : en;
   }
+
+
+  const { getBooleanSetting } = useSystemSettings();
+  const invoicesEnabled = getBooleanSetting("features.invoices.enabled", true);
+  const commissionsEnabled = getBooleanSetting("features.commissions.enabled", true);
+  const pageTitle = usePageText("pages.dashboard.title", "لوحة التحكم", "Dashboard");
+  const pageDescription = usePageText(
+    "pages.dashboard.description",
+    "تابع العملاء والمتابعات والفواتير والعمولات حسب نطاق العرض.",
+    "Track customers, follow-ups, invoices, and commissions by scope."
+  );
 
   function money(value: number | string | null) {
     return new Intl.NumberFormat(isArabic ? "ar-EG" : "en-US", {
@@ -322,12 +335,12 @@ export function DashboardClient({
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm text-emerald-300">
-              {tx("داشبورد ذكي حسب نطاق العرض", "Scope-aware dashboard")}
+              {pageDescription}
             </p>
             <h1 className="mt-1 text-3xl font-black text-white">
               {scope.mode === "all"
-                ? tx("كل النظام", "Full system")
-                : scope.targetName}
+                ? pageTitle
+                : `${pageTitle} — ${scope.targetName ?? ""}`}
             </h1>
             <p className="mt-2 text-sm text-slate-400">
               {isUserPreview
@@ -361,9 +374,9 @@ export function DashboardClient({
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title={tx("الصفقات", "Deals")} value={scopedDeals.length} icon={Route} />
-        <StatCard title={tx("الفواتير غير المدفوعة", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" />
-        <StatCard title={tx("عمولات مستحقة", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" />
-        <StatCard title={tx("عمولات مدفوعة", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" />
+        {invoicesEnabled ? <StatCard title={tx("الفواتير غير المدفوعة", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("عمولات مستحقة", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("عمولات مدفوعة", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
@@ -442,22 +455,22 @@ export function DashboardClient({
               icon={UsersRound}
             />
 
-            {!isModeratorPreview ? (
-              <>
-                <QuickAction
-                  href="/invoices"
+            {!isModeratorPreview && invoicesEnabled ? (
+              <QuickAction
+                href="/invoices"
                   title={tx("الفواتير", "Invoices")}
                   description={tx("مراجعة المدفوعات والفواتير.", "Review invoices and payments.")}
                   icon={Receipt}
-                />
+              />
+            ) : null}
 
-                <QuickAction
-                  href="/commissions"
+            {!isModeratorPreview && commissionsEnabled ? (
+              <QuickAction
+                href="/commissions"
                   title={tx("العمولات", "Commissions")}
                   description={tx("مراجعة العمولات المستحقة والمدفوعة.", "Review due and paid commissions.")}
                   icon={BadgeDollarSign}
-                />
-              </>
+              />
             ) : null}
           </div>
         </section>

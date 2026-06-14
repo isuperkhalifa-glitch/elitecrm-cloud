@@ -16,7 +16,10 @@ export async function GET() {
       .order("key", { ascending: true });
 
     if (error) {
-      return NextResponse.json({ settings: mergeSystemSettings([]), warning: error.message });
+      return NextResponse.json({
+        settings: mergeSystemSettings([]),
+        warning: error.message,
+      });
     }
 
     return NextResponse.json({ settings: mergeSystemSettings((data ?? []) as any) });

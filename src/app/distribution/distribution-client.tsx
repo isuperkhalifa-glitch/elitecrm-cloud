@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
+import { usePageText } from "@/components/page-settings";
 import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
@@ -72,6 +73,12 @@ export function DistributionClient({
     return isArabic ? ar : en;
   }
 
+  const pageTitle = usePageText("pages.distribution.title", "توزيع العملاء", "Customer Distribution");
+  const pageDescription = usePageText(
+    "pages.distribution.description",
+    "توزيع العملاء على فريق السيلز ومتابعة حالة التوزيع.",
+    "Assign customers to the sales team and monitor distribution status."
+  );
   const salesUsers = useMemo(() => {
     return profiles.filter((profile) =>
       ["sales", "admin", "manager"].includes(profile.role ?? "")
@@ -214,8 +221,8 @@ export function DistributionClient({
       <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <p className="text-sm text-emerald-300">{tx("توزيع العملاء", "Customer Distribution")}</p>
-            <h1 className="text-3xl font-black text-white">{tx("مساحة الموديريتور", "Moderator Workspace")}</h1>
+            <p className="text-sm text-emerald-300">{pageDescription}</p>
+            <h1 className="text-3xl font-black text-white">{pageTitle}</h1>
           </div>
 
           <div className="flex flex-col gap-3 md:flex-row">

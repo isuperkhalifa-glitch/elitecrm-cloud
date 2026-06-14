@@ -20,7 +20,6 @@ type SystemSettingsContextValue = {
 };
 
 const defaultSettings = mergeSystemSettings([]);
-
 const SystemSettingsContext = createContext<SystemSettingsContextValue | null>(null);
 
 function toMap(settings: SystemSetting[]) {
@@ -54,7 +53,6 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
         const result = await response.json();
 
         if (!active || !Array.isArray(result.settings)) return;
-
         setSettings(mergeSystemSettings(result.settings));
       } catch {
         if (active) setSettings(defaultSettings);

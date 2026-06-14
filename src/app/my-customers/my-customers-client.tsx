@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
 import { useScope } from "@/components/scope-provider";
+import { usePageText, useSettingOptions } from "@/components/page-settings";
 import { createClient } from "@/lib/supabase/client";
+import { useSystemSettings } from "@/components/system-settings-provider";
 import {
   CalendarClock,
   CheckCircle2,
@@ -121,6 +123,15 @@ export function MyCustomersClient({
     return isArabic ? ar : en;
   }
 
+  const { getBooleanSetting } = useSystemSettings();
+  const transfersEnabled = getBooleanSetting("features.transfers.enabled", true);
+  const customerStatusesFromSettings = useSettingOptions("crm.customer_statuses", customerStatuses);
+  const pageTitle = usePageText("pages.my-customers.title", "عملائي", "My Customers");
+  const pageDescription = usePageText(
+    "pages.my-customers.description",
+    "مساحة متابعة العملاء للسيلز: ملاحظات، مواعيد متابعة، حالات، وتحويلات.",
+    "Sales workspace for notes, follow-ups, statuses, and transfers."
+  );
   const effectiveUserId =
     isAdmin && scope.mode === "user" && scope.targetId ? scope.targetId : currentUserId;
 
@@ -359,10 +370,10 @@ export function MyCustomersClient({
         <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="text-sm text-emerald-300">
-              {tx("مساحة عمل السيلز", "Sales Workspace")}
+              {pageDescription}
             </p>
             <h1 className="text-3xl font-black text-white">
-              {tx("عملائي", "My Customers")}
+              {pageTitle}
             </h1>
           </div>
 
@@ -383,7 +394,7 @@ export function MyCustomersClient({
               className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
             >
               <option value="all">{tx("كل الحالات", "All statuses")}</option>
-              {customerStatuses.map((status) => (
+              {customerStatusesFromSettings.map((status) => (
                 <option key={status} value={status}>
                   {statusLabel(status)}
                 </option>
@@ -476,7 +487,7 @@ export function MyCustomersClient({
                       disabled={savingId === lead.id}
                       className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-60"
                     >
-                      {customerStatuses.map((status) => (
+                      {customerStatusesFromSettings.map((status) => (
                         <option key={status} value={status}>
                           {statusLabel(status)}
                         </option>
@@ -516,6 +527,7 @@ export function MyCustomersClient({
                       </button>
                     </div>
 
+                    {transfersEnabled ? (
                     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-3">
                       <p className="mb-2 text-xs text-slate-500">{tx("تحويل لسيلز آخر", "Transfer to another sales")}</p>
 
@@ -569,6 +581,7 @@ export function MyCustomersClient({
                         </button>
                       </div>
                     </div>
+                    ) : null}
                   </div>
                 </div>
               </article>

@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
 import { useScope } from "@/components/scope-provider";
+import { usePageText, useSettingOptions } from "@/components/page-settings";
 import { createClient } from "@/lib/supabase/client";
 
 type Lead = {
@@ -68,6 +69,14 @@ export function LeadsClient({
 }: LeadsClientProps) {
   const { t } = useI18n();
   const { scope } = useScope();
+  const pageTitle = usePageText("pages.leads.title", "العملاء", "Leads");
+  const pageDescription = usePageText(
+    "pages.leads.description",
+    "إضافة وإدارة عملاء الدورات مع الحالة والأولوية ومصدر العميل.",
+    "Add and manage training customers with status, priority, and source."
+  );
+  const leadStatusOptions = useSettingOptions("crm.lead_statuses", ["new", "contacted", "qualified", "converted", "lost"]);
+  const priorityOptions = useSettingOptions("crm.priorities", ["low", "medium", "high", "urgent"]);
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [form, setForm] = useState<LeadForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -131,7 +140,7 @@ export function LeadsClient({
   const filteredLeads = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    if (!keyword) return leads;
+    if (!keyword) return scopedLeads;
 
     return scopedLeads.filter((lead) =>
       [
@@ -347,11 +356,11 @@ export function LeadsClient({
                   onChange={(event) => updateField("status", event.target.value)}
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
                 >
-                  <option value="new">{t("newLead")}</option>
-                  <option value="contacted">{t("contactedLead")}</option>
-                  <option value="qualified">{t("qualifiedLead")}</option>
-                  <option value="converted">{t("convertedLead")}</option>
-                  <option value="lost">{t("lostLead")}</option>
+                  {leadStatusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {getStatusLabel(status)}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -362,10 +371,11 @@ export function LeadsClient({
                   onChange={(event) => updateField("priority", event.target.value)}
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
                 >
-                  <option value="low">{t("lowPriority")}</option>
-                  <option value="medium">{t("mediumPriority")}</option>
-                  <option value="high">{t("highPriority")}</option>
-                  <option value="urgent">{t("urgentPriority")}</option>
+                  {priorityOptions.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {getPriorityLabel(priority)}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -408,8 +418,8 @@ export function LeadsClient({
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl sm:p-6">
           <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm text-emerald-300">{t("totalLeads")}</p>
-              <h2 className="mt-1 text-3xl font-bold">{leads.length}</h2>
+              <p className="text-sm text-emerald-300">{pageDescription}</p>
+              <h2 className="mt-1 text-3xl font-bold">{pageTitle} ({filteredLeads.length})</h2>
             </div>
 
             <input

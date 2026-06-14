@@ -1,7 +1,7 @@
-﻿import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
-import { SettingsClient } from "./settings-client";
 import { mergeSystemSettings } from "@/lib/settings/defaults";
+import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage({ searchParams }: any) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -11,7 +11,6 @@ export default async function SettingsPage({ searchParams }: any) {
       : null;
 
   const { supabase, user, profile } = await getCurrentUserProfile();
-
   const canEdit = profile?.role === "admin";
 
   if (!canEdit) {
@@ -45,4 +44,3 @@ export default async function SettingsPage({ searchParams }: any) {
     />
   );
 }
-
