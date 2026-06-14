@@ -11,6 +11,7 @@ import {
   UploadCloud,
   XCircle,
 } from "lucide-react";
+import { guessCourseId, normalizeLeadStatus, splitPhone } from "@/lib/crm/customer-core";
 
 type ImportsClientProps = {
   currentUserId: string;
@@ -25,6 +26,8 @@ type PreparedLead = {
   external_id: string | null;
   full_name: string;
   phone: string | null;
+  country_code: string | null;
+  phone_number: string | null;
   email: string | null;
   company_name: string | null;
   source: string | null;
@@ -32,6 +35,11 @@ type PreparedLead = {
   priority: string;
   owner_id: string | null;
   program: string | null;
+  course_id: string | null;
+  lead_type: string;
+  customer_status: string;
+  registration_status: string;
+  payment_status: string;
   notes: string | null;
   system_source: string | null;
   agent_id: number | null;
@@ -101,18 +109,7 @@ function parseDate(value: string) {
 }
 
 function mapStatus(value: string) {
-  const status = value.trim();
-
-  const map: Record<string, string> = {
-    notInterested: "not_interested",
-    wrongNumber: "wrong_number",
-    waitingOrConnecting: "follow_up",
-    noReplyOrClosed: "no_answer",
-    interested: "interested",
-    new: "new",
-  };
-
-  return (map[status] ?? status) || "new";
+  return normalizeLeadStatus(value);
 }
 
 function buildLeadPayload(
@@ -134,7 +131,9 @@ function buildLeadPayload(
       "mobile",
     ]);
     const phone = normalizePhone(rawPhone);
+    const phoneParts = splitPhone(phone);
     const program = readText(row, ["program"]);
+    const courseId = guessCourseId(program);
     const notes = cleanNotes(
       [
         readText(row, ["notes"]),
@@ -162,6 +161,8 @@ function buildLeadPayload(
       external_id: externalId || null,
       full_name: name,
       phone,
+      country_code: phoneParts.country_code,
+      phone_number: phoneParts.phone_number || null,
       email: null,
       company_name: program || null,
       source: readText(row, ["source"]) || "excel_import",
@@ -169,6 +170,11 @@ function buildLeadPayload(
       priority: readNumber(row, ["potential"]) ? "high" : "medium",
       owner_id: null,
       program: program || null,
+      course_id: courseId,
+      lead_type: "fresh",
+      customer_status: mapStatus(readText(row, ["status"])),
+      registration_status: "not_registered",
+      payment_status: mapStatus(readText(row, ["status"])) === "paid" ? "paid" : "unpaid",
       notes: notes || null,
       system_source: readText(row, ["systemSource"]) || null,
       agent_id: readNumber(row, ["agentId"]),

@@ -118,6 +118,9 @@ function crmName(key: string, label: string) {
   const names: Record<string, string> = {
     "crm.lead_statuses": "حالات العملاء",
     "crm.customer_statuses": "حالات رحلة العميل",
+    "crm.lead_types": "أنواع العملاء",
+    "crm.country_codes": "أكواد الدول",
+    "crm.courses": "الدورات",
     "crm.registration_statuses": "حالات التسجيل",
     "crm.priorities": "الأولويات",
     "crm.payment_statuses": "حالات الدفع",

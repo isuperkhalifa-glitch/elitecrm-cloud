@@ -19,6 +19,10 @@ type Lead = {
   id: string;
   full_name: string | null;
   phone: string | null;
+  country_code?: string | null;
+  phone_number?: string | null;
+  lead_type?: string | null;
+  course_id?: string | null;
   email: string | null;
   company_name: string | null;
   source: string | null;
@@ -160,11 +164,9 @@ export function DistributionClient({
       .update({
         owner_id: salesId,
         assigned_at: new Date().toISOString(),
-        customer_status: "assigned",
-        status: "assigned",
       })
       .in("id", ids)
-      .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,customer_status,registration_status,payment_status,created_at");
+      .select("*");
 
     if (error) {
       setError(error.message);

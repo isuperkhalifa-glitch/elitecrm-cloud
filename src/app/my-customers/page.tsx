@@ -1,4 +1,4 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { MyCustomersClient } from "./my-customers-client";
 
 export default async function MyCustomersPage() {
@@ -7,7 +7,7 @@ export default async function MyCustomersPage() {
   const [{ data: leads }, { data: profiles }] = await Promise.all([
     supabase
       .from("leads")
-      .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,last_contact_at,next_follow_up_at,last_note,customer_status,registration_status,payment_status,transfer_reason,transferred_at,created_at")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(1000),
 

@@ -9,7 +9,7 @@ export default async function DistributionPage() {
   const [{ data: leads }, { data: profiles }] = await Promise.all([
     supabase
       .from("leads")
-      .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,customer_status,registration_status,payment_status,created_at")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(1000),
 

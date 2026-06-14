@@ -21,11 +21,16 @@ import {
   UsersRound,
   XCircle,
 } from "lucide-react";
+import { getLeadStatusClass, getLeadStatusLabel, leadStatusValues } from "@/lib/crm/customer-core";
 
 type Lead = {
   id: string;
   full_name: string | null;
   phone: string | null;
+  country_code?: string | null;
+  phone_number?: string | null;
+  lead_type?: string | null;
+  course_id?: string | null;
   email: string | null;
   company_name: string | null;
   source: string | null;
@@ -61,19 +66,7 @@ type Props = {
   role: string | null;
 };
 
-const customerStatuses = [
-  "new",
-  "assigned",
-  "contacted",
-  "interested",
-  "follow_up",
-  "no_answer",
-  "not_interested",
-  "wrong_number",
-  "registered",
-  "paid",
-  "canceled",
-];
+const customerStatuses = [...leadStatusValues];
 
 function normalizePhone(phone: string | null) {
   if (!phone) return "";
@@ -189,24 +182,14 @@ export function MyCustomersClient({
   }, [scopedLeads]);
 
   function statusLabel(value: string | null) {
-    const map: Record<string, string> = {
-      new: tx("جديد", "New"),
-      assigned: tx("موزع", "Assigned"),
-      contacted: tx("تم التواصل", "Contacted"),
-      interested: tx("مهتم", "Interested"),
-      follow_up: tx("متابعة", "Follow-up"),
-      no_answer: tx("لا يرد", "No answer"),
-      not_interested: tx("غير مهتم", "Not interested"),
-      wrong_number: tx("رقم خطأ", "Wrong number"),
+    const extra: Record<string, string> = {
       registered: tx("مسجل", "Registered"),
-      paid: tx("مدفوع", "Paid"),
-      canceled: tx("ملغي", "Canceled"),
       unpaid: tx("غير مدفوع", "Unpaid"),
       partial: tx("دفع جزئي", "Partial"),
       not_registered: tx("غير مسجل", "Not registered"),
     };
 
-    return map[value ?? ""] ?? value ?? "-";
+    return extra[value ?? ""] ?? getLeadStatusLabel(value, language);
   }
 
   function dateLabel(value: string | null) {
@@ -236,7 +219,7 @@ export function MyCustomersClient({
       .from("leads")
       .update(patch)
       .eq("id", leadId)
-      .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,last_contact_at,next_follow_up_at,last_note,customer_status,registration_status,payment_status,transfer_reason,transferred_at,created_at")
+      .select("*")
       .single();
 
     if (error || !data) {
@@ -257,14 +240,10 @@ export function MyCustomersClient({
     const patch: Partial<Lead> = {
       status: nextStatus,
       customer_status: nextStatus,
-      last_contact_at: ["contacted", "interested", "follow_up", "registered", "paid"].includes(nextStatus)
+      last_contact_at: ["interested", "need_offer", "busy", "paid"].includes(nextStatus)
         ? new Date().toISOString()
         : lead.last_contact_at,
     };
-
-    if (nextStatus === "registered") {
-      patch.registration_status = "registered";
-    }
 
     if (nextStatus === "paid") {
       patch.registration_status = "registered";
@@ -293,8 +272,8 @@ export function MyCustomersClient({
 
     await updateLead(lead.id, {
       next_follow_up_at: new Date(value).toISOString(),
-      customer_status: "follow_up",
-      status: "follow_up",
+      customer_status: "busy",
+      status: "busy",
     });
   }
 
@@ -313,8 +292,7 @@ export function MyCustomersClient({
       transfer_reason: transfer.reason || tx("تحويل من مساحة عمل السيلز", "Transferred from sales workspace"),
       transferred_at: new Date().toISOString(),
       assigned_at: new Date().toISOString(),
-      customer_status: "assigned",
-      status: "assigned",
+      lead_type: "redirected",
     } as Partial<Lead>);
   }
 

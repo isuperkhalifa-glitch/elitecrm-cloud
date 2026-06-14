@@ -45,7 +45,7 @@ export default async function RegistrationsPage() {
 
   let leadsQuery = supabase
     .from("leads")
-    .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,last_contact_at,next_follow_up_at,last_note,customer_status,registration_status,payment_status,created_at")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(1000);
 
