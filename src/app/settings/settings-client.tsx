@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
   Database,
@@ -134,32 +133,28 @@ export function SettingsClient({
       return;
     }
 
-    const supabase = createClient();
+    const response = await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: row.key,
+        label: row.label,
+        group_name: row.group_name,
+        value: parsedValue,
+        description: row.description,
+        is_public: row.is_public ?? true,
+      }),
+    });
 
-    const { data, error } = await supabase
-      .from("system_settings")
-      .upsert(
-        {
-          key: row.key,
-          label: row.label,
-          group_name: row.group_name,
-          value: parsedValue,
-          description: row.description,
-          is_public: row.is_public ?? true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "key" }
-      )
-      .select("key,label,group_name,value,description,is_public,updated_at")
-      .single();
+    const result = await response.json();
 
-    if (error || !data) {
-      setError(error?.message ?? "تعذر حفظ الإعداد.");
+    if (!response.ok || !result.setting) {
+      setError(result.error ?? "تعذر حفظ الإعداد.");
       setSavingKey("");
       return;
     }
 
-    const saved = data as SettingRow;
+    const saved = result.setting as SettingRow;
 
     setRows((current) =>
       current.map((item) =>
@@ -193,41 +188,37 @@ export function SettingsClient({
 
     setSavingKey(newKey);
 
-    const supabase = createClient();
+    const response = await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: newKey.trim(),
+        label: newLabel.trim(),
+        group_name: newGroup.trim() || "custom",
+        value: parsedValue,
+        description: pageKey
+          ? "إعداد مخصص لصفحة " + pageKey
+          : "إعداد مخصص من لوحة الأدمن",
+        is_public: true,
+      }),
+    });
 
-    const { data, error } = await supabase
-      .from("system_settings")
-      .upsert(
-        {
-          key: newKey.trim(),
-          label: newLabel.trim(),
-          group_name: newGroup.trim() || "custom",
-          value: parsedValue,
-          description: pageKey
-            ? `إعداد مخصص لصفحة ${pageKey}`
-            : "إعداد مخصص من لوحة الأدمن",
-          is_public: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "key" }
-      )
-      .select("key,label,group_name,value,description,is_public,updated_at")
-      .single();
+    const result = await response.json();
 
-    if (error || !data) {
-      setError(error?.message ?? "تعذر إضافة الإعداد.");
+    if (!response.ok || !result.setting) {
+      setError(result.error ?? "تعذر إضافة الإعداد.");
       setSavingKey("");
       return;
     }
 
-    const added = data as SettingRow;
+    const added = result.setting as SettingRow;
 
     setRows((current) => [
       ...current.filter((row) => row.key !== added.key),
       { ...added, valueText: toText(added.value) },
     ]);
 
-    setNewKey(pageKey ? `${prefix}custom` : "");
+    setNewKey(pageKey ? prefix + "custom" : "");
     setNewLabel("");
     setNewGroup(pageKey ? "pages" : "custom");
     setNewValue('"قيمة جديدة"');
@@ -240,11 +231,14 @@ export function SettingsClient({
     setError("");
     setSavingKey(key);
 
-    const supabase = createClient();
-    const { error } = await supabase.from("system_settings").delete().eq("key", key);
+    const response = await fetch("/api/admin/settings?key=" + encodeURIComponent(key), {
+      method: "DELETE",
+    });
 
-    if (error) {
-      setError(error.message);
+    const result = await response.json();
+
+    if (!response.ok) {
+      setError(result.error ?? "تعذر حذف الإعداد.");
       setSavingKey("");
       return;
     }

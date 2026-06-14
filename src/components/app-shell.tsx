@@ -153,7 +153,7 @@ const navGroups: NavGroup[] = [
         href: "/settings",
         labelKey: "settings",
         icon: Settings,
-        roles: ["admin", "manager"],
+        roles: ["admin"],
       },
     ],
   },

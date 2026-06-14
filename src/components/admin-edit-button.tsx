@@ -13,7 +13,7 @@ export function AdminEditButton({ role }: Props) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(false);
 
-  const canEdit = role === "admin" || role === "manager";
+  const canEdit = role === "admin";
 
   useEffect(() => {
     if (!canEdit) return;

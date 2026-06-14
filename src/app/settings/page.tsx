@@ -11,7 +11,7 @@ export default async function SettingsPage({ searchParams }: any) {
 
   const { supabase, user, profile } = await getCurrentUserProfile();
 
-  const canEdit = profile?.role === "admin" || profile?.role === "manager";
+  const canEdit = profile?.role === "admin";
 
   if (!canEdit) {
     return (
@@ -22,7 +22,7 @@ export default async function SettingsPage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-200">
-          هذه الصفحة متاحة للأدمن والمدير فقط.
+          هذه الصفحة متاحة للأدمن فقط.
         </div>
       </AppShell>
     );
