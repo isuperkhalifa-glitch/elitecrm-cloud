@@ -15,7 +15,7 @@ type I18nContextValue = {
   dir: "rtl" | "ltr";
   setLanguage: (language: Language) => void;
   toggleLanguage: () => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey | string) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -53,7 +53,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       dir,
       setLanguage,
       toggleLanguage,
-      t: (key) => translations[language][key] ?? String(key),
+      t: (key) => translations[language][key as TranslationKey] ?? String(key),
     }),
     [language]
   );
@@ -70,4 +70,3 @@ export function useI18n() {
 
   return context;
 }
-

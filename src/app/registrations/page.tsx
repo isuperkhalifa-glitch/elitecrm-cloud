@@ -8,7 +8,6 @@ const allowedRoles = new Set(["admin", "manager", "sales", "finance"]);
 export default async function RegistrationsPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
   const role = profile?.role ?? null;
-
   const systemSettings = await loadPublicSystemSettings(supabase);
 
   if (!isFeatureEnabled(systemSettings, "features.registrations.enabled", true)) {
@@ -20,9 +19,9 @@ export default async function RegistrationsPage() {
         role={role}
       >
         <div className="safe-card rounded-[2rem] border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
-          <h2 className="text-2xl font-black">ط§ظ„طھط³ط¬ظٹظ„ط§طھ ظ…طھظˆظ‚ظپط© ط­ط§ظ„ظٹظ‹ط§</h2>
+          <h2 className="text-2xl font-black">التسجيلات متوقفة حاليًا</h2>
           <p className="mt-3 text-sm leading-7 text-amber-100/80">
-            ظٹظ…ظƒظ† ظ„ظ„ط£ط¯ظ…ظ† طھط´ط؛ظٹظ„ طµظپط­ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ ظ…ظ† ظ…ط±ظƒط² ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ظ†ط¸ط§ظ….
+            يمكن للأدمن تشغيل صفحة التسجيلات من مركز إعدادات النظام.
           </p>
         </div>
       </AppShell>
@@ -37,8 +36,8 @@ export default async function RegistrationsPage() {
         fullName={profile?.full_name ?? null}
         role={role}
       >
-        <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-200">
-          ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ط؛ظٹط± ظ…طھط§ط­ط© ظ„طµظ„ط§ط­ظٹطھظƒ ط§ظ„ط­ط§ظ„ظٹط©.
+        <div className="safe-card rounded-[2rem] border border-red-400/20 bg-red-400/10 p-8 text-red-100">
+          هذه الصفحة غير متاحة لصلاحيتك الحالية.
         </div>
       </AppShell>
     );

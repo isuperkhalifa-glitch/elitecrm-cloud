@@ -10,6 +10,19 @@ export type SystemSetting = {
 
 export const defaultSystemSettings: SystemSetting[] = [
   {
+  key: "crm.registration_statuses",
+  label: "حالات التسجيل",
+  group_name: "crm",
+  value: [
+    "not_registered",
+    "registered",
+    "canceled"
+  ],
+  description: "حالات تسجيل العميل.",
+  is_public: true
+},
+
+  {
     key: "features.registrations.enabled",
     label: "طھط´ط؛ظٹظ„ ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
     group_name: "features",

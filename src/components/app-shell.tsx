@@ -58,32 +58,23 @@ const previewAdminRoles: Role[] = ["admin", "manager"];
 
 const navGroups: NavGroup[] = [
   {
-    labelAr: "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629",
+    labelAr: "نظرة عامة",
     labelEn: "Overview",
-    items: [
-      { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard, roles: allRoles },
-    ],
+    items: [{ href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard, roles: allRoles }],
   },
   {
-    labelAr: "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644",
+    labelAr: "مساحة العمل",
     labelEn: "Workspace",
     items: [
       { href: "/my-customers", labelKey: "myCustomers", icon: UsersRound, roles: ["admin", "manager", "sales"] },
-      {
-        href: "/registrations",
-        labelKey: "registrations",
-        icon: CheckSquare,
-        featureKey: "features.registrations.enabled",
-        roles: ["admin", "manager", "sales", "finance"],
-      },
-      {
-        href: "/leads", labelKey: "leads", icon: UsersRound, roles: ["admin", "manager", "moderator", "sales"] },
+      { href: "/registrations", labelKey: "registrations", icon: CheckSquare, featureKey: "features.registrations.enabled", roles: ["admin", "manager", "sales", "finance"] },
+      { href: "/leads", labelKey: "leads", icon: UsersRound, roles: ["admin", "manager", "moderator", "sales"] },
       { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["admin", "manager", "sales"] },
       { href: "/deals", labelKey: "deals", icon: BadgeDollarSign, featureKey: "features.deals.enabled", roles: ["admin", "manager", "sales", "finance"] },
     ],
   },
   {
-    labelAr: "\u0627\u0644\u0645\u0627\u0644\u064a\u0629",
+    labelAr: "المالية",
     labelEn: "Finance",
     items: [
       { href: "/invoices", labelKey: "invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["admin", "manager", "finance", "sales"] },
@@ -91,7 +82,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    labelAr: "\u0627\u0644\u0625\u062f\u0627\u0631\u0629",
+    labelAr: "الإدارة",
     labelEn: "Admin",
     items: [
       { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["admin", "manager", "moderator"] },
@@ -114,23 +105,17 @@ function normalizeRole(role?: string | null): Role {
 
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    admin: { ar: "\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Admin" },
-    manager: { ar: "\u0645\u062f\u064a\u0631", en: "Manager" },
-    moderator: { ar: "\u0645\u0648\u062f\u064a\u0631\u064a\u062a\u0648\u0631", en: "Moderator" },
-    sales: { ar: "\u0633\u064a\u0644\u0632", en: "Sales" },
-    finance: { ar: "\u0645\u0627\u0644\u064a\u0629", en: "Finance" },
+    admin: { ar: "مدير النظام", en: "Admin" },
+    manager: { ar: "مدير", en: "Manager" },
+    moderator: { ar: "موديريتور", en: "Moderator" },
+    sales: { ar: "سيلز", en: "Sales" },
+    finance: { ar: "مالية", en: "Finance" },
   };
 
   return isArabic ? labels[role].ar : labels[role].en;
 }
 
-export function AppShell({
-  titleKey,
-  userEmail,
-  fullName,
-  role,
-  children,
-}: AppShellProps) {
+export function AppShell({ titleKey, userEmail, fullName, role, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t, language } = useI18n();
@@ -143,35 +128,23 @@ export function AppShell({
   const isRealAdmin = previewAdminRoles.includes(realRole);
 
   const previewRole =
-    isRealAdmin &&
-    scope.mode === "user" &&
-    scope.previewMode === "selected" &&
-    scope.targetRole
+    isRealAdmin && scope.mode === "user" && scope.previewMode === "selected" && scope.targetRole
       ? normalizeRole(scope.targetRole)
       : realRole;
 
-  const isPreviewMode =
-    isRealAdmin &&
-    scope.mode === "user" &&
-    scope.previewMode === "selected";
+  const isPreviewMode = isRealAdmin && scope.mode === "user" && scope.previewMode === "selected";
 
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) =>
-          item.roles.includes(previewRole) &&
-          (!item.featureKey || getBooleanSetting(item.featureKey, true))
+        (item) => item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))
       ),
     }))
     .filter((group) => group.items.length > 0);
 
   function label(key: string) {
-    try {
-      return t(key as never);
-    } catch {
-      return key;
-    }
+    return t(key);
   }
 
   async function signOut() {
@@ -188,21 +161,12 @@ export function AppShell({
   const sidebar = (
     <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
       <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
-        <p className="text-xs text-emerald-300">
-          {isArabic ? "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644" : "Workspace"}
-        </p>
-        <h2 className="mt-1 truncate text-lg font-black">
-          {fullName ?? userEmail ?? "-"}
-        </h2>
+        <p className="text-xs text-emerald-300">{isArabic ? "مساحة العمل" : "Workspace"}</p>
+        <h2 className="mt-1 truncate text-lg font-black">{fullName ?? userEmail ?? "-"}</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">
-            {roleName(realRole, isArabic)}
-          </span>
-
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">{roleName(realRole, isArabic)}</span>
           {isPreviewMode ? (
-            <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">
-              {roleName(previewRole, isArabic)}
-            </span>
+            <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">{roleName(previewRole, isArabic)}</span>
           ) : null}
         </div>
       </div>
@@ -210,16 +174,11 @@ export function AppShell({
       <nav className="space-y-5">
         {visibleGroups.map((group) => (
           <div key={group.labelEn}>
-            <p className="mb-2 px-3 text-xs font-bold text-slate-500">
-              {isArabic ? group.labelAr : group.labelEn}
-            </p>
-
+            <p className="mb-2 px-3 text-xs font-bold text-slate-500">{isArabic ? group.labelAr : group.labelEn}</p>
             <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const active =
-                  pathname === item.href || pathname.startsWith(item.href + "/");
-
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.href}
@@ -245,7 +204,7 @@ export function AppShell({
       {isPreviewMode ? (
         <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
           {isArabic
-            ? "\u0623\u0646\u062a \u0627\u0644\u0622\u0646 \u062a\u0634\u0627\u0647\u062f \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0643\u0645\u0627 \u062a\u0638\u0647\u0631 \u0644\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u062e\u062a\u0627\u0631."
+            ? "أنت الآن تشاهد القائمة والصلاحيات كما تظهر للمستخدم المختار."
             : "You are previewing the menu and permissions as the selected user."}
         </div>
       ) : null}
@@ -267,17 +226,9 @@ export function AppShell({
 
           <div className="min-w-0 flex-1">
             <p className="text-xs text-emerald-300">
-              {isPreviewMode
-                ? isArabic
-                  ? "\u0645\u0639\u0627\u064a\u0646\u0629 \u0645\u0633\u062a\u062e\u062f\u0645"
-                  : "User preview"
-                : isArabic
-                  ? "\u0631\u0624\u064a\u0629 \u0627\u0644\u0646\u0638\u0627\u0645"
-                  : "System view"}
+              {isPreviewMode ? (isArabic ? "معاينة مستخدم" : "User preview") : isArabic ? "رؤية النظام" : "System view"}
             </p>
-            <h1 className="truncate text-lg font-black md:text-xl">
-              {label(titleKey)}
-            </h1>
+            <h1 className="truncate text-lg font-black md:text-xl">{label(titleKey)}</h1>
           </div>
 
           <div className="hidden min-w-0 flex-1 justify-center xl:flex">
@@ -288,14 +239,13 @@ export function AppShell({
             <NotificationBell />
             <LanguageToggle />
             <ThemeToggle />
-
             <button
               onClick={signOut}
               className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 hover:bg-white/10 md:flex"
               type="button"
             >
               <LogOut className="h-4 w-4" />
-              {isArabic ? "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c" : "Logout"}
+              {isArabic ? "تسجيل الخروج" : "Logout"}
             </button>
           </div>
         </div>
@@ -305,24 +255,13 @@ export function AppShell({
         </div>
       </header>
 
-      {mobileOpen ? (
-        <button
-          type="button"
-          aria-label="close menu"
-          onClick={closeMobile}
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-        />
-      ) : null}
+      {mobileOpen ? <button type="button" aria-label="close menu" onClick={closeMobile} className="fixed inset-0 z-40 bg-black/60 lg:hidden" /> : null}
 
       <aside
         className={
           "fixed bottom-0 top-0 z-50 w-72 border-white/10 bg-slate-950/95 pt-24 shadow-2xl backdrop-blur-2xl transition-transform duration-300 lg:z-40 lg:block lg:translate-x-0 " +
           (isArabic ? "right-0 border-l " : "left-0 border-r ") +
-          (mobileOpen
-            ? "translate-x-0 "
-            : isArabic
-              ? "translate-x-full lg:translate-x-0 "
-              : "-translate-x-full lg:translate-x-0 ")
+          (mobileOpen ? "translate-x-0 " : isArabic ? "translate-x-full lg:translate-x-0 " : "-translate-x-full lg:translate-x-0 ")
         }
       >
         {sidebar}
