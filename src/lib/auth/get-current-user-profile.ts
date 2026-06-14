@@ -16,10 +16,11 @@ export async function getCurrentUserProfile() {
     .from("profiles")
     .select("full_name, role, is_active")
     .eq("id", user.id)
-    .maybeSingle();
+    .single();
 
   if (profile?.is_active === false) {
-    redirect("/login?error=inactive");
+    await supabase.auth.signOut();
+    redirect("/login");
   }
 
   return {

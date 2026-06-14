@@ -62,11 +62,11 @@ export function UsersClient({
   }
 
   function roleLabel(value: string | null) {
-    if (value === "admin") return tx("ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ…", "Admin");
-    if (value === "manager") return tx("ظ…ط¯ظٹط±", "Manager");
-    if (value === "moderator") return tx("ظ…ظˆط¯ظٹط±ظٹطھظˆط±", "Moderator");
-    if (value === "finance") return tx("ظ…ط§ظ„ظٹط©", "Finance");
-    return tx("ط³ظٹظ„ط²", "Sales");
+    if (value === "admin") return tx("مدير النظام", "Admin");
+    if (value === "manager") return tx("مدير", "Manager");
+    if (value === "moderator") return tx("مراقب", "Moderator");
+    if (value === "finance") return tx("مالية", "Finance");
+    return tx("سيلز", "Sales");
   }
 
   const filteredUsers = useMemo(() => {
@@ -102,7 +102,7 @@ export function UsersClient({
     setError("");
 
     if (!canManage) {
-      setError(tx("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.", "Admin only."));
+      setError(tx("هذه الصلاحية للأدمن فقط.", "Admin only."));
       return;
     }
 
@@ -119,40 +119,32 @@ export function UsersClient({
     const result = await response.json();
 
     if (!response.ok) {
-      setError(result.error ?? tx("طھط¹ط°ط± ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ….", "Unable to create user."));
+      setError(result.error ?? tx("تعذر إنشاء المستخدم.", "Unable to create user."));
       setCreating(false);
       return;
     }
 
     setUsers((current) => [result.user as UserRow, ...current]);
     setForm(emptyForm);
-    setMessage(tx("طھظ… ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ… ط¨ظ†ط¬ط§ط­.", "User created successfully."));
+    setMessage(tx("تم إنشاء المستخدم بنجاح.", "User created successfully."));
     setCreating(false);
   }
 
   async function updateUser(userId: string, patch: Partial<UserRow>) {
     setMessage("");
     setError("");
-
-    if (!canManage) {
-      setError(tx("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.", "Admin only."));
-      return;
-    }
-
     setSavingId(userId);
 
-    const response = await fetch("/api/admin/users/" + encodeURIComponent(userId), {
+    const response = await fetch("/api/admin/users", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(patch),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, ...patch }),
     });
 
     const result = await response.json();
 
     if (!response.ok || !result.user) {
-      setError(result.error ?? tx("طھط¹ط°ط± طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ….", "Unable to update user."));
+      setError(result.error ?? tx("تعذر تحديث المستخدم.", "Unable to update user."));
       setSavingId("");
       return;
     }
@@ -161,7 +153,7 @@ export function UsersClient({
       current.map((user) => (user.id === userId ? (result.user as UserRow) : user))
     );
 
-    setMessage(tx("طھظ… طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ….", "User updated."));
+    setMessage(tx("تم تحديث المستخدم.", "User updated."));
     setSavingId("");
   }
 
@@ -174,17 +166,17 @@ export function UsersClient({
     >
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <p className="text-sm text-slate-400">{tx("ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†", "Total users")}</p>
+          <p className="text-sm text-slate-400">{tx("إجمالي المستخدمين", "Total users")}</p>
           <h2 className="mt-2 text-3xl font-black text-white">{stats.total}</h2>
         </div>
 
         <div className="safe-card rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
-          <p className="text-sm text-emerald-300">{tx("ظ†ط´ط·ظٹظ†", "Active")}</p>
+          <p className="text-sm text-emerald-300">{tx("نشطون", "Active")}</p>
           <h2 className="mt-2 text-3xl font-black text-emerald-300">{stats.active}</h2>
         </div>
 
         <div className="safe-card rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-5">
-          <p className="text-sm text-sky-300">{tx("ط³ظٹظ„ط²", "Sales")}</p>
+          <p className="text-sm text-sky-300">{tx("سيلز", "Sales")}</p>
           <h2 className="mt-2 text-3xl font-black text-sky-300">{stats.sales}</h2>
         </div>
 
