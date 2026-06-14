@@ -1,4 +1,5 @@
 ﻿"use client";
+import { AdminEditButton } from "@/components/admin-edit-button";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -350,11 +351,13 @@ export function AppShell({
       <main className="min-h-screen pt-32 lg:rtl:pr-72 lg:ltr:pl-72">
         <div className="elitecrm-page-width safe-page px-4 pb-10 lg:px-6">
           <ScopeBanner />
+        <AdminEditButton role={role ?? null} />
           <div className="elite-page-enter">{children}</div>
         </div>
       </main>
     </div>
   );
 }
+
 
 
