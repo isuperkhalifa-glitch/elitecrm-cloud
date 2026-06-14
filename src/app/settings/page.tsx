@@ -1,6 +1,7 @@
 ﻿import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { SettingsClient } from "./settings-client";
+import { mergeSystemSettings } from "@/lib/settings/defaults";
 
 export default async function SettingsPage({ searchParams }: any) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -36,7 +37,7 @@ export default async function SettingsPage({ searchParams }: any) {
 
   return (
     <SettingsClient
-      initialSettings={(settings ?? []) as any}
+      initialSettings={mergeSystemSettings((settings ?? []) as any) as any}
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}

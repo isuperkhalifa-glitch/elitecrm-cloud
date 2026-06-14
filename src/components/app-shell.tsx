@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { GlobalScopeSwitcher, ScopeBanner } from "@/components/global-scope-switcher";
 import { useScope } from "@/components/scope-provider";
+import { useSystemSettings } from "@/components/system-settings-provider";
 
 type AppShellProps = {
   titleKey: string;
@@ -43,6 +44,7 @@ type NavItem = {
   labelKey: string;
   icon: LucideIcon;
   roles: Role[];
+  featureKey?: string;
 };
 
 type NavGroup = {
@@ -105,12 +107,14 @@ const navGroups: NavGroup[] = [
         href: "/invoices",
         labelKey: "invoices",
         icon: Receipt,
+        featureKey: "features.invoices.enabled",
         roles: ["admin", "manager", "finance", "sales"],
       },
       {
         href: "/commissions",
         labelKey: "commissions",
         icon: BadgeDollarSign,
+        featureKey: "features.commissions.enabled",
         roles: ["admin", "manager", "finance", "sales"],
       },
     ],
@@ -190,6 +194,7 @@ export function AppShell({
   const router = useRouter();
   const { t, language } = useI18n();
   const { scope } = useScope();
+  const { getBooleanSetting } = useSystemSettings();
 
   const isArabic = language === "ar";
   const realRole = normalizeRole(role);
@@ -211,7 +216,10 @@ export function AppShell({
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.roles.includes(previewRole)),
+      items: group.items.filter((item) =>
+        item.roles.includes(previewRole) &&
+        (!item.featureKey || getBooleanSetting(item.featureKey, true))
+      ),
     }))
     .filter((group) => group.items.length > 0);
 
