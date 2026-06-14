@@ -337,6 +337,22 @@ export const defaultSystemSettings: SystemSetting[] = [
     description: "الوصف الظاهر في صفحة العمولات.",
     is_public: true,
   },
+  {
+    key: "pages.customers.title",
+    label: "عنوان العملاء",
+    group_name: "pages",
+    value: "العملاء",
+    description: "عنوان صفحة العملاء الموحدة.",
+    is_public: true,
+  },
+  {
+    key: "pages.customers.description",
+    label: "وصف العملاء",
+    group_name: "pages",
+    value: "صفحة واحدة لكل العملاء مع متابعة قوية ورحلة كاملة.",
+    description: "الوصف الظاهر في صفحة العملاء الموحدة.",
+    is_public: true,
+  },
 ];
 
 export function mergeSystemSettings(settings: SystemSetting[] = []) {
