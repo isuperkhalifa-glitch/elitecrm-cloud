@@ -3,7 +3,19 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle2, Database, Loader2, Plus, Save, Trash2, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Database,
+  Eye,
+  Layers3,
+  Loader2,
+  Plus,
+  Save,
+  Search,
+  Settings2,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 
 type SettingRow = {
   key: string;
@@ -24,10 +36,15 @@ type Props = {
   userEmail: string | null;
   fullName: string | null;
   role: string | null;
+  pageKey?: string | null;
 };
 
 function toText(value: unknown) {
   return JSON.stringify(value ?? null, null, 2);
+}
+
+function pagePrefix(pageKey?: string | null) {
+  return pageKey ? `pages.${pageKey}.` : "";
 }
 
 export function SettingsClient({
@@ -35,7 +52,10 @@ export function SettingsClient({
   userEmail,
   fullName,
   role,
+  pageKey,
 }: Props) {
+  const prefix = pagePrefix(pageKey);
+
   const [rows, setRows] = useState<EditableRow[]>(
     initialSettings.map((setting) => ({
       ...setting,
@@ -43,23 +63,55 @@ export function SettingsClient({
     }))
   );
 
-  const [newKey, setNewKey] = useState("");
+  const [mode, setMode] = useState(pageKey ? "page" : "all");
+  const [search, setSearch] = useState("");
+
+  const [newKey, setNewKey] = useState(pageKey ? `${prefix}custom` : "");
   const [newLabel, setNewLabel] = useState("");
-  const [newGroup, setNewGroup] = useState("custom");
+  const [newGroup, setNewGroup] = useState(pageKey ? "pages" : "custom");
   const [newValue, setNewValue] = useState('"قيمة جديدة"');
 
   const [savingKey, setSavingKey] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const visibleRows = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return rows.filter((row) => {
+      const matchesMode =
+        mode === "all" ||
+        (mode === "page" && prefix && row.key.startsWith(prefix)) ||
+        (mode === "features" && row.group_name === "features") ||
+        (mode === "crm" && row.group_name === "crm") ||
+        (mode === "general" && row.group_name === "general");
+
+      const matchesKeyword =
+        !keyword ||
+        [
+          row.key,
+          row.label,
+          row.group_name,
+          row.description,
+          row.valueText,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+
+      return matchesMode && matchesKeyword;
+    });
+  }, [rows, mode, prefix, search]);
+
   const groupedRows = useMemo(() => {
-    return rows.reduce<Record<string, EditableRow[]>>((acc, row) => {
+    return visibleRows.reduce<Record<string, EditableRow[]>>((acc, row) => {
       const group = row.group_name || "general";
       acc[group] = acc[group] ?? [];
       acc[group].push(row);
       return acc;
     }, {});
-  }, [rows]);
+  }, [visibleRows]);
 
   function updateLocalRow(key: string, patch: Partial<EditableRow>) {
     setRows((current) =>
@@ -107,10 +159,12 @@ export function SettingsClient({
       return;
     }
 
+    const saved = data as SettingRow;
+
     setRows((current) =>
       current.map((item) =>
         item.key === row.key
-          ? { ...(data as SettingRow), valueText: toText((data as SettingRow).value) }
+          ? { ...saved, valueText: toText(saved.value) }
           : item
       )
     );
@@ -149,7 +203,9 @@ export function SettingsClient({
           label: newLabel.trim(),
           group_name: newGroup.trim() || "custom",
           value: parsedValue,
-          description: "إعداد مخصص من لوحة الأدمن",
+          description: pageKey
+            ? `إعداد مخصص لصفحة ${pageKey}`
+            : "إعداد مخصص من لوحة الأدمن",
           is_public: true,
           updated_at: new Date().toISOString(),
         },
@@ -171,9 +227,9 @@ export function SettingsClient({
       { ...added, valueText: toText(added.value) },
     ]);
 
-    setNewKey("");
+    setNewKey(pageKey ? `${prefix}custom` : "");
     setNewLabel("");
-    setNewGroup("custom");
+    setNewGroup(pageKey ? "pages" : "custom");
     setNewValue('"قيمة جديدة"');
     setMessage("تم إضافة الإعداد.");
     setSavingKey("");
@@ -185,7 +241,6 @@ export function SettingsClient({
     setSavingKey(key);
 
     const supabase = createClient();
-
     const { error } = await supabase.from("system_settings").delete().eq("key", key);
 
     if (error) {
@@ -212,7 +267,9 @@ export function SettingsClient({
             <p className="text-sm text-emerald-300">لوحة تحكم الأدمن</p>
             <h1 className="text-3xl font-black text-white">إعدادات النظام الشاملة</h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-400">
-              هنا تقدر تعدل قيم النظام من قاعدة البيانات. أي قيمة هنا هتبقى أساس للتحكم في الصفحات، الحالات، الخصائص، والأسماء.
+              {pageKey
+                ? `أنت تعدل إعدادات صفحة: ${pageKey}`
+                : "تقدر تعدل الإعدادات العامة، خصائص النظام، وإعدادات كل صفحة."}
             </p>
           </div>
 
@@ -226,13 +283,95 @@ export function SettingsClient({
       </div>
 
       <section className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-        <h2 className="mb-4 text-xl font-black text-white">إضافة إعداد جديد</h2>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {pageKey ? (
+              <button
+                type="button"
+                onClick={() => setMode("page")}
+                className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                  mode === "page"
+                    ? "bg-emerald-400 text-slate-950"
+                    : "border border-white/10 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                إعدادات الصفحة الحالية
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => setMode("all")}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                mode === "all"
+                  ? "bg-emerald-400 text-slate-950"
+                  : "border border-white/10 text-slate-300 hover:bg-white/10"
+              }`}
+            >
+              كل النظام
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMode("features")}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                mode === "features"
+                  ? "bg-emerald-400 text-slate-950"
+                  : "border border-white/10 text-slate-300 hover:bg-white/10"
+              }`}
+            >
+              الخصائص
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMode("crm")}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                mode === "crm"
+                  ? "bg-emerald-400 text-slate-950"
+                  : "border border-white/10 text-slate-300 hover:bg-white/10"
+              }`}
+            >
+              CRM
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMode("general")}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+                mode === "general"
+                  ? "bg-emerald-400 text-slate-950"
+                  : "border border-white/10 text-slate-300 hover:bg-white/10"
+              }`}
+            >
+              عام
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 xl:min-w-96">
+            <Search className="h-4 w-4 text-slate-500" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="بحث في الإعدادات..."
+              className="w-full border-none bg-transparent p-0 text-white outline-none"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Plus className="h-5 w-5 text-emerald-300" />
+          <h2 className="text-xl font-black text-white">إضافة إعداد جديد</h2>
+        </div>
 
         <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_2fr_auto]">
           <input
             value={newKey}
             onChange={(event) => setNewKey(event.target.value)}
             placeholder="مثال: pages.leads.title"
+            dir="ltr"
             className="rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400"
           />
 
@@ -254,6 +393,7 @@ export function SettingsClient({
             value={newValue}
             onChange={(event) => setNewValue(event.target.value)}
             placeholder='"قيمة" أو true أو ["a","b"]'
+            dir="ltr"
             className="rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400"
           />
 
@@ -275,7 +415,16 @@ export function SettingsClient({
             key={group}
             className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5"
           >
-            <h2 className="mb-4 text-2xl font-black text-white">{group}</h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {group === "pages" ? <Layers3 className="h-5 w-5 text-sky-300" /> : <Settings2 className="h-5 w-5 text-emerald-300" />}
+                <h2 className="text-2xl font-black text-white">{group}</h2>
+              </div>
+
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
+                {groupRows.length} إعداد
+              </span>
+            </div>
 
             <div className="grid gap-4">
               {groupRows.map((row) => (
@@ -285,7 +434,7 @@ export function SettingsClient({
                 >
                   <div className="mb-3 grid gap-3 xl:grid-cols-[1fr_1fr_auto] xl:items-center">
                     <div>
-                      <p className="text-xs text-slate-500">{row.key}</p>
+                      <p className="text-xs text-slate-500" dir="ltr">{row.key}</p>
                       <input
                         value={row.label}
                         onChange={(event) => updateLocalRow(row.key, { label: event.target.value })}
@@ -332,17 +481,30 @@ export function SettingsClient({
                     className="w-full resize-y rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 font-mono text-sm text-white outline-none focus:border-emerald-400"
                   />
 
-                  <input
-                    value={row.description ?? ""}
-                    onChange={(event) => updateLocalRow(row.key, { description: event.target.value })}
-                    placeholder="وصف الإعداد"
-                    className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-                  />
+                  <div className="mt-3 grid gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
+                    <input
+                      value={row.description ?? ""}
+                      onChange={(event) => updateLocalRow(row.key, { description: event.target.value })}
+                      placeholder="وصف الإعداد"
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    />
+
+                    <div className="flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-300">
+                      <Eye className="h-4 w-4" />
+                      public
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
           </section>
         ))}
+
+        {visibleRows.length === 0 ? (
+          <div className="safe-card rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">
+            لا توجد إعدادات مطابقة.
+          </div>
+        ) : null}
       </div>
 
       {error ? (

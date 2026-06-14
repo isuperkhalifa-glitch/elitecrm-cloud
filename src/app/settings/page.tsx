@@ -2,7 +2,13 @@
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { SettingsClient } from "./settings-client";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: any) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const selectedPageKey =
+    typeof resolvedSearchParams?.page === "string"
+      ? resolvedSearchParams.page
+      : null;
+
   const { supabase, user, profile } = await getCurrentUserProfile();
 
   const canEdit = profile?.role === "admin" || profile?.role === "manager";
@@ -34,6 +40,8 @@ export default async function SettingsPage() {
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
+      pageKey={selectedPageKey}
     />
   );
 }
+
