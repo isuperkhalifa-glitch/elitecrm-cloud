@@ -221,7 +221,7 @@ export function CustomersClient({
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [selectedId, setSelectedId] = useState<string | null>(initialLeads[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -231,7 +231,7 @@ export function CustomersClient({
   const [draftNote, setDraftNote] = useState("");
 
   const selectedLead = useMemo(
-    () => leads.find((lead) => lead.id === selectedId) ?? leads[0] ?? null,
+    () => leads.find((lead) => lead.id === selectedId) ?? null,
     [leads, selectedId]
   );
 
@@ -532,7 +532,7 @@ export function CustomersClient({
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid gap-4">
         <section className="safe-card overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[920px] text-sm">
@@ -594,7 +594,16 @@ export function CustomersClient({
           </div>
         </section>
 
-        <aside className="safe-card sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+        {selectedLead ? (
+        <button
+          type="button"
+          aria-label="إغلاق التفاصيل"
+          onClick={() => setSelectedId(null)}
+          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm"
+        />
+      ) : null}
+
+        <aside className={selectedLead ? "fixed inset-x-4 top-24 bottom-5 z-[90] mx-auto w-[min(980px,calc(100vw-2rem))] overflow-y-auto rounded-[2rem] border border-white/10 bg-slate-950 p-5 shadow-2xl" : "hidden"}>
           {selectedLead ? (
             <div className="space-y-5">
               <div className="flex items-start justify-between gap-3">
