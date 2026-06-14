@@ -10,10 +10,19 @@ export type SystemSetting = {
 
 export const defaultSystemSettings: SystemSetting[] = [
   {
+    key: "features.deals.enabled",
+    label: "تشغيل الصفقات",
+    group_name: "features",
+    value: false,
+    description: "إظهار أو إخفاء صفحة الصفقات من النظام.",
+    is_public: true,
+  },
+
+  {
     key: "features.invoices.enabled",
     label: "تشغيل الفواتير",
     group_name: "features",
-    value: true,
+    value: false,
     description: "إظهار أو إخفاء الفواتير من النظام.",
     is_public: true,
   },

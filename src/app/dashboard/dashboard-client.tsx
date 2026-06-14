@@ -148,7 +148,8 @@ export function DashboardClient({
 
 
   const { getBooleanSetting } = useSystemSettings();
-  const invoicesEnabled = getBooleanSetting("features.invoices.enabled", true);
+  
+  const dealsEnabled = getBooleanSetting("features.deals.enabled", false);const invoicesEnabled = getBooleanSetting("features.invoices.enabled", true);
   const commissionsEnabled = getBooleanSetting("features.commissions.enabled", true);
   const pageTitle = usePageText("pages.dashboard.title", "لوحة التحكم", "Dashboard");
   const pageDescription = usePageText(
@@ -373,7 +374,7 @@ export function DashboardClient({
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={tx("الصفقات", "Deals")} value={scopedDeals.length} icon={Route} />
+        {dealsEnabled ? <StatCard title={tx("الصفقات", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
         {invoicesEnabled ? <StatCard title={tx("الفواتير غير المدفوعة", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
         {commissionsEnabled ? <StatCard title={tx("عمولات مستحقة", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
         {commissionsEnabled ? <StatCard title={tx("عمولات مدفوعة", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
