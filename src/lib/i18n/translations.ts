@@ -1,4 +1,4 @@
-﻿export type Language = "ar" | "en";
+export type Language = "ar" | "en";
 
 export const translations = {
   ar: {
@@ -191,6 +191,8 @@ export const translations = {
     commissions: "Commissions",
     users: "Users",
     settings: "Settings",
+    distribution: "Distribution",
+    imports: "Imports",
     admin: "System Admin",
     sales: "Sales",
     activeSystem: "System is running successfully",

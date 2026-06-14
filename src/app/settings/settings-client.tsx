@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -44,6 +44,25 @@ function toText(value: unknown) {
 
 function pagePrefix(pageKey?: string | null) {
   return pageKey ? `pages.${pageKey}.` : "";
+}
+
+function groupLabel(group: string) {
+  const labels: Record<string, string> = {
+    pages: "الصفحات",
+    features: "الخصائص",
+    crm: "CRM",
+    general: "عام",
+    custom: "مخصص",
+  };
+
+  return labels[group] ?? group;
+}
+
+function settingShortName(row: SettingRow) {
+  if (row.key.endsWith(".title")) return "عنوان الصفحة";
+  if (row.key.endsWith(".description")) return "وصف الصفحة";
+  if (row.key.includes(".enabled")) return "تشغيل / إيقاف";
+  return row.label || row.key;
 }
 
 export function SettingsClient({
@@ -263,7 +282,7 @@ export function SettingsClient({
             <p className="mt-2 max-w-3xl text-sm text-slate-400">
               {pageKey
                 ? `أنت تعدل إعدادات صفحة: ${pageKey}`
-                : "تقدر تعدل الإعدادات العامة، خصائص النظام، وإعدادات كل صفحة."}
+                : "عدّل النصوص والخصائص الأساسية من مكان واحد."}
             </p>
           </div>
 
@@ -357,7 +376,7 @@ export function SettingsClient({
       <section className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="mb-4 flex items-center gap-2">
           <Plus className="h-5 w-5 text-emerald-300" />
-          <h2 className="text-xl font-black text-white">إضافة إعداد جديد</h2>
+          <h2 className="text-xl font-black text-white">إضافة إعداد متقدم</h2>
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_2fr_auto]">
@@ -412,7 +431,7 @@ export function SettingsClient({
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 {group === "pages" ? <Layers3 className="h-5 w-5 text-sky-300" /> : <Settings2 className="h-5 w-5 text-emerald-300" />}
-                <h2 className="text-2xl font-black text-white">{group}</h2>
+                <h2 className="text-2xl font-black text-white">{groupLabel(group)}</h2>
               </div>
 
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
@@ -428,7 +447,8 @@ export function SettingsClient({
                 >
                   <div className="mb-3 grid gap-3 xl:grid-cols-[1fr_1fr_auto] xl:items-center">
                     <div>
-                      <p className="text-xs text-slate-500" dir="ltr">{row.key}</p>
+                      <p className="text-xs font-bold text-emerald-300">{settingShortName(row)}</p>
+                      <p className="mt-1 text-[11px] text-slate-500" dir="ltr">{row.key}</p>
                       <input
                         value={row.label}
                         onChange={(event) => updateLocalRow(row.key, { label: event.target.value })}
@@ -470,7 +490,7 @@ export function SettingsClient({
                   <textarea
                     value={row.valueText}
                     onChange={(event) => updateLocalRow(row.key, { valueText: event.target.value })}
-                    rows={5}
+                    rows={2}
                     dir="ltr"
                     className="w-full resize-y rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 font-mono text-sm text-white outline-none focus:border-emerald-400"
                   />

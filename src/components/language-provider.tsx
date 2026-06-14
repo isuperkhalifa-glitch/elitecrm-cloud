@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   createContext,
@@ -53,7 +53,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       dir,
       setLanguage,
       toggleLanguage,
-      t: (key) => translations[language][key],
+      t: (key) => translations[language][key] ?? String(key),
     }),
     [language]
   );
