@@ -1,8 +1,10 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { UsersClient } from "./users-client";
 
 export default async function UsersPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "users");
 
   const { data: users } = await supabase
     .from("profiles")

@@ -1,8 +1,10 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { CompaniesClient } from "./companies-client";
 
 export default async function CompaniesPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "companies");
 
   const { data: companies } = await supabase
     .from("companies")
@@ -21,4 +23,3 @@ export default async function CompaniesPage() {
     />
   );
 }
-

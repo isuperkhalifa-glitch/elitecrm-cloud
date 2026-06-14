@@ -2,9 +2,11 @@ import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { CommissionsClient } from "./commissions-client";
 import { AppShell } from "@/components/app-shell";
 import { isFeatureEnabled, loadPublicSystemSettings } from "@/lib/settings/server";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 
 export default async function CommissionsPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "commissions");
 
   const systemSettings = await loadPublicSystemSettings(supabase);
 

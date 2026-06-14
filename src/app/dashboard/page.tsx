@@ -1,8 +1,29 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { isFeatureEnabled, loadPublicSystemSettings } from "@/lib/settings/server";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+
+  const systemSettings = await loadPublicSystemSettings(supabase);
+  const invoicesEnabled = isFeatureEnabled(systemSettings, "features.invoices.enabled", true);
+  const commissionsEnabled = isFeatureEnabled(systemSettings, "features.commissions.enabled", true);
+
+  const invoiceQuery = invoicesEnabled
+    ? supabase
+        .from("invoices")
+        .select("id,invoice_number,company_id,deal_id,owner_id,amount,status,paid_at,due_date,created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000)
+    : Promise.resolve({ data: [] });
+
+  const commissionQuery = commissionsEnabled
+    ? supabase
+        .from("commissions")
+        .select("id,sales_id,company_id,invoice_id,commission_amount,status,paid_at,created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000)
+    : Promise.resolve({ data: [] });
 
   const [
     { data: leads },
@@ -31,17 +52,8 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(1000),
 
-    supabase
-      .from("invoices")
-      .select("id,invoice_number,company_id,deal_id,owner_id,amount,status,paid_at,due_date,created_at")
-      .order("created_at", { ascending: false })
-      .limit(1000),
-
-    supabase
-      .from("commissions")
-      .select("id,sales_id,company_id,invoice_id,commission_amount,status,paid_at,created_at")
-      .order("created_at", { ascending: false })
-      .limit(1000),
+    invoiceQuery,
+    commissionQuery,
 
     supabase
       .from("profiles")

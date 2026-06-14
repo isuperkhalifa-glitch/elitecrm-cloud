@@ -1,8 +1,10 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { DistributionClient } from "./distribution-client";
 
 export default async function DistributionPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "distribution");
 
   const [{ data: leads }, { data: profiles }] = await Promise.all([
     supabase

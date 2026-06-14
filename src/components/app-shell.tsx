@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   BadgeDollarSign,
   Building2,
@@ -16,6 +16,7 @@ import {
   Settings,
   UserCog,
   UsersRound,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { AdminEditButton } from "@/components/admin-edit-button";
@@ -27,6 +28,7 @@ import { useScope } from "@/components/scope-provider";
 import { useSystemSettings } from "@/components/system-settings-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
+import { normalizeRole, type Role } from "@/lib/auth/roles";
 
 type AppShellProps = {
   titleKey: string;
@@ -35,8 +37,6 @@ type AppShellProps = {
   role?: string | null;
   children: ReactNode;
 };
-
-type Role = "admin" | "manager" | "moderator" | "sales" | "finance";
 
 type NavItem = {
   href: string;
@@ -57,7 +57,7 @@ const previewAdminRoles: Role[] = ["admin", "manager"];
 
 const navGroups: NavGroup[] = [
   {
-    labelAr: "نظرة عامة",
+    labelAr: "ظ†ط¸ط±ط© ط¹ط§ظ…ط©",
     labelEn: "Overview",
     items: [
       {
@@ -69,7 +69,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    labelAr: "مساحة العمل",
+    labelAr: "ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„",
     labelEn: "Workspace",
     items: [
       {
@@ -99,7 +99,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    labelAr: "المالية",
+    labelAr: "ط§ظ„ظ…ط§ظ„ظٹط©",
     labelEn: "Finance",
     items: [
       {
@@ -119,7 +119,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    labelAr: "الإدارة",
+    labelAr: "ط§ظ„ط¥ط¯ط§ط±ط©",
     labelEn: "Admin",
     items: [
       {
@@ -150,7 +150,7 @@ const navGroups: NavGroup[] = [
         href: "/users",
         labelKey: "users",
         icon: UserCog,
-        roles: ["admin", "manager"],
+        roles: ["admin"],
       },
       {
         href: "/settings",
@@ -162,21 +162,13 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-function normalizeRole(role?: string | null): Role {
-  if (role === "admin") return "admin";
-  if (role === "manager") return "manager";
-  if (role === "moderator") return "moderator";
-  if (role === "finance") return "finance";
-  return "sales";
-}
-
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    admin: { ar: "مدير النظام", en: "Admin" },
-    manager: { ar: "مدير", en: "Manager" },
-    moderator: { ar: "موديريتور", en: "Moderator" },
-    sales: { ar: "سيلز", en: "Sales" },
-    finance: { ar: "مالية", en: "Finance" },
+    admin: { ar: "ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ…", en: "Admin" },
+    manager: { ar: "ظ…ط¯ظٹط±", en: "Manager" },
+    moderator: { ar: "ظ…ظˆط¯ظٹط±ظٹطھظˆط±", en: "Moderator" },
+    sales: { ar: "ط³ظٹظ„ط²", en: "Sales" },
+    finance: { ar: "ظ…ط§ظ„ظٹط©", en: "Finance" },
   };
 
   return isArabic ? labels[role].ar : labels[role].en;
@@ -194,6 +186,7 @@ export function AppShell({
   const { t, language } = useI18n();
   const { scope } = useScope();
   const { getBooleanSetting } = useSystemSettings();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isArabic = language === "ar";
   const realRole = normalizeRole(role);
@@ -238,26 +231,94 @@ export function AppShell({
     router.refresh();
   }
 
+  const SidebarContent = (
+    <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
+      <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
+        <p className="text-xs text-emerald-300">
+          {isArabic ? "ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„" : "Workspace"}
+        </p>
+        <h2 className="mt-1 truncate text-lg font-black">
+          {fullName ?? userEmail ?? "-"}
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">
+            {roleName(realRole, isArabic)}
+          </span>
+
+          {isPreviewMode ? (
+            <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">
+              {roleName(previewRole, isArabic)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <nav className="space-y-5">
+        {visibleGroups.map((group) => (
+          <div key={group.labelEn}>
+            <p className="mb-2 px-3 text-xs font-bold text-slate-500">
+              {isArabic ? group.labelAr : group.labelEn}
+            </p>
+
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={"elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
+                      (active
+                        ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white")}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span>{label(item.labelKey)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {isPreviewMode ? (
+        <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
+          {isArabic
+            ? "ط£ظ†طھ ط§ظ„ط¢ظ† طھط´ط§ظ‡ط¯ ط§ظ„ظ‚ط§ط¦ظ…ط© ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ ظƒظ…ط§ طھط¸ظ‡ط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط±."
+            : "You are previewing the menu and permissions as the selected user."}
+        </div>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
         <div className="flex min-h-20 items-center gap-3 px-4 lg:px-6">
           <button
+            onClick={() => setMobileOpen((value) => !value)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:hidden"
             type="button"
             aria-label="menu"
+            aria-expanded={mobileOpen}
           >
-            <Menu className="h-5 w-5" />
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
           <div className="min-w-0 flex-1">
             <p className="text-xs text-emerald-300">
               {isPreviewMode
                 ? isArabic
-                  ? "معاينة مستخدم"
+                  ? "ظ…ط¹ط§ظٹظ†ط© ظ…ط³طھط®ط¯ظ…"
                   : "User preview"
                 : isArabic
-                  ? "رؤية النظام"
+                  ? "ط±ط¤ظٹط© ط§ظ„ظ†ط¸ط§ظ…"
                   : "System view"}
             </p>
             <h1 className="truncate text-lg font-black md:text-xl">
@@ -280,7 +341,7 @@ export function AppShell({
               type="button"
             >
               <LogOut className="h-4 w-4" />
-              {isArabic ? "تسجيل الخروج" : "Logout"}
+              {isArabic ? "طھط³ط¬ظٹظ„ ط§ظ„ط®ط±ظˆط¬" : "Logout"}
             </button>
           </div>
         </div>
@@ -290,69 +351,16 @@ export function AppShell({
         </div>
       </header>
 
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
+      ) : null}
+
+      <aside className={(mobileOpen ? "translate-x-0" : "rtl:translate-x-full ltr:-translate-x-full") + " fixed bottom-0 top-0 z-50 w-80 max-w-[86vw] border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl transition-transform duration-300 lg:hidden rtl:right-0 rtl:border-l ltr:left-0 ltr:border-r"}>
+        {SidebarContent}
+      </aside>
+
       <aside className="fixed bottom-0 top-0 z-40 hidden w-72 border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl lg:block rtl:right-0 rtl:border-l ltr:left-0 ltr:border-r">
-        <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
-          <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
-            <p className="text-xs text-emerald-300">
-              {isArabic ? "مساحة العمل" : "Workspace"}
-            </p>
-            <h2 className="mt-1 truncate text-lg font-black">
-              {fullName ?? userEmail ?? "-"}
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">
-                {roleName(realRole, isArabic)}
-              </span>
-
-              {isPreviewMode ? (
-                <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">
-                  {roleName(previewRole, isArabic)}
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          <nav className="space-y-5">
-            {visibleGroups.map((group) => (
-              <div key={group.labelEn}>
-                <p className="mb-2 px-3 text-xs font-bold text-slate-500">
-                  {isArabic ? group.labelAr : group.labelEn}
-                </p>
-
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const active =
-                      pathname === item.href ||
-                      pathname.startsWith(item.href + "/");
-
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={"elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
-                          (active
-                            ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
-                            : "text-slate-300 hover:bg-white/10 hover:text-white")}
-                      >
-                        <Icon className="h-5 w-5 shrink-0" />
-                        <span>{label(item.labelKey)}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </nav>
-
-          {isPreviewMode ? (
-            <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
-              {isArabic
-                ? "أنت الآن تشاهد القائمة والصلاحيات كما تظهر للمستخدم المختار."
-                : "You are previewing the menu and permissions as the selected user."}
-            </div>
-          ) : null}
-        </div>
+        {SidebarContent}
       </aside>
 
       <main className="min-h-screen pt-32 lg:rtl:pr-72 lg:ltr:pl-72">

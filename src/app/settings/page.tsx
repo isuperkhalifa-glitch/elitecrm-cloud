@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requireAdmin } from "@/lib/auth/server-guards";
 import { mergeSystemSettings } from "@/lib/settings/defaults";
 import { SettingsClient } from "./settings-client";
 
@@ -11,9 +12,8 @@ export default async function SettingsPage({ searchParams }: any) {
       : null;
 
   const { supabase, user, profile } = await getCurrentUserProfile();
-  const canEdit = profile?.role === "admin";
 
-  if (!canEdit) {
+  if (profile?.role !== "admin") {
     return (
       <AppShell
         titleKey="settings"
@@ -22,11 +22,13 @@ export default async function SettingsPage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-200">
-          هذه الصفحة متاحة للأدمن فقط.
+          ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ظ…طھط§ط­ط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.
         </div>
       </AppShell>
     );
   }
+
+  requireAdmin(profile?.role);
 
   const { data: settings } = await supabase
     .from("system_settings")

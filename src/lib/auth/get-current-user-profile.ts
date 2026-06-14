@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getCurrentUserProfile() {
@@ -14,9 +14,13 @@ export async function getCurrentUserProfile() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, is_active")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (profile?.is_active === false) {
+    redirect("/login?error=inactive");
+  }
 
   return {
     supabase,

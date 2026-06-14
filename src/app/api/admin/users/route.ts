@@ -1,16 +1,15 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { isAdmin, isRole } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const allowedRoles = ["admin", "manager", "moderator", "sales", "finance"];
 
 export async function POST(request: Request) {
   try {
     const { profile } = await getCurrentUserProfile();
 
-    if (!profile || !["admin", "manager"].includes(profile.role ?? "")) {
+    if (!isAdmin(profile?.role)) {
       return NextResponse.json(
-        { error: "غير مسموح بإنشاء مستخدمين." },
+        { error: "ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·." },
         { status: 403 }
       );
     }
@@ -24,21 +23,21 @@ export async function POST(request: Request) {
 
     if (!email || !password || !fullName) {
       return NextResponse.json(
-        { error: "الاسم والبريد وكلمة المرور مطلوبة." },
+        { error: "ط§ظ„ط§ط³ظ… ظˆط§ظ„ط¨ط±ظٹط¯ ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ظ…ط·ظ„ظˆط¨ط©." },
         { status: 400 }
       );
     }
 
-    if (!allowedRoles.includes(role)) {
+    if (!isRole(role)) {
       return NextResponse.json(
-        { error: "صلاحية غير صحيحة." },
+        { error: "طµظ„ط§ط­ظٹط© ط؛ظٹط± طµط­ظٹط­ط©." },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        { error: "كلمة المرور لازم تكون 8 أحرف على الأقل." },
+        { error: "ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ظ„ط§ط²ظ… طھظƒظˆظ† 8 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„." },
         { status: 400 }
       );
     }
@@ -56,7 +55,7 @@ export async function POST(request: Request) {
 
     if (error || !data.user) {
       return NextResponse.json(
-        { error: error?.message ?? "تعذر إنشاء المستخدم." },
+        { error: error?.message ?? "طھط¹ط°ط± ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ…." },
         { status: 400 }
       );
     }

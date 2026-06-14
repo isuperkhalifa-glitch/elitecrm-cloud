@@ -37,7 +37,7 @@ export const defaultSystemSettings: SystemSetting[] = [
     key: "crm.lead_statuses",
     label: "حالات العملاء",
     group_name: "crm",
-    value: ["new", "contacted", "qualified", "converted", "lost"],
+    value: ["new", "assigned", "contacted", "qualified", "interested", "follow_up", "no_answer", "converted", "lost"],
     description: "الحالات الأساسية المستخدمة في صفحة العملاء.",
     is_public: true,
   },

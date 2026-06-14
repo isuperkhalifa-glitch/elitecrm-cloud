@@ -1,9 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
-import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
   Loader2,
@@ -48,7 +47,7 @@ export function UsersClient({
 }: Props) {
   const { language } = useI18n();
   const isArabic = language === "ar";
-  const canManage = role === "admin" || role === "manager";
+  const canManage = role === "admin";
 
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [form, setForm] = useState(emptyForm);
@@ -63,11 +62,11 @@ export function UsersClient({
   }
 
   function roleLabel(value: string | null) {
-    if (value === "admin") return tx("مدير النظام", "Admin");
-    if (value === "manager") return tx("مدير", "Manager");
-    if (value === "moderator") return tx("موديريتور", "Moderator");
-    if (value === "finance") return tx("مالية", "Finance");
-    return tx("سيلز", "Sales");
+    if (value === "admin") return tx("ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ…", "Admin");
+    if (value === "manager") return tx("ظ…ط¯ظٹط±", "Manager");
+    if (value === "moderator") return tx("ظ…ظˆط¯ظٹط±ظٹطھظˆط±", "Moderator");
+    if (value === "finance") return tx("ظ…ط§ظ„ظٹط©", "Finance");
+    return tx("ط³ظٹظ„ط²", "Sales");
   }
 
   const filteredUsers = useMemo(() => {
@@ -103,7 +102,7 @@ export function UsersClient({
     setError("");
 
     if (!canManage) {
-      setError(tx("هذه الصلاحية للمدير فقط.", "Admin only."));
+      setError(tx("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.", "Admin only."));
       return;
     }
 
@@ -120,42 +119,49 @@ export function UsersClient({
     const result = await response.json();
 
     if (!response.ok) {
-      setError(result.error ?? tx("تعذر إنشاء المستخدم.", "Unable to create user."));
+      setError(result.error ?? tx("طھط¹ط°ط± ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ….", "Unable to create user."));
       setCreating(false);
       return;
     }
 
     setUsers((current) => [result.user as UserRow, ...current]);
     setForm(emptyForm);
-    setMessage(tx("تم إنشاء المستخدم بنجاح.", "User created successfully."));
+    setMessage(tx("طھظ… ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ… ط¨ظ†ط¬ط§ط­.", "User created successfully."));
     setCreating(false);
   }
 
   async function updateUser(userId: string, patch: Partial<UserRow>) {
     setMessage("");
     setError("");
+
+    if (!canManage) {
+      setError(tx("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.", "Admin only."));
+      return;
+    }
+
     setSavingId(userId);
 
-    const supabase = createClient();
+    const response = await fetch("/api/admin/users/" + encodeURIComponent(userId), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(patch),
+    });
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(patch)
-      .eq("id", userId)
-      .select("id,email,full_name,role,is_active,created_at")
-      .single();
+    const result = await response.json();
 
-    if (error || !data) {
-      setError(error?.message ?? tx("تعذر تحديث المستخدم.", "Unable to update user."));
+    if (!response.ok || !result.user) {
+      setError(result.error ?? tx("طھط¹ط°ط± طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ….", "Unable to update user."));
       setSavingId("");
       return;
     }
 
     setUsers((current) =>
-      current.map((user) => (user.id === userId ? (data as UserRow) : user))
+      current.map((user) => (user.id === userId ? (result.user as UserRow) : user))
     );
 
-    setMessage(tx("تم تحديث المستخدم.", "User updated."));
+    setMessage(tx("طھظ… طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ….", "User updated."));
     setSavingId("");
   }
 
@@ -168,22 +174,22 @@ export function UsersClient({
     >
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <p className="text-sm text-slate-400">{tx("إجمالي المستخدمين", "Total users")}</p>
+          <p className="text-sm text-slate-400">{tx("ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†", "Total users")}</p>
           <h2 className="mt-2 text-3xl font-black text-white">{stats.total}</h2>
         </div>
 
         <div className="safe-card rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
-          <p className="text-sm text-emerald-300">{tx("نشطين", "Active")}</p>
+          <p className="text-sm text-emerald-300">{tx("ظ†ط´ط·ظٹظ†", "Active")}</p>
           <h2 className="mt-2 text-3xl font-black text-emerald-300">{stats.active}</h2>
         </div>
 
         <div className="safe-card rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-5">
-          <p className="text-sm text-sky-300">{tx("سيلز", "Sales")}</p>
+          <p className="text-sm text-sky-300">{tx("ط³ظٹظ„ط²", "Sales")}</p>
           <h2 className="mt-2 text-3xl font-black text-sky-300">{stats.sales}</h2>
         </div>
 
         <div className="safe-card rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-5">
-          <p className="text-sm text-yellow-300">{tx("إدارة", "Admins")}</p>
+          <p className="text-sm text-yellow-300">{tx("ط¥ط¯ط§ط±ط©", "Admins")}</p>
           <h2 className="mt-2 text-3xl font-black text-yellow-300">{stats.admins}</h2>
         </div>
       </div>
@@ -195,8 +201,8 @@ export function UsersClient({
               <UserPlus className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-emerald-300">{tx("إضافة مستخدم", "Add user")}</p>
-              <h2 className="text-2xl font-black text-white">{tx("مستخدم جديد", "New User")}</h2>
+              <p className="text-sm text-emerald-300">{tx("ط¥ط¶ط§ظپط© ظ…ط³طھط®ط¯ظ…", "Add user")}</p>
+              <h2 className="text-2xl font-black text-white">{tx("ظ…ط³طھط®ط¯ظ… ط¬ط¯ظٹط¯", "New User")}</h2>
             </div>
           </div>
 
@@ -204,14 +210,14 @@ export function UsersClient({
             <input
               value={form.full_name}
               onChange={(event) => setForm({ ...form, full_name: event.target.value })}
-              placeholder={tx("اسم المستخدم", "Full name")}
+              placeholder={tx("ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…", "Full name")}
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
             />
 
             <input
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
-              placeholder={tx("البريد الإلكتروني", "Email")}
+              placeholder={tx("ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", "Email")}
               type="email"
               dir="ltr"
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
@@ -220,7 +226,7 @@ export function UsersClient({
             <input
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
-              placeholder={tx("كلمة المرور", "Password")}
+              placeholder={tx("ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±", "Password")}
               type="text"
               dir="ltr"
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
@@ -245,7 +251,7 @@ export function UsersClient({
               type="button"
             >
               {creating ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserPlus className="h-5 w-5" />}
-              {tx("إنشاء مستخدم", "Create user")}
+              {tx("ط¥ظ†ط´ط§ط، ظ…ط³طھط®ط¯ظ…", "Create user")}
             </button>
 
             {error ? (
@@ -267,14 +273,14 @@ export function UsersClient({
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm text-emerald-300">{tx("الصلاحيات", "Permissions")}</p>
-              <h2 className="text-2xl font-black text-white">{tx("المستخدمين", "Users")}</h2>
+              <p className="text-sm text-emerald-300">{tx("ط§ظ„طµظ„ط§ط­ظٹط§طھ", "Permissions")}</p>
+              <h2 className="text-2xl font-black text-white">{tx("ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†", "Users")}</h2>
             </div>
 
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={tx("بحث...", "Search...")}
+              placeholder={tx("ط¨ط­ط«...", "Search...")}
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400 md:max-w-sm"
             />
           </div>
@@ -295,7 +301,7 @@ export function UsersClient({
 
                       {user.id === currentUserId ? (
                         <span className="rounded-full bg-sky-400/10 px-2 py-1 text-xs text-sky-300">
-                          {tx("أنت", "You")}
+                          {tx("ط£ظ†طھ", "You")}
                         </span>
                       ) : null}
                     </div>
@@ -307,7 +313,7 @@ export function UsersClient({
 
                   <select
                     value={user.role ?? "sales"}
-                    disabled={!canManage}
+                    disabled={!canManage || savingId === user.id}
                     onChange={(event) =>
                       updateUser(user.id, { role: event.target.value })
                     }
@@ -325,18 +331,17 @@ export function UsersClient({
                     onClick={() =>
                       updateUser(user.id, { is_active: !user.is_active })
                     }
-                    className={`rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:opacity-60 ${
-                      user.is_active
+                    className={"rounded-2xl border px-4 py-3 text-sm font-bold transition disabled:opacity-60 " +
+                      (user.is_active
                         ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
-                        : "border-red-500/30 bg-red-500/10 text-red-300"
-                    }`}
+                        : "border-red-500/30 bg-red-500/10 text-red-300")}
                     type="button"
                   >
                     {savingId === user.id
-                      ? tx("جاري...", "Saving...")
+                      ? tx("ط¬ط§ط±ظٹ...", "Saving...")
                       : user.is_active
-                        ? tx("نشط", "Active")
-                        : tx("موقوف", "Inactive")}
+                        ? tx("ظ†ط´ط·", "Active")
+                        : tx("ظ…ظˆظ‚ظˆظپ", "Inactive")}
                   </button>
 
                   <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
@@ -349,7 +354,7 @@ export function UsersClient({
 
             {filteredUsers.length === 0 ? (
               <div className="rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">
-                {tx("لا يوجد مستخدمين.", "No users found.")}
+                {tx("ظ„ط§ ظٹظˆط¬ط¯ ظ…ط³طھط®ط¯ظ…ظٹظ†.", "No users found.")}
               </div>
             ) : null}
           </div>

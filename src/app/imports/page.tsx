@@ -1,8 +1,10 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { ImportsClient } from "./imports-client";
 
 export default async function ImportsPage() {
   const { user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "imports");
 
   return (
     <ImportsClient

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -30,7 +30,7 @@ type PreparedLead = {
   source: string | null;
   status: string;
   priority: string;
-  owner_id: string;
+  owner_id: string | null;
   program: string | null;
   notes: string | null;
   system_source: string | null;
@@ -107,7 +107,7 @@ function mapStatus(value: string) {
     notInterested: "not_interested",
     wrongNumber: "wrong_number",
     waitingOrConnecting: "follow_up",
-    noReplyOrClosed: "no_reply",
+    noReplyOrClosed: "no_answer",
     interested: "interested",
     new: "new",
   };
@@ -167,7 +167,7 @@ function buildLeadPayload(
       source: readText(row, ["source"]) || "excel_import",
       status: mapStatus(readText(row, ["status"])),
       priority: readNumber(row, ["potential"]) ? "high" : "medium",
-      owner_id: currentUserId,
+      owner_id: null,
       program: program || null,
       notes: notes || null,
       system_source: readText(row, ["systemSource"]) || null,
@@ -327,7 +327,7 @@ export function ImportsClient({
 
   return (
     <AppShell
-      titleKey="leads"
+      titleKey="imports"
       userEmail={userEmail}
       fullName={fullName}
       role={role}

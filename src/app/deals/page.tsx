@@ -1,8 +1,10 @@
-﻿import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { DealsClient } from "./deals-client";
 
 export default async function DealsPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "deals");
 
   const [{ data: deals }, { data: companies }, { data: contacts }] =
     await Promise.all([
@@ -32,5 +34,3 @@ export default async function DealsPage() {
     />
   );
 }
-
-
