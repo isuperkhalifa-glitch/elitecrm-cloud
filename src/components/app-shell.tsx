@@ -69,7 +69,15 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       { href: "/my-customers", labelKey: "myCustomers", icon: UsersRound, roles: ["admin", "manager", "sales"] },
-      { href: "/leads", labelKey: "leads", icon: UsersRound, roles: ["admin", "manager", "moderator", "sales"] },
+      {
+        href: "/registrations",
+        labelKey: "registrations",
+        icon: CheckSquare,
+        featureKey: "features.registrations.enabled",
+        roles: ["admin", "manager", "sales", "finance"],
+      },
+      {
+        href: "/leads", labelKey: "leads", icon: UsersRound, roles: ["admin", "manager", "moderator", "sales"] },
       { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["admin", "manager", "sales"] },
       { href: "/deals", labelKey: "deals", icon: BadgeDollarSign, featureKey: "features.deals.enabled", roles: ["admin", "manager", "sales", "finance"] },
     ],

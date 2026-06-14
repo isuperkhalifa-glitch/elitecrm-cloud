@@ -10,6 +10,15 @@ export type SystemSetting = {
 
 export const defaultSystemSettings: SystemSetting[] = [
   {
+    key: "features.registrations.enabled",
+    label: "طھط´ط؛ظٹظ„ ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
+    group_name: "features",
+    value: true,
+    description: "ط¥ط¸ظ‡ط§ط± طµظپط­ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ ط§ظ„ظ…ط¨ط³ط·ط© ط¨ط¯ظ„ ط§ظ„طµظپظ‚ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط±.",
+    is_public: true,
+  },
+
+  {
     key: "features.deals.enabled",
     label: "تشغيل الصفقات",
     group_name: "features",
@@ -30,7 +39,7 @@ export const defaultSystemSettings: SystemSetting[] = [
     key: "features.commissions.enabled",
     label: "تشغيل العمولات",
     group_name: "features",
-    value: true,
+    value: false,
     description: "إظهار أو إخفاء العمولات من النظام.",
     is_public: true,
   },
@@ -280,6 +289,22 @@ export const defaultSystemSettings: SystemSetting[] = [
     group_name: "pages",
     value: "تحكم مركزي في خصائص النظام، الصفحات، الحالات، والصلاحيات التشغيلية.",
     description: "الوصف الظاهر في صفحة الإعدادات.",
+    is_public: true,
+  },
+  {
+    key: "pages.registrations.title",
+    label: "ط¹ظ†ظˆط§ظ† ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
+    group_name: "pages",
+    value: "ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
+    description: "ط¹ظ†ظˆط§ظ† طµظپط­ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ ط§ظ„ظ…ط¨ط³ط·ط©.",
+    is_public: true,
+  },
+  {
+    key: "pages.registrations.description",
+    label: "ظˆطµظپ ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
+    group_name: "pages",
+    value: "طھط§ط¨ط¹ ط§ظ„ط¹ظ…ظ„ط§ط، ط§ظ„ظ…ط³ط¬ظ„ظٹظ† ظˆط­ط§ظ„ط© ط§ظ„ط¯ظپط¹ ظ…ظ† طµظپط­ط© ظˆط§ط­ط¯ط© ط¨ط³ظٹط·ط©.",
+    description: "ط§ظ„ظˆطµظپ ط§ظ„ط¸ط§ظ‡ط± ظپظٹ طµظپط­ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ.",
     is_public: true,
   },
 ];
