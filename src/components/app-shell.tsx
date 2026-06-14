@@ -28,7 +28,6 @@ import { useScope } from "@/components/scope-provider";
 import { useSystemSettings } from "@/components/system-settings-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
-import { normalizeRole, type Role } from "@/lib/auth/roles";
 
 type AppShellProps = {
   titleKey: string;
@@ -37,6 +36,8 @@ type AppShellProps = {
   role?: string | null;
   children: ReactNode;
 };
+
+type Role = "admin" | "manager" | "moderator" | "sales" | "finance";
 
 type NavItem = {
   href: string;
@@ -57,118 +58,59 @@ const previewAdminRoles: Role[] = ["admin", "manager"];
 
 const navGroups: NavGroup[] = [
   {
-    labelAr: "ظ†ط¸ط±ط© ط¹ط§ظ…ط©",
+    labelAr: "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629",
     labelEn: "Overview",
     items: [
-      {
-        href: "/dashboard",
-        labelKey: "dashboard",
-        icon: LayoutDashboard,
-        roles: allRoles,
-      },
+      { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard, roles: allRoles },
     ],
   },
   {
-    labelAr: "ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„",
+    labelAr: "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644",
     labelEn: "Workspace",
     items: [
-      {
-        href: "/my-customers",
-        labelKey: "myCustomers",
-        icon: UsersRound,
-        roles: ["admin", "manager", "sales"],
-      },
-      {
-        href: "/leads",
-        labelKey: "leads",
-        icon: UsersRound,
-        roles: ["admin", "manager", "moderator", "sales"],
-      },
-      {
-        href: "/tasks",
-        labelKey: "tasks",
-        icon: CheckSquare,
-        roles: ["admin", "manager", "sales"],
-      },
-      {
-        href: "/deals",
-        labelKey: "deals",
-        icon: BadgeDollarSign,
-        roles: ["admin", "manager", "sales"],
-      },
+      { href: "/my-customers", labelKey: "myCustomers", icon: UsersRound, roles: ["admin", "manager", "sales"] },
+      { href: "/leads", labelKey: "leads", icon: UsersRound, roles: ["admin", "manager", "moderator", "sales"] },
+      { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["admin", "manager", "sales"] },
+      { href: "/deals", labelKey: "deals", icon: BadgeDollarSign, roles: ["admin", "manager", "sales", "finance"] },
     ],
   },
   {
-    labelAr: "ط§ظ„ظ…ط§ظ„ظٹط©",
+    labelAr: "\u0627\u0644\u0645\u0627\u0644\u064a\u0629",
     labelEn: "Finance",
     items: [
-      {
-        href: "/invoices",
-        labelKey: "invoices",
-        icon: Receipt,
-        featureKey: "features.invoices.enabled",
-        roles: ["admin", "manager", "finance", "sales"],
-      },
-      {
-        href: "/commissions",
-        labelKey: "commissions",
-        icon: BadgeDollarSign,
-        featureKey: "features.commissions.enabled",
-        roles: ["admin", "manager", "finance", "sales"],
-      },
+      { href: "/invoices", labelKey: "invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["admin", "manager", "finance", "sales"] },
+      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["admin", "manager", "finance", "sales"] },
     ],
   },
   {
-    labelAr: "ط§ظ„ط¥ط¯ط§ط±ط©",
+    labelAr: "\u0627\u0644\u0625\u062f\u0627\u0631\u0629",
     labelEn: "Admin",
     items: [
-      {
-        href: "/distribution",
-        labelKey: "distribution",
-        icon: UsersRound,
-        roles: ["admin", "manager", "moderator"],
-      },
-      {
-        href: "/imports",
-        labelKey: "imports",
-        icon: FileSpreadsheet,
-        roles: ["admin", "manager", "moderator"],
-      },
-      {
-        href: "/companies",
-        labelKey: "companies",
-        icon: Building2,
-        roles: ["admin", "manager"],
-      },
-      {
-        href: "/contacts",
-        labelKey: "contacts",
-        icon: ContactRound,
-        roles: ["admin", "manager"],
-      },
-      {
-        href: "/users",
-        labelKey: "users",
-        icon: UserCog,
-        roles: ["admin"],
-      },
-      {
-        href: "/settings",
-        labelKey: "settings",
-        icon: Settings,
-        roles: ["admin"],
-      },
+      { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["admin", "manager", "moderator"] },
+      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["admin", "manager", "moderator"] },
+      { href: "/companies", labelKey: "companies", icon: Building2, roles: ["admin", "manager"] },
+      { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["admin", "manager"] },
+      { href: "/users", labelKey: "users", icon: UserCog, roles: ["admin"] },
+      { href: "/settings", labelKey: "settings", icon: Settings, roles: ["admin"] },
     ],
   },
 ];
 
+function normalizeRole(role?: string | null): Role {
+  if (role === "admin") return "admin";
+  if (role === "manager") return "manager";
+  if (role === "moderator") return "moderator";
+  if (role === "finance") return "finance";
+  return "sales";
+}
+
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    admin: { ar: "ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ…", en: "Admin" },
-    manager: { ar: "ظ…ط¯ظٹط±", en: "Manager" },
-    moderator: { ar: "ظ…ظˆط¯ظٹط±ظٹطھظˆط±", en: "Moderator" },
-    sales: { ar: "ط³ظٹظ„ط²", en: "Sales" },
-    finance: { ar: "ظ…ط§ظ„ظٹط©", en: "Finance" },
+    admin: { ar: "\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Admin" },
+    manager: { ar: "\u0645\u062f\u064a\u0631", en: "Manager" },
+    moderator: { ar: "\u0645\u0648\u062f\u064a\u0631\u064a\u062a\u0648\u0631", en: "Moderator" },
+    sales: { ar: "\u0633\u064a\u0644\u0632", en: "Sales" },
+    finance: { ar: "\u0645\u0627\u0644\u064a\u0629", en: "Finance" },
   };
 
   return isArabic ? labels[role].ar : labels[role].en;
@@ -231,11 +173,15 @@ export function AppShell({
     router.refresh();
   }
 
-  const SidebarContent = (
+  function closeMobile() {
+    setMobileOpen(false);
+  }
+
+  const sidebar = (
     <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
       <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
         <p className="text-xs text-emerald-300">
-          {isArabic ? "ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„" : "Workspace"}
+          {isArabic ? "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644" : "Workspace"}
         </p>
         <h2 className="mt-1 truncate text-lg font-black">
           {fullName ?? userEmail ?? "-"}
@@ -264,18 +210,19 @@ export function AppShell({
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active =
-                  pathname === item.href ||
-                  pathname.startsWith(item.href + "/");
+                  pathname === item.href || pathname.startsWith(item.href + "/");
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={"elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
+                    onClick={closeMobile}
+                    className={
+                      "elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
                       (active
                         ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20"
-                        : "text-slate-300 hover:bg-white/10 hover:text-white")}
+                        : "text-slate-300 hover:bg-white/10 hover:text-white")
+                    }
                   >
                     <Icon className="h-5 w-5 shrink-0" />
                     <span>{label(item.labelKey)}</span>
@@ -290,7 +237,7 @@ export function AppShell({
       {isPreviewMode ? (
         <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
           {isArabic
-            ? "ط£ظ†طھ ط§ظ„ط¢ظ† طھط´ط§ظ‡ط¯ ط§ظ„ظ‚ط§ط¦ظ…ط© ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ ظƒظ…ط§ طھط¸ظ‡ط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط±."
+            ? "\u0623\u0646\u062a \u0627\u0644\u0622\u0646 \u062a\u0634\u0627\u0647\u062f \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0643\u0645\u0627 \u062a\u0638\u0647\u0631 \u0644\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u062e\u062a\u0627\u0631."
             : "You are previewing the menu and permissions as the selected user."}
         </div>
       ) : null}
@@ -298,15 +245,14 @@ export function AppShell({
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
         <div className="flex min-h-20 items-center gap-3 px-4 lg:px-6">
           <button
-            onClick={() => setMobileOpen((value) => !value)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:hidden"
             type="button"
             aria-label="menu"
-            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((value) => !value)}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -315,10 +261,10 @@ export function AppShell({
             <p className="text-xs text-emerald-300">
               {isPreviewMode
                 ? isArabic
-                  ? "ظ…ط¹ط§ظٹظ†ط© ظ…ط³طھط®ط¯ظ…"
+                  ? "\u0645\u0639\u0627\u064a\u0646\u0629 \u0645\u0633\u062a\u062e\u062f\u0645"
                   : "User preview"
                 : isArabic
-                  ? "ط±ط¤ظٹط© ط§ظ„ظ†ط¸ط§ظ…"
+                  ? "\u0631\u0624\u064a\u0629 \u0627\u0644\u0646\u0638\u0627\u0645"
                   : "System view"}
             </p>
             <h1 className="truncate text-lg font-black md:text-xl">
@@ -341,7 +287,7 @@ export function AppShell({
               type="button"
             >
               <LogOut className="h-4 w-4" />
-              {isArabic ? "طھط³ط¬ظٹظ„ ط§ظ„ط®ط±ظˆط¬" : "Logout"}
+              {isArabic ? "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c" : "Logout"}
             </button>
           </div>
         </div>
@@ -352,15 +298,26 @@ export function AppShell({
       </header>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
+        <button
+          type="button"
+          aria-label="close menu"
+          onClick={closeMobile}
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+        />
       ) : null}
 
-      <aside className={(mobileOpen ? "translate-x-0" : "rtl:translate-x-full ltr:-translate-x-full") + " fixed bottom-0 top-0 z-50 w-80 max-w-[86vw] border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl transition-transform duration-300 lg:hidden rtl:right-0 rtl:border-l ltr:left-0 ltr:border-r"}>
-        {SidebarContent}
-      </aside>
-
-      <aside className="fixed bottom-0 top-0 z-40 hidden w-72 border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl lg:block rtl:right-0 rtl:border-l ltr:left-0 ltr:border-r">
-        {SidebarContent}
+      <aside
+        className={
+          "fixed bottom-0 top-0 z-50 w-72 border-white/10 bg-slate-950/95 pt-24 shadow-2xl backdrop-blur-2xl transition-transform duration-300 lg:z-40 lg:block lg:translate-x-0 " +
+          (isArabic ? "right-0 border-l " : "left-0 border-r ") +
+          (mobileOpen
+            ? "translate-x-0 "
+            : isArabic
+              ? "translate-x-full lg:translate-x-0 "
+              : "-translate-x-full lg:translate-x-0 ")
+        }
+      >
+        {sidebar}
       </aside>
 
       <main className="min-h-screen pt-32 lg:rtl:pr-72 lg:ltr:pl-72">
