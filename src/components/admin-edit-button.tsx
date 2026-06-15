@@ -57,12 +57,12 @@ export function AdminEditButton({ role }: Props) {
   }
 
   function openPageSettings() {
-    router.push("/settings?page=" + encodeURIComponent(pageKey));
+    router.push("/customize?page=" + encodeURIComponent(pageKey));
     setPanelOpen(false);
   }
 
   function openSystemSettings() {
-    router.push("/settings");
+    router.push("/customize");
     setPanelOpen(false);
   }
 
