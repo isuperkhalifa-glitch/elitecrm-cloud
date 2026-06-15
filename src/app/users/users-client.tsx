@@ -103,7 +103,7 @@ export function UsersClient({
     setError("");
 
     if (!canManage) {
-      setError(tx("هذه الصلاحية للأدمن فقط.", "Admin only."));
+      setError(tx("\u0647\u0630\u0647 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629 \u0644\u0644\u0645\u0637\u0648\u0631 \u0623\u0648 \u0627\u0644\u0623\u062f\u0645\u0646 \u0641\u0642\u0637.", "Developer or admin only."));
       return;
     }
 
