@@ -116,10 +116,10 @@ function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
     developer: { ar: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Developer" },
     admin: { ar: "مدير النظام", en: "Admin" },
-    manager: { ar: "مدير", en: "Manager" },
-    moderator: { ar: "موديريتور", en: "Moderator" },
+    manager: { ar: "طھظٹظ… ظ„ظٹط¯ط± ط³ظٹظ„ط²", en: "Sales Team Leader" },
+    moderator: { ar: "ظ…ط³ظˆظ‚", en: "Marketer" },
     sales: { ar: "سيلز", en: "Sales" },
-    finance: { ar: "مالية", en: "Finance" },
+    finance: { ar: "ظ…ط­ظ„ظ„ ط¨ظٹط§ظ†ط§طھ", en: "Data Analyst" },
   };
 
   return isArabic ? labels[role].ar : labels[role].en;
