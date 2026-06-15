@@ -16,8 +16,7 @@ export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator"
 export const routeAccess: Record<string, AppRole[]> = {
   "/dashboard": ["developer", "admin", "manager", "moderator", "sales", "finance"],
   "/customers": ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  "/training-centers": ["developer", "admin", "manager"],
-  "/courses": ["developer", "admin", "manager", "moderator", "sales", "finance"],
+  "/courses": ["developer", "admin", "manager"],
   "/leads": ["developer", "admin", "manager", "moderator", "sales"],
   "/my-customers": ["developer", "admin", "manager", "sales"],
   "/distribution": ["developer", "admin", "manager", "moderator"],

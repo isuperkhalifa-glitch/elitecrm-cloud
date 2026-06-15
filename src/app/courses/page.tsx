@@ -1,28 +1,31 @@
-import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requirePageAccess } from "@/lib/auth/server-guards";
 import { CoursesClient } from "./courses-client";
 
-const allowedRoles = new Set(["developer", "admin", "manager"]);
-const selectColumns = "id,code,name,name_ar,name_en,category,delivery_mode,duration_days,duration_hours,accreditation_number,provider,base_price,sale_price,discount_type,discount_value,discount_code,currency,start_date,end_date,location,description,notes,is_active,sort_order,created_at,updated_at";
-
 export default async function CoursesPage() {
-  const { user, profile } = await getCurrentUserProfile();
-  const role = profile?.role ?? null;
+  const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "courses");
 
-  if (!allowedRoles.has(role ?? "")) {
-    return (
-      <AppShell titleKey="courses" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
-        <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          <h2 className="text-2xl font-black">{"غير مسموح"}</h2>
-          <p className="mt-3 text-sm leading-7 text-red-100/80">{"إدارة الدورات متاحة للمطور أو الأدمن أو المدير فقط."}</p>
-        </div>
-      </AppShell>
-    );
-  }
+  const [{ data: courses }, { data: companies }] = await Promise.all([
+    supabase
+      .from("courses")
+      .select("id,name,name_ar,name_en,company_id,code,accreditation_number,delivery_mode,duration_days,duration_hours,price,sale_price,discount_type,discount_value,discount_code,location,notes,status,sort_order,created_at")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("companies")
+      .select("id,name,status,commission_type,commission_value")
+      .order("name", { ascending: true }),
+  ]);
 
-  const admin = createAdminClient();
-  const { data: courses } = await admin.from("courses").select(selectColumns).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
-
-  return <CoursesClient initialCourses={(courses ?? []) as any} userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role} />;
+  return (
+    <CoursesClient
+      initialCourses={(courses ?? []) as any}
+      trainingCenters={(companies ?? []) as any}
+      currentUserId={user.id}
+      userEmail={user.email ?? null}
+      fullName={profile?.full_name ?? null}
+      role={profile?.role ?? null}
+    />
+  );
 }

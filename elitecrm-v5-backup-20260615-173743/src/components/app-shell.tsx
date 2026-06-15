@@ -94,7 +94,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["developer", "admin", "manager", "moderator"] },
       { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
-      { href: "/training-centers", labelKey: "trainingCenters", icon: Building2, roles: ["developer", "admin", "manager"] },
+      { href: "/companies", labelKey: "companies", icon: Building2, roles: ["developer", "admin", "manager"] },
       { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["developer", "admin", "manager"] },
       { href: "/users", labelKey: "users", icon: UserCog, roles: ["developer", "admin"] },
       { href: "/settings", labelKey: "settings", icon: Settings, roles: ["developer", "admin"] },

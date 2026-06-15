@@ -4,7 +4,6 @@ export type PageKey =
   | "dashboard"
   | "customers"
   | "courses"
-  | "training-centers"
   | "my-customers"
   | "leads"
   | "tasks"
@@ -24,8 +23,7 @@ export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
-  courses: ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  "training-centers": ["developer", "admin", "manager"],
+  courses: ["developer", "admin", "manager"],
   "my-customers": ["developer", "admin", "manager", "sales"],
   leads: ["developer", "admin", "manager", "moderator", "sales"],
   tasks: ["developer", "admin", "manager", "sales"],

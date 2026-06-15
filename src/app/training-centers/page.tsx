@@ -1,0 +1,23 @@
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { requirePageAccess } from "@/lib/auth/server-guards";
+import { CompaniesClient } from "../companies/companies-client";
+
+export default async function TrainingCentersPage() {
+  const { supabase, user, profile } = await getCurrentUserProfile();
+  requirePageAccess(profile?.role, "training-centers");
+
+  const { data: companies } = await supabase
+    .from("companies")
+    .select("id,name,industry,website,phone,email,city,country,status,commission_type,commission_value,created_at")
+    .order("created_at", { ascending: false });
+
+  return (
+    <CompaniesClient
+      initialCompanies={(companies ?? []) as any}
+      currentUserId={user.id}
+      userEmail={user.email ?? null}
+      fullName={profile?.full_name ?? null}
+      role={profile?.role ?? null}
+    />
+  );
+}
