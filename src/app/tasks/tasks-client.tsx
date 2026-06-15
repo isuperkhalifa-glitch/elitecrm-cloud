@@ -97,13 +97,14 @@ export function TasksClient({
 
   const summary = useMemo(() => {
     const now = new Date();
+    const visibleTasks = scopedTasks;
 
     return {
-      total: tasks.length,
-      todo: tasks.filter((task) => task.status === "todo").length,
-      inProgress: tasks.filter((task) => task.status === "in_progress").length,
-      done: tasks.filter((task) => task.status === "done").length,
-      overdue: tasks.filter((task) => {
+      total: visibleTasks.length,
+      todo: visibleTasks.filter((task) => task.status === "todo").length,
+      inProgress: visibleTasks.filter((task) => task.status === "in_progress").length,
+      done: visibleTasks.filter((task) => task.status === "done").length,
+      overdue: visibleTasks.filter((task) => {
         if (!task.due_date || task.status === "done" || task.status === "canceled") {
           return false;
         }

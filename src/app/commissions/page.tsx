@@ -11,22 +11,21 @@ export default async function CommissionsPage() {
   const systemSettings = await loadPublicSystemSettings(supabase);
 
   if (!isFeatureEnabled(systemSettings, "features.commissions.enabled", true)) {
-
-  return (
-    <AppShell
-      titleKey="commissions"
-      userEmail={user.email ?? null}
-      fullName={profile?.full_name ?? null}
-      role={profile?.role ?? null}
-    >
-      <div className="safe-card rounded-[2rem] border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
-        <h2 className="text-2xl font-black">العمولات متوقفة حاليًا</h2>
-        <p className="mt-3 text-sm leading-7 text-amber-100/80">
-          تم إيقاف موديول العمولات من مركز إعدادات النظام. يمكن للأدمن تشغيله مرة أخرى من Settings.
-        </p>
-      </div>
-    </AppShell>
-  );
+    return (
+      <AppShell
+        titleKey="commissions"
+        userEmail={user.email ?? null}
+        fullName={profile?.full_name ?? null}
+        role={profile?.role ?? null}
+      >
+        <div className="safe-card rounded-[2rem] border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
+          <h2 className="text-2xl font-black">العمولات متوقفة حاليًا</h2>
+          <p className="mt-3 text-sm leading-7 text-amber-100/80">
+            تم إيقاف موديول العمولات من مركز إعدادات النظام. يمكن للأدمن تشغيله مرة أخرى من Settings.
+          </p>
+        </div>
+      </AppShell>
+    );
 
   }
 

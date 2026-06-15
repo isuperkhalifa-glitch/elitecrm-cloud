@@ -22,7 +22,7 @@ export default async function SettingsPage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-200">
-          ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ظ…طھط§ط­ط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.
+          هذه الصفحة متاحة للأدمن فقط.
         </div>
       </AppShell>
     );
