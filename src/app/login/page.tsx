@@ -57,7 +57,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = "/dashboard";
+      window.location.href = "/customers";
     } catch (err) {
       setError(err instanceof Error ? err.message : t("loginError"));
       setLoading(false);

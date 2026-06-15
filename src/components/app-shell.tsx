@@ -56,6 +56,13 @@ type NavGroup = {
 const allRoles: Role[] = ["admin", "manager", "moderator", "sales", "finance"];
 const previewAdminRoles: Role[] = ["admin", "manager"];
 
+const hiddenNavHrefs = new Set([
+  "/leads",
+  "/my-customers",
+  "/deals",
+  "/invoices",
+]);
+
 const navGroups: NavGroup[] = [
   {
     labelAr: "نظرة عامة",
@@ -135,7 +142,8 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) => item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))
+        (item) => !hiddenNavHrefs.has(item.href) &&
+          item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))
       ),
     }))
     .filter((group) => group.items.length > 0);
