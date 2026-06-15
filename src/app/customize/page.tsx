@@ -1,11 +1,11 @@
-import { AppShell } from "@/components/app-shell";
+﻿import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { mergeSystemSettings } from "@/lib/settings/defaults";
 import { CustomizerClient } from "./customizer-client";
 
 export default async function CustomizePage({ searchParams }: any) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const selectedPageKey =
+  const pageKey =
     typeof resolvedSearchParams?.page === "string"
       ? resolvedSearchParams.page
       : "customers";
@@ -21,7 +21,7 @@ export default async function CustomizePage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ظ…طھط§ط­ط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·.
+          هذه الصفحة متاحة للأدمن فقط.
         </div>
       </AppShell>
     );
@@ -34,12 +34,16 @@ export default async function CustomizePage({ searchParams }: any) {
     .order("key", { ascending: true });
 
   return (
-    <CustomizerClient
-      initialSettings={mergeSystemSettings((settings ?? []) as any) as any}
-      pageKey={selectedPageKey}
+    <AppShell
+      titleKey="settings"
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
-    />
+    >
+      <CustomizerClient
+        pageKey={pageKey}
+        initialSettings={mergeSystemSettings((settings ?? []) as any) as any}
+      />
+    </AppShell>
   );
 }

@@ -1,458 +1,381 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   Eye,
-  LayoutDashboard,
-  ListChecks,
+  FileText,
+  LayoutGrid,
   Palette,
-  PanelTopOpen,
   Save,
+  Settings2,
   ShieldCheck,
   SlidersHorizontal,
   ToggleLeft,
-  ToggleRight,
+  Workflow,
 } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
 import type { SystemSetting } from "@/lib/settings/defaults";
 
 type Props = {
-  initialSettings: SystemSetting[];
   pageKey: string;
-  userEmail: string | null;
-  fullName: string | null;
-  role: string | null;
+  initialSettings: SystemSetting[];
 };
 
-type SectionKey = "page" | "features" | "journey" | "lists" | "roles" | "appearance" | "advanced";
+type SectionKey =
+  | "page"
+  | "features"
+  | "journey"
+  | "menu"
+  | "permissions"
+  | "appearance"
+  | "advanced";
 
-type EditableSetting = SystemSetting & {
-  valueText: string;
+const L = {
+  title: "\u062a\u062e\u0635\u064a\u0635 \u0627\u0644\u0646\u0638\u0627\u0645",
+  subtitle:
+    "\u0644\u0648\u062d\u0629 \u0633\u0647\u0644\u0629 \u0632\u064a WordPress \u0644\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0648\u0627\u0644\u0645\u0645\u064a\u0632\u0627\u062a \u0648\u0631\u062d\u0644\u0629 \u0627\u0644\u0639\u0645\u064a\u0644.",
+  page: "\u0627\u0644\u0635\u0641\u062d\u0629",
+  features: "\u0627\u0644\u0645\u0645\u064a\u0632\u0627\u062a",
+  journey: "\u0631\u062d\u0644\u0629 \u0627\u0644\u0639\u0645\u064a\u0644",
+  menu: "\u0627\u0644\u0642\u0648\u0627\u0626\u0645",
+  permissions: "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a",
+  appearance: "\u0627\u0644\u0645\u0638\u0647\u0631",
+  advanced: "\u0645\u062a\u0642\u062f\u0645",
+  save: "\u062d\u0641\u0638",
+  saved: "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638",
+  saving: "\u062c\u0627\u0631\u064a \u0627\u0644\u062d\u0641\u0638...",
+  pageTitle: "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0635\u0641\u062d\u0629",
+  pageDescription: "\u0648\u0635\u0641 \u0627\u0644\u0635\u0641\u062d\u0629",
+  enabled: "\u0645\u0641\u0639\u0644",
+  disabled: "\u0645\u062a\u0648\u0642\u0641",
+  noItems: "\u0644\u0627 \u062a\u0648\u062c\u062f \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0641\u064a \u0647\u0630\u0627 \u0627\u0644\u0642\u0633\u0645.",
+  oneItemPerLine: "\u0627\u0643\u062a\u0628 \u0643\u0644 \u0642\u064a\u0645\u0629 \u0641\u064a \u0633\u0637\u0631 \u0645\u0633\u062a\u0642\u0644.",
 };
 
-const sections: { key: SectionKey; title: string; desc: string; icon: any }[] = [
-  { key: "page", title: "طھط®طµظٹطµ ط§ظ„طµظپط­ط©", desc: "ط§ظ„ط¹ظ†ظˆط§ظ†طŒ ط§ظ„ظˆطµظپطŒ ظˆط§ظ„ط¸ظ‡ظˆط±", icon: PanelTopOpen },
-  { key: "features", title: "طھط´ط؛ظٹظ„ ظˆط¥ظٹظ‚ط§ظپ", desc: "طھط­ظƒظ… ط³ط±ظٹط¹ ظپظٹ ط§ظ„ظ…ظ…ظٹط²ط§طھ", icon: SlidersHorizontal },
-  { key: "journey", title: "ط±ط­ظ„ط© ط§ظ„ط¹ظ…ظٹظ„", desc: "ط§ظ„ط­ط§ظ„ط§طھ ظˆط§ظ„ظ…طھط§ط¨ط¹ط©", icon: ListChecks },
-  { key: "lists", title: "ط§ظ„ظ‚ظˆط§ط¦ظ…", desc: "ط§ظ„ط¯ظˆط±ط§طھطŒ ط§ظ„ظ…طµط§ط¯ط±طŒ ط§ظ„ط£ظ†ظˆط§ط¹", icon: LayoutDashboard },
-  { key: "roles", title: "ط§ظ„طµظ„ط§ط­ظٹط§طھ", desc: "ظ…ط§ ظٹط¸ظ‡ط± ظ„ظƒظ„ ط¯ظˆط±", icon: ShieldCheck },
-  { key: "appearance", title: "ط§ظ„ظ…ط¸ظ‡ط±", desc: "ط§ظ„ظ„ط؛ط© ظˆط§ظ„ط«ظٹظ… ظˆط§ظ„ظˆط§ط¬ظ‡ط©", icon: Palette },
-  { key: "advanced", title: "ظ…طھظ‚ط¯ظ…", desc: "ط¥ط¹ط¯ط§ط¯ط§طھ ظپظ†ظٹط© ط¹ظ†ط¯ ط§ظ„ط­ط§ط¬ط©", icon: Eye },
+const sections: Array<{
+  key: SectionKey;
+  title: string;
+  desc: string;
+  icon: any;
+}> = [
+  {
+    key: "page",
+    title: L.page,
+    desc: "\u0639\u0646\u0648\u0627\u0646 \u0648\u0648\u0635\u0641 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629.",
+    icon: FileText,
+  },
+  {
+    key: "features",
+    title: L.features,
+    desc: "\u062a\u0634\u063a\u064a\u0644 \u0648\u0625\u064a\u0642\u0627\u0641 \u0627\u0644\u0645\u0648\u062f\u064a\u0648\u0644\u0627\u062a.",
+    icon: ToggleLeft,
+  },
+  {
+    key: "journey",
+    title: L.journey,
+    desc: "\u062d\u0627\u0644\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0623\u0648\u0644\u0648\u064a\u0627\u062a.",
+    icon: Workflow,
+  },
+  {
+    key: "menu",
+    title: L.menu,
+    desc: "\u062a\u0631\u062a\u064a\u0628 \u0648\u062a\u0628\u0633\u064a\u0637 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0646\u0638\u0627\u0645.",
+    icon: LayoutGrid,
+  },
+  {
+    key: "permissions",
+    title: L.permissions,
+    desc: "\u0645\u0627\u0630\u0627 \u064a\u0631\u0649 \u0648\u064a\u0641\u0639\u0644 \u0643\u0644 \u062f\u0648\u0631.",
+    icon: ShieldCheck,
+  },
+  {
+    key: "appearance",
+    title: L.appearance,
+    desc: "\u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0648\u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0639\u0631\u0636.",
+    icon: Palette,
+  },
+  {
+    key: "advanced",
+    title: L.advanced,
+    desc: "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0641\u0646\u064a\u0629 \u0644\u0644\u0623\u062f\u0645\u0646.",
+    icon: Settings2,
+  },
 ];
 
-const pageNames: Record<string, string> = {
-  dashboard: "ظ„ظˆط­ط© ط§ظ„طھط­ظƒظ…",
-  customers: "ط§ظ„ط¹ظ…ظ„ط§ط،",
-  distribution: "ط§ظ„طھظˆط²ظٹط¹",
-  imports: "ط§ظ„ط§ط³طھظٹط±ط§ط¯",
-  registrations: "ط§ظ„طھط³ط¬ظٹظ„ط§طھ",
-  settings: "ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ",
-  users: "ط§ظ„ظ…ط³طھط®ط¯ظ…ظˆظ†",
-};
-
-const featureKeys = [
-  "features.deals.enabled",
-  "features.invoices.enabled",
-  "features.commissions.enabled",
-  "features.transfers.enabled",
-];
-
-const journeyKeys = [
-  "crm.customer_statuses",
-  "crm.lead_statuses",
-  "crm.payment_statuses",
-  "crm.priorities",
-  "crm.lead_types",
-];
-
-const listKeys = [
-  "crm.courses",
-  "crm.sources",
-  "crm.countries",
-];
-
-function toText(value: unknown) {
-  if (Array.isArray(value)) return value.join("\\n");
+function valueToText(value: unknown) {
+  if (Array.isArray(value)) return value.join("\n");
   if (typeof value === "boolean") return value ? "true" : "false";
   if (value == null) return "";
   return String(value);
 }
 
-function parseValue(text: string, original: unknown) {
-  if (typeof original === "boolean") return text === "true";
+function parseValue(original: unknown, text: string) {
   if (Array.isArray(original)) {
     return text
       .split(/\n|,/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
+
+  if (typeof original === "boolean") {
+    return text === "true";
+  }
+
   return text;
 }
 
-function readableKey(key: string) {
-  const map: Record<string, string> = {
-    "features.deals.enabled": "طھط´ط؛ظٹظ„ ط§ظ„طµظپظ‚ط§طھ",
-    "features.invoices.enabled": "طھط´ط؛ظٹظ„ ط§ظ„ظپظˆط§طھظٹط±",
-    "features.commissions.enabled": "طھط´ط؛ظٹظ„ ط§ظ„ط¹ظ…ظˆظ„ط§طھ",
-    "features.transfers.enabled": "طھط´ط؛ظٹظ„ طھط­ظˆظٹظ„ ط§ظ„ط¹ظ…ظ„ط§ط،",
-    "crm.customer_statuses": "ط­ط§ظ„ط§طھ ط±ط­ظ„ط© ط§ظ„ط¹ظ…ظٹظ„",
-    "crm.lead_statuses": "ط­ط§ظ„ط§طھ ط§ظ„ط¹ظ…ظ„ط§ط،",
-    "crm.payment_statuses": "ط­ط§ظ„ط§طھ ط§ظ„ط¯ظپط¹",
-    "crm.priorities": "ط§ظ„ط£ظˆظ„ظˆظٹط§طھ",
-    "crm.lead_types": "ط£ظ†ظˆط§ط¹ ط§ظ„ط¹ظ…ظ„ط§ط،",
-    "crm.courses": "ط§ظ„ط¯ظˆط±ط§طھ",
-    "crm.sources": "ظ…طµط§ط¯ط± ط§ظ„ط¹ظ…ظ„ط§ط،",
-    "crm.countries": "ط£ظƒظˆط§ط¯ ط§ظ„ط¯ظˆظ„",
-  };
-
-  if (key.endsWith(".title")) return "ط¹ظ†ظˆط§ظ† ط§ظ„طµظپط­ط©";
-  if (key.endsWith(".description")) return "ظˆطµظپ ط§ظ„طµظپط­ط©";
-  return map[key] ?? key;
+function settingTitle(setting: SystemSetting) {
+  if (setting.key.endsWith(".title")) return L.pageTitle;
+  if (setting.key.endsWith(".description")) return L.pageDescription;
+  return setting.label || setting.key;
 }
 
-function settingDescription(key: string) {
-  if (key.endsWith(".title")) return "ظ‡ط°ط§ ط§ظ„ظ†طµ ظٹط¸ظ‡ط± ظƒط¹ظ†ظˆط§ظ† ط±ط¦ظٹط³ظٹ ط¯ط§ط®ظ„ ط§ظ„طµظپط­ط©.";
-  if (key.endsWith(".description")) return "ظ‡ط°ط§ ط§ظ„ظ†طµ ظٹط¸ظ‡ط± ظƒظˆطµظپ ظ…ط®طھطµط± طھط­طھ ط¹ظ†ظˆط§ظ† ط§ظ„طµظپط­ط©.";
-  if (key.includes("features.")) return "طھط´ط؛ظٹظ„ ط£ظˆ ط¥ظٹظ‚ط§ظپ ظ‡ط°ظ‡ ط§ظ„ظ…ظٹط²ط© ظ…ظ† ط§ظ„ظˆط§ط¬ظ‡ط© ظˆط§ظ„ط±ظˆط§ط¨ط·.";
-  if (key.includes("statuses") || key.includes("priorities")) return "ط§ظƒطھط¨ ظƒظ„ ط§ط®طھظٹط§ط± ظپظٹ ط³ط·ط± ظ…ظ†ظپطµظ„.";
-  if (key.includes("courses")) return "ط§ظƒطھط¨ ط£ط³ظ…ط§ط، ط§ظ„ط¯ظˆط±ط§طھطŒ ظƒظ„ ط¯ظˆط±ط© ظپظٹ ط³ط·ط±.";
-  return "ط¥ط¹ط¯ط§ط¯ ظ‚ط§ط¨ظ„ ظ„ظ„طھط¹ط¯ظٹظ„ ظ…ظ† ظ„ظˆط­ط© ط§ظ„ط£ط¯ظ…ظ†.";
+function isBooleanSetting(setting: SystemSetting) {
+  return typeof setting.value === "boolean" || setting.key.includes(".enabled");
 }
 
-function buildMissingSetting(key: string, pageKey: string): EditableSetting {
-  const isTitle = key.endsWith(".title");
-  const pageName = pageNames[pageKey] ?? pageKey;
+function belongsToSection(setting: SystemSetting, section: SectionKey, pageKey: string) {
+  if (section === "page") return setting.key.startsWith("pages." + pageKey + ".");
+  if (section === "features") return setting.key.startsWith("features.");
+  if (section === "journey") {
+    return (
+      setting.key.includes("status") ||
+      setting.key.includes("priorit") ||
+      setting.key.includes("lead_type") ||
+      setting.key.includes("customer")
+    );
+  }
+  if (section === "menu") return setting.key.startsWith("pages.");
+  if (section === "permissions") return setting.key.includes("role") || setting.key.includes("permission");
+  if (section === "appearance") {
+    return (
+      setting.key.includes("theme") ||
+      setting.key.includes("color") ||
+      setting.key.includes("language") ||
+      setting.key.includes("appearance")
+    );
+  }
 
-  return {
-    key,
-    label: readableKey(key),
-    group_name: key.startsWith("pages.") ? "pages" : key.startsWith("features.") ? "features" : "crm",
-    value: isTitle ? pageName : "",
-    description: settingDescription(key),
-    is_public: true,
-    updated_at: null,
-    valueText: isTitle ? pageName : "",
-  };
+  return true;
 }
 
-export function CustomizerClient({
-  initialSettings,
-  pageKey,
-  userEmail,
-  fullName,
-  role,
-}: Props) {
+export function CustomizerClient({ pageKey, initialSettings }: Props) {
   const [activeSection, setActiveSection] = useState<SectionKey>("page");
-  const [settings, setSettings] = useState<EditableSetting[]>(
-    initialSettings.map((item) => ({ ...item, valueText: toText(item.value) }))
+  const [settings, setSettings] = useState<SystemSetting[]>(initialSettings);
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(initialSettings.map((setting) => [setting.key, valueToText(setting.value)]))
   );
   const [savingKey, setSavingKey] = useState("");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
-  const settingsMap = useMemo(() => {
-    return settings.reduce<Record<string, EditableSetting>>((acc, item) => {
-      acc[item.key] = item;
-      return acc;
-    }, {});
-  }, [settings]);
+  const visibleSettings = useMemo(
+    () => settings.filter((setting) => belongsToSection(setting, activeSection, pageKey)),
+    [settings, activeSection, pageKey]
+  );
 
-  function getSetting(key: string) {
-    return settingsMap[key] ?? buildMissingSetting(key, pageKey);
-  }
-
-  function updateText(key: string, valueText: string) {
-    setSettings((current) => {
-      const exists = current.some((item) => item.key === key);
-      if (!exists) return [{ ...getSetting(key), valueText }, ...current];
-      return current.map((item) => (item.key === key ? { ...item, valueText } : item));
-    });
-  }
-
-  async function saveSetting(setting: EditableSetting) {
-    setError("");
+  async function saveSetting(setting: SystemSetting) {
     setMessage("");
     setSavingKey(setting.key);
 
-    try {
-      const value = parseValue(setting.valueText, setting.value);
-      const response = await fetch("/api/admin/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          key: setting.key,
-          label: setting.label || readableKey(setting.key),
-          group_name: setting.group_name || "custom",
-          value,
-          description: setting.description || settingDescription(setting.key),
-          is_public: setting.is_public ?? true,
-        }),
-      });
+    const nextValue = parseValue(setting.value, values[setting.key] ?? "");
 
-      const result = await response.json();
+    const response = await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: setting.key,
+        label: setting.label,
+        group_name: setting.group_name,
+        value: nextValue,
+        description: setting.description,
+        is_public: setting.is_public ?? true,
+      }),
+    });
 
-      if (!response.ok || !result.setting) {
-        setError(result.error ?? "طھط¹ط°ط± ط§ظ„ط­ظپط¸.");
-        return;
-      }
+    const result = await response.json();
 
+    if (response.ok && result.setting) {
       const saved = result.setting as SystemSetting;
-      setSettings((current) => {
-        const next = { ...saved, valueText: toText(saved.value) };
-        const exists = current.some((item) => item.key === saved.key);
-        return exists
-          ? current.map((item) => (item.key === saved.key ? next : item))
-          : [next, ...current];
-      });
-      setMessage("طھظ… ط§ظ„ط­ظپط¸ ط¨ظ†ط¬ط§ط­.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "طھط¹ط°ط± ط§ظ„ط­ظپط¸.");
-    } finally {
-      setSavingKey("");
+      setSettings((current) =>
+        current.map((item) => (item.key === saved.key ? saved : item))
+      );
+      setValues((current) => ({ ...current, [saved.key]: valueToText(saved.value) }));
+      setMessage(L.saved);
+    } else {
+      setMessage(result.error ?? "\u062a\u0639\u0630\u0631 \u0627\u0644\u062d\u0641\u0638");
     }
+
+    setSavingKey("");
   }
-
-  async function saveMany(keys: string[]) {
-    for (const key of keys) {
-      await saveSetting(getSetting(key));
-    }
-  }
-
-  function SectionButton({ section }: { section: (typeof sections)[number] }) {
-    const Icon = section.icon;
-    const active = activeSection === section.key;
-
-    return (
-      <button
-        type="button"
-        onClick={() => setActiveSection(section.key)}
-        className={
-          "flex w-full items-center gap-3 rounded-2xl p-3 text-start transition " +
-          (active
-            ? "bg-emerald-400 text-slate-950"
-            : "border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10")
-        }
-      >
-        <Icon className="h-5 w-5" />
-        <span>
-          <span className="block text-sm font-black">{section.title}</span>
-          <span className="mt-1 block text-xs opacity-70">{section.desc}</span>
-        </span>
-      </button>
-    );
-  }
-
-  function TextControl({ setting }: { setting: EditableSetting }) {
-    const multiline = Array.isArray(setting.value) || setting.key.endsWith(".description");
-
-    return (
-      <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-black text-white">{readableKey(setting.key)}</h3>
-            <p className="mt-1 text-xs leading-5 text-slate-400">{settingDescription(setting.key)}</p>
-          </div>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] text-slate-400" dir="ltr">
-            {setting.key}
-          </span>
-        </div>
-
-        {multiline ? (
-          <textarea
-            value={setting.valueText}
-            onChange={(event) => updateText(setting.key, event.target.value)}
-            rows={Array.isArray(setting.value) ? 7 : 3}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-          />
-        ) : (
-          <input
-            value={setting.valueText}
-            onChange={(event) => updateText(setting.key, event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-          />
-        )}
-
-        <button
-          type="button"
-          onClick={() => saveSetting(getSetting(setting.key))}
-          disabled={savingKey === setting.key}
-          className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950 hover:bg-emerald-300 disabled:opacity-60"
-        >
-          <Save className="h-4 w-4" />
-          {savingKey === setting.key ? "ط¬ط§ط± ط§ظ„ط­ظپط¸..." : "ط­ظپط¸"}
-        </button>
-      </div>
-    );
-  }
-
-  function ToggleControl({ setting }: { setting: EditableSetting }) {
-    const enabled = setting.valueText === "true";
-
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4">
-        <div>
-          <h3 className="font-black text-white">{readableKey(setting.key)}</h3>
-          <p className="mt-1 text-xs leading-5 text-slate-400">{settingDescription(setting.key)}</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={async () => {
-            const next = enabled ? "false" : "true";
-            updateText(setting.key, next);
-            await saveSetting({ ...setting, valueText: next });
-          }}
-          className={
-            "flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-black " +
-            (enabled ? "bg-emerald-400 text-slate-950" : "bg-white/10 text-slate-300")
-          }
-        >
-          {enabled ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
-          {enabled ? "ظ…ظپط¹ظ„" : "ظ…طھظˆظ‚ظپ"}
-        </button>
-      </div>
-    );
-  }
-
-  const pageTitle = getSetting(`pages.${pageKey}.title`);
-  const pageDescription = getSetting(`pages.${pageKey}.description`);
 
   return (
-    <AppShell titleKey="settings" userEmail={userEmail} fullName={fullName} role={role}>
-      <div className="space-y-5">
-        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-bold text-emerald-300">طھط®طµظٹطµ ط§ظ„ظ†ط¸ط§ظ…</p>
-          <h1 className="mt-2 text-3xl font-black text-white">ظ„ظˆط­ط© طھط®طµظٹطµ طھط´ط¨ظ‡ WordPress</h1>
-          <p className="mt-3 max-w-3xl leading-7 text-slate-400">
-            ط¹ط¯ظ‘ظ„ ط§ظ„طµظپط­ط§طھطŒ ط§ظ„ظ‚ظˆط§ط¦ظ…طŒ ط§ظ„ط­ط§ظ„ط§طھطŒ ط§ظ„طµظ„ط§ط­ظٹط§طھطŒ ظˆط§ظ„ظ…ظ…ظٹط²ط§طھ ط¨ط¯ظˆظ† ظƒطھط§ط¨ط© JSON ط£ظˆ ظƒظˆط¯.
-          </p>
+    <div className="space-y-5">
+      <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-bold text-emerald-300">WordPress Style</p>
+            <h1 className="mt-2 text-3xl font-black text-white">{L.title}</h1>
+            <p className="mt-3 max-w-3xl leading-7 text-slate-400">{L.subtitle}</p>
+          </div>
 
           {message ? (
-            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">
+            <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-300">
               <CheckCircle2 className="h-4 w-4" />
               {message}
             </div>
           ) : null}
-
-          {error ? (
-            <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-200">
-              {error}
-            </div>
-          ) : null}
-        </section>
-
-        <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="safe-card h-max rounded-[2rem] border border-white/10 bg-white/[0.04] p-3">
-            <div className="space-y-2">
-              {sections.map((section) => (
-                <SectionButton key={section.key} section={section} />
-              ))}
-            </div>
-          </aside>
-
-          <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-            {activeSection === "page" ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-black text-white">طھط®طµظٹطµ طµظپط­ط©: {pageNames[pageKey] ?? pageKey}</h2>
-                    <p className="mt-1 text-sm text-slate-400">ط؛ظٹظ‘ط± ظ…ط§ ظٹط¸ظ‡ط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ط¯ط§ط®ظ„ ظ‡ط°ظ‡ ط§ظ„طµظپط­ط©.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => saveMany([pageTitle.key, pageDescription.key])}
-                    className="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950"
-                  >
-                    ط­ظپط¸ ط§ظ„ظƒظ„
-                  </button>
-                </div>
-                <TextControl setting={pageTitle} />
-                <TextControl setting={pageDescription} />
-              </div>
-            ) : null}
-
-            {activeSection === "features" ? (
-              <div className="space-y-3">
-                <h2 className="text-2xl font-black text-white">طھط´ط؛ظٹظ„ ظˆط¥ظٹظ‚ط§ظپ ط§ظ„ظ…ظ…ظٹط²ط§طھ</h2>
-                <p className="text-sm text-slate-400">ط£ظٹ ظ…ظٹط²ط© طھظ‚ظپظ„ظ‡ط§ طھط®طھظپظٹ ظ…ظ† ط§ظ„ظ‚ط§ط¦ظ…ط© ظˆط§ظ„ط±ط§ط¨ط·.</p>
-                {featureKeys.map((key) => (
-                  <ToggleControl key={key} setting={getSetting(key)} />
-                ))}
-              </div>
-            ) : null}
-
-            {activeSection === "journey" ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-white">ط±ط­ظ„ط© ط§ظ„ط¹ظ…ظٹظ„</h2>
-                <p className="text-sm text-slate-400">ظƒظ„ ط§ط®طھظٹط§ط± ظپظٹ ط³ط·ط± ظ…ظ†ظپطµظ„. ظ‡ط°ظ‡ ط§ظ„ظ‚ظˆط§ط¦ظ… طھط¸ظ‡ط± ظپظٹ طµظپط­ط© ط§ظ„ط¹ظ…ظ„ط§ط،.</p>
-                {journeyKeys.map((key) => (
-                  <TextControl key={key} setting={getSetting(key)} />
-                ))}
-              </div>
-            ) : null}
-
-            {activeSection === "lists" ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-white">ط§ظ„ظ‚ظˆط§ط¦ظ… ط§ظ„ط£ط³ط§ط³ظٹط©</h2>
-                <p className="text-sm text-slate-400">ط§ظ„ط¯ظˆط±ط§طھطŒ ط§ظ„ظ…طµط§ط¯ط±طŒ ظˆط£ظƒظˆط§ط¯ ط§ظ„ط¯ظˆظ„ ط§ظ„ظ…ط³طھط®ط¯ظ…ط© ظپظٹ ط§ظ„ظ†ط¸ط§ظ….</p>
-                {listKeys.map((key) => (
-                  <TextControl key={key} setting={getSetting(key)} />
-                ))}
-              </div>
-            ) : null}
-
-            {activeSection === "roles" ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-white">ط§ظ„طµظ„ط§ط­ظٹط§طھ</h2>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {[
-                    ["Admin", "ظƒظ„ ط´ظٹط،: ط¥ط¹ط¯ط§ط¯ط§طھطŒ ظ…ط³طھط®ط¯ظ…ظٹظ†طŒ ط¹ظ…ظ„ط§ط،طŒ طھظ‚ط§ط±ظٹط±."],
-                    ["Manager", "ظ…طھط§ط¨ط¹ط© ط§ظ„طھط´ط؛ظٹظ„ ظˆط§ظ„طھظˆط²ظٹط¹ ط¨ط¯ظˆظ† ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ظ†ط¸ط§ظ…."],
-                    ["Moderator", "ط¥ط¶ط§ظپط© ظˆط§ط³طھظٹط±ط§ط¯ ظˆطھظˆط²ظٹط¹ ط§ظ„ط¹ظ…ظ„ط§ط،."],
-                    ["Sales", "ظ…طھط§ط¨ط¹ط© ط¹ظ…ظ„ط§ط¦ظ‡ ظپظ‚ط· ظˆطھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط§طھ."],
-                    ["Finance", "ط§ظ„طھط³ط¬ظٹظ„ط§طھ ظˆط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ."],
-                  ].map(([title, desc]) => (
-                    <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                      <h3 className="font-black text-white">{title}</h3>
-                      <p className="mt-2 text-sm leading-7 text-slate-400">{desc}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm leading-7 text-amber-100">
-                  طھط¹ط¯ظٹظ„ ط§ظ„طµظ„ط§ط­ظٹط§طھ ط§ظ„طھظپطµظٹظ„ظٹ ظ„ظƒظ„ ط²ط± ظ‡ظٹظƒظˆظ† ظپظٹ ظ†ط³ط®ط© ظ„ط§ط­ظ‚ط© ط­طھظ‰ ظ„ط§ ظ†ظƒط³ط± ط§ظ„ط£ظ…ط§ظ† ط§ظ„ط­ط§ظ„ظٹ.
-                </p>
-              </div>
-            ) : null}
-
-            {activeSection === "appearance" ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-white">ط§ظ„ظ…ط¸ظ‡ط± ظˆط§ظ„ظ„ط؛ط©</h2>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <h3 className="font-black text-white">ط§ظ„ظ„ط؛ط©</h3>
-                  <p className="mt-2 text-sm text-slate-400">ظٹطھظ… ط§ظ„طھط­ظƒظ… ظپظٹظ‡ط§ ظ…ظ† ط²ط± ط§ظ„ظ„ط؛ط© ظپظٹ ط§ظ„ظ‡ظٹط¯ط±.</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <h3 className="font-black text-white">ط§ظ„ظ…ط¸ظ‡ط±</h3>
-                  <p className="mt-2 text-sm text-slate-400">ظٹطھظ… ط§ظ„طھط­ظƒظ… ظپظٹظ‡ ظ…ظ† ط²ط± ط§ظ„ظ…ط¸ظ‡ط± ظپظٹ ط§ظ„ظ‡ظٹط¯ط±.</p>
-                </div>
-              </div>
-            ) : null}
-
-            {activeSection === "advanced" ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-black text-white">ظ…طھظ‚ط¯ظ…</h2>
-                <p className="text-sm text-slate-400">ظ‡ط°ط§ ط§ظ„ظ‚ط³ظ… ظ„ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ظپظ†ظٹط© ظپظ‚ط·.</p>
-                {settings
-                  .filter((item) => !item.key.startsWith("pages.") && !featureKeys.includes(item.key) && !journeyKeys.includes(item.key) && !listKeys.includes(item.key))
-                  .map((setting) => (
-                    <TextControl key={setting.key} setting={setting} />
-                  ))}
-              </div>
-            ) : null}
-          </section>
         </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-3">
+          <div className="mb-3 flex items-center gap-2 px-2 text-sm font-black text-white">
+            <SlidersHorizontal className="h-4 w-4 text-emerald-300" />
+            \u0623\u0642\u0633\u0627\u0645 \u0627\u0644\u062a\u062e\u0635\u064a\u0635
+          </div>
+
+          <div className="space-y-2">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              const active = activeSection === section.key;
+
+              return (
+                <button
+                  key={section.key}
+                  type="button"
+                  onClick={() => setActiveSection(section.key)}
+                  className={
+                    "flex w-full items-start gap-3 rounded-2xl border p-3 text-start transition " +
+                    (active
+                      ? "border-emerald-400/30 bg-emerald-400 text-slate-950"
+                      : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/10")
+                  }
+                >
+                  <Icon className="mt-1 h-5 w-5 shrink-0" />
+                  <span>
+                    <span className="block text-sm font-black">{section.title}</span>
+                    <span className={active ? "mt-1 block text-xs text-slate-800" : "mt-1 block text-xs text-slate-500"}>
+                      {section.desc}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-emerald-300">\u0627\u0644\u0642\u0633\u0645 \u0627\u0644\u062d\u0627\u0644\u064a</p>
+              <h2 className="mt-1 text-2xl font-black text-white">
+                {sections.find((section) => section.key === activeSection)?.title}
+              </h2>
+            </div>
+
+            <Eye className="h-5 w-5 text-slate-500" />
+          </div>
+
+          <div className="space-y-4">
+            {visibleSettings.length ? (
+              visibleSettings.map((setting) => (
+                <article key={setting.key} className="rounded-[1.5rem] border border-white/10 bg-slate-950/50 p-4">
+                  <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-base font-black text-white">{settingTitle(setting)}</p>
+                      <p className="mt-1 text-xs text-slate-500" dir="ltr">{setting.key}</p>
+                      {setting.description ? (
+                        <p className="mt-2 text-sm leading-6 text-slate-400">{setting.description}</p>
+                      ) : null}
+                    </div>
+
+                    {isBooleanSetting(setting) ? (
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-slate-300">
+                        {(values[setting.key] ?? "") === "true" ? L.enabled : L.disabled}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {isBooleanSetting(setting) ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setValues((current) => ({ ...current, [setting.key]: "true" }))}
+                        className={
+                          "rounded-2xl px-4 py-2 text-sm font-black " +
+                          ((values[setting.key] ?? "") === "true"
+                            ? "bg-emerald-400 text-slate-950"
+                            : "bg-white/10 text-slate-300")
+                        }
+                      >
+                        {L.enabled}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setValues((current) => ({ ...current, [setting.key]: "false" }))}
+                        className={
+                          "rounded-2xl px-4 py-2 text-sm font-black " +
+                          ((values[setting.key] ?? "") === "false"
+                            ? "bg-red-400 text-slate-950"
+                            : "bg-white/10 text-slate-300")
+                        }
+                      >
+                        {L.disabled}
+                      </button>
+                    </div>
+                  ) : Array.isArray(setting.value) ? (
+                    <div>
+                      <textarea
+                        value={values[setting.key] ?? ""}
+                        onChange={(event) =>
+                          setValues((current) => ({ ...current, [setting.key]: event.target.value }))
+                        }
+                        rows={5}
+                        className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                      />
+                      <p className="mt-2 text-xs text-slate-500">{L.oneItemPerLine}</p>
+                    </div>
+                  ) : setting.key.endsWith(".description") ? (
+                    <textarea
+                      value={values[setting.key] ?? ""}
+                      onChange={(event) =>
+                        setValues((current) => ({ ...current, [setting.key]: event.target.value }))
+                      }
+                      rows={3}
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    />
+                  ) : (
+                    <input
+                      value={values[setting.key] ?? ""}
+                      onChange={(event) =>
+                        setValues((current) => ({ ...current, [setting.key]: event.target.value }))
+                      }
+                      className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    />
+                  )}
+
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => saveSetting(setting)}
+                      disabled={savingKey === setting.key}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950 disabled:opacity-60"
+                    >
+                      <Save className="h-4 w-4" />
+                      {savingKey === setting.key ? L.saving : L.save}
+                    </button>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-slate-400">
+                {L.noItems}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    </AppShell>
+    </div>
   );
 }
