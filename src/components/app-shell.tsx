@@ -59,6 +59,7 @@ const previewAdminRoles: Role[] = ["admin", "manager"];
 const hiddenNavHrefs = new Set([
   "/leads",
   "/my-customers",
+  "/tasks",
   "/deals",
   "/invoices",
 ]);
