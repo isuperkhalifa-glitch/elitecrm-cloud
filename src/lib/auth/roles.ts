@@ -3,6 +3,7 @@ export type Role = "developer" | "admin" | "manager" | "moderator" | "sales" | "
 export type PageKey =
   | "dashboard"
   | "customers"
+  | "courses"
   | "my-customers"
   | "leads"
   | "tasks"
@@ -14,13 +15,15 @@ export type PageKey =
   | "companies"
   | "contacts"
   | "users"
-  | "settings";
+  | "settings"
+  | "customize";
 
 export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
+  courses: ["developer", "admin", "manager"],
   "my-customers": ["developer", "admin", "manager", "sales"],
   leads: ["developer", "admin", "manager", "moderator", "sales"],
   tasks: ["developer", "admin", "manager", "sales"],
@@ -33,6 +36,7 @@ export const pageAccess: Record<PageKey, Role[]> = {
   contacts: ["developer", "admin", "manager"],
   users: ["developer", "admin"],
   settings: ["developer", "admin"],
+  customize: ["developer", "admin"],
 };
 
 export function normalizeRole(role?: string | null): Role {

@@ -1,68 +1,32 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { CalendarClock, CheckCircle2, CreditCard, Search, UserRound } from "lucide-react";
+import { CalendarClock, CheckCircle2, CreditCard, Search, UserRound, BookOpen } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
 import { usePageText, useSettingOptions } from "@/components/page-settings";
 import { useScope } from "@/components/scope-provider";
 import { createClient } from "@/lib/supabase/client";
 
-type Lead = {
-  id: string;
-  full_name: string;
-  phone: string | null;
-  email: string | null;
-  company_name: string | null;
-  source: string | null;
-  status: string | null;
-  priority: string | null;
-  owner_id: string | null;
-  program: string | null;
-  assigned_at: string | null;
-  last_contact_at: string | null;
-  next_follow_up_at: string | null;
-  last_note: string | null;
-  customer_status: string | null;
-  registration_status: string | null;
-  payment_status: string | null;
-  created_at: string;
-};
-
-type Profile = {
-  id: string;
-  full_name: string | null;
-  role: string | null;
-  is_active: boolean | null;
-};
-
-type Props = {
-  initialLeads: Lead[];
-  profiles: Profile[];
-  currentUserId: string;
-  userEmail: string | null;
-  fullName: string | null;
-  role: string | null;
-};
+type Lead = { id: string; full_name: string; phone: string | null; email: string | null; company_name: string | null; source: string | null; status: string | null; priority: string | null; owner_id: string | null; program: string | null; assigned_at: string | null; last_contact_at: string | null; next_follow_up_at: string | null; last_note: string | null; customer_status: string | null; registration_status: string | null; payment_status: string | null; course_id: string | null; course_price: number | null; discount_code: string | null; discount_value: number | null; final_price: number | null; registration_notes: string | null; created_at: string };
+type Profile = { id: string; full_name: string | null; role: string | null; is_active: boolean | null };
+type Course = { id: string; code: string | null; name: string; name_ar: string | null; name_en: string | null; base_price: number | null; sale_price: number | null; discount_type: string | null; discount_value: number | null; discount_code: string | null; currency: string | null; is_active: boolean | null; sort_order: number | null };
+type Props = { initialLeads: Lead[]; profiles: Profile[]; courses: Course[]; currentUserId: string; userEmail: string | null; fullName: string | null; role: string | null };
 
 const registrationFallback = ["not_registered", "registered", "canceled"];
 const paymentFallback = ["unpaid", "partial", "paid", "refunded"];
 
-export function RegistrationsClient({ initialLeads, profiles, userEmail, fullName, role }: Props) {
+function toMoney(value: number | null | undefined, currency = "SAR") { const number = Number(value ?? 0); return number.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + currency; }
+function courseBase(course?: Course | null) { if (!course) return 0; return Number(course.sale_price ?? course.base_price ?? 0); }
+
+export function RegistrationsClient({ initialLeads, profiles, courses, userEmail, fullName, role }: Props) {
   const { language } = useI18n();
   const { scope } = useScope();
   const isArabic = language === "ar";
-
   const pageTitle = usePageText("pages.registrations.title", "التسجيلات", "Registrations");
-  const pageDescription = usePageText(
-    "pages.registrations.description",
-    "تابع العملاء المسجلين وحالة الدفع من صفحة واحدة بسيطة.",
-    "Track registered customers and payment status from one simple page."
-  );
-
+  const pageDescription = usePageText("pages.registrations.description", "تابع تسجيل العملاء والدورات والأسعار وحالة الدفع.", "Track customer registrations, courses, prices, and payment status.");
   const registrationOptions = useSettingOptions("crm.registration_statuses", registrationFallback);
   const paymentOptions = useSettingOptions("crm.payment_statuses", paymentFallback);
-
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
   const [registrationFilter, setRegistrationFilter] = useState("all");
@@ -70,250 +34,18 @@ export function RegistrationsClient({ initialLeads, profiles, userEmail, fullNam
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  function tx(ar: string, en: string) {
-    return isArabic ? ar : en;
-  }
-
-  function ownerName(id: string | null) {
-    if (!id) return tx("غير موزع", "Unassigned");
-    return profiles.find((profile) => profile.id === id)?.full_name ?? id;
-  }
-
-  function registrationLabel(value: string | null) {
-    const labels: Record<string, { ar: string; en: string }> = {
-      not_registered: { ar: "غير مسجل", en: "Not registered" },
-      registered: { ar: "مسجل", en: "Registered" },
-      canceled: { ar: "ملغي", en: "Canceled" },
-    };
-    return labels[value ?? ""]?.[language] ?? value ?? "-";
-  }
-
-  function paymentLabel(value: string | null) {
-    const labels: Record<string, { ar: string; en: string }> = {
-      unpaid: { ar: "غير مدفوع", en: "Unpaid" },
-      partial: { ar: "دفع جزئي", en: "Partial" },
-      paid: { ar: "مدفوع", en: "Paid" },
-      refunded: { ar: "مسترد", en: "Refunded" },
-    };
-    return labels[value ?? ""]?.[language] ?? value ?? "-";
-  }
-
-  const scopedLeads = useMemo(() => {
-    if (scope.mode === "user" && scope.targetId) {
-      return leads.filter((lead) => lead.owner_id === scope.targetId);
-    }
-    if (scope.mode === "company" && scope.targetName) {
-      return leads.filter((lead) => (lead.company_name ?? "").toLowerCase().includes(scope.targetName.toLowerCase()));
-    }
-    return leads;
-  }, [leads, scope]);
-
-  const filteredLeads = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    return scopedLeads.filter((lead) => {
-      const matchesSearch =
-        !keyword ||
-        [lead.full_name, lead.phone, lead.email, lead.company_name, lead.program, ownerName(lead.owner_id)]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword);
-
-      const matchesRegistration = registrationFilter === "all" || (lead.registration_status ?? "not_registered") === registrationFilter;
-      const matchesPayment = paymentFilter === "all" || (lead.payment_status ?? "unpaid") === paymentFilter;
-      return matchesSearch && matchesRegistration && matchesPayment;
-    });
-  }, [scopedLeads, search, registrationFilter, paymentFilter]);
-
-  const stats = useMemo(() => {
-    const registered = scopedLeads.filter((lead) => lead.registration_status === "registered").length;
-    const paid = scopedLeads.filter((lead) => lead.payment_status === "paid").length;
-    const pendingPayment = scopedLeads.filter(
-      (lead) => ["registered", "paid"].includes(lead.registration_status ?? "") && (lead.payment_status ?? "unpaid") !== "paid"
-    ).length;
-    return { total: scopedLeads.length, registered, paid, pendingPayment };
-  }, [scopedLeads]);
-
-  async function updateLead(lead: Lead, updates: Partial<Pick<Lead, "registration_status" | "payment_status">>) {
-    setMessage("");
-    setError("");
-    setSavingId(lead.id);
-
-    const nextRegistration = updates.registration_status ?? lead.registration_status ?? "not_registered";
-    const nextPayment = updates.payment_status ?? lead.payment_status ?? "unpaid";
-    const nextCustomerStatus = nextPayment === "paid" ? "paid" : nextRegistration === "registered" ? "registered" : lead.customer_status ?? "interested";
-
-    const payload = {
-      registration_status: nextRegistration,
-      payment_status: nextPayment,
-      customer_status: nextCustomerStatus,
-      last_contact_at: new Date().toISOString(),
-    };
-
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("leads")
-      .update(payload)
-      .eq("id", lead.id)
-      .select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,last_contact_at,next_follow_up_at,last_note,customer_status,registration_status,payment_status,created_at")
-      .single();
-
-    setSavingId(null);
-
-    if (error || !data) {
-      setError(tx("تعذر حفظ التحديث. حاول مرة أخرى.", "Unable to save update. Try again."));
-      return;
-    }
-
-    setLeads((current) => current.map((item) => (item.id === lead.id ? (data as Lead) : item)));
-    setMessage(tx("تم تحديث التسجيل بنجاح.", "Registration updated successfully."));
-  }
-
-  const canEdit = role === "admin" || role === "manager" || role === "sales" || role === "finance";
-
-  return (
-    <AppShell titleKey="registrations" userEmail={userEmail} fullName={fullName} role={role}>
-      <div className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-        <p className="text-sm text-emerald-300">{pageDescription}</p>
-        <h1 className="mt-2 text-3xl font-black text-white">{pageTitle}</h1>
-      </div>
-
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <Stat label={tx("كل العملاء", "All customers")} value={stats.total} />
-        <Stat label={tx("مسجل", "Registered")} value={stats.registered} />
-        <Stat label={tx("مدفوع", "Paid")} value={stats.paid} />
-        <Stat label={tx("بانتظار الدفع", "Pending payment")} value={stats.pendingPayment} />
-      </div>
-
-      <section className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-        <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto]">
-          <div className="relative">
-            <Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={tx("ابحث باسم العميل أو البرنامج أو رقم الجوال...", "Search customer, program, or phone...")}
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-11 py-3 text-sm text-white outline-none focus:border-emerald-400"
-            />
-          </div>
-
-          <select
-            value={registrationFilter}
-            onChange={(event) => setRegistrationFilter(event.target.value)}
-            className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-          >
-            <option value="all">{tx("كل حالات التسجيل", "All registration statuses")}</option>
-            {registrationOptions.map((status) => (
-              <option key={status} value={status}>{registrationLabel(status)}</option>
-            ))}
-          </select>
-
-          <select
-            value={paymentFilter}
-            onChange={(event) => setPaymentFilter(event.target.value)}
-            className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
-          >
-            <option value="all">{tx("كل حالات الدفع", "All payment statuses")}</option>
-            {paymentOptions.map((status) => (
-              <option key={status} value={status}>{paymentLabel(status)}</option>
-            ))}
-          </select>
-        </div>
-
-        {message ? <div className="mt-4 text-sm font-bold text-emerald-300">{message}</div> : null}
-        {error ? <div className="mt-4 text-sm font-bold text-red-300">{error}</div> : null}
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        {filteredLeads.map((lead) => (
-          <article key={lead.id} className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-slate-400">{ownerName(lead.owner_id)}</p>
-                <h2 className="mt-1 text-xl font-black text-white">{lead.full_name}</h2>
-                <p className="mt-1 text-sm text-slate-400">{lead.program ?? lead.source ?? tx("برنامج غير محدد", "No program")}</p>
-              </div>
-              <div className="flex flex-wrap justify-end gap-2">
-                <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs font-bold text-sky-300">{registrationLabel(lead.registration_status ?? "not_registered")}</span>
-                <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">{paymentLabel(lead.payment_status ?? "unpaid")}</span>
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <Info icon={<CreditCard className="h-4 w-4" />} label={tx("رقم الجوال", "Phone")} value={lead.phone ?? "-"} />
-              <Info icon={<CalendarClock className="h-4 w-4" />} label={tx("متابعة قادمة", "Next follow-up")} value={lead.next_follow_up_at ? new Date(lead.next_follow_up_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US") : "-"} />
-            </div>
-
-            {lead.last_note ? <p className="mt-4 rounded-2xl bg-white/[0.03] p-3 text-sm text-slate-300">{lead.last_note}</p> : null}
-
-            {canEdit ? (
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <select
-                  value={lead.registration_status ?? "not_registered"}
-                  onChange={(event) => updateLead(lead, { registration_status: event.target.value })}
-                  disabled={savingId === lead.id}
-                  className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:opacity-60"
-                >
-                  {registrationOptions.map((status) => <option key={status} value={status}>{registrationLabel(status)}</option>)}
-                </select>
-
-                <select
-                  value={lead.payment_status ?? "unpaid"}
-                  onChange={(event) => updateLead(lead, { payment_status: event.target.value })}
-                  disabled={savingId === lead.id}
-                  className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:opacity-60"
-                >
-                  {paymentOptions.map((status) => <option key={status} value={status}>{paymentLabel(status)}</option>)}
-                </select>
-
-                <button
-                  type="button"
-                  onClick={() => updateLead(lead, { registration_status: "registered" })}
-                  disabled={savingId === lead.id}
-                  className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/20 disabled:opacity-60"
-                >
-                  {tx("تسجيل", "Register")}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => updateLead(lead, { registration_status: "registered", payment_status: "paid" })}
-                  disabled={savingId === lead.id}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-emerald-300 disabled:opacity-60"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {tx("تم الدفع", "Paid")}
-                </button>
-              </div>
-            ) : null}
-          </article>
-        ))}
-      </div>
-
-      {!filteredLeads.length ? (
-        <div className="safe-card mt-6 rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">
-          {tx("لا توجد تسجيلات مطابقة للفلاتر الحالية.", "No registrations match the current filters.")}
-        </div>
-      ) : null}
-    </AppShell>
-  );
+  function tx(ar: string, en: string) { return isArabic ? ar : en; }
+  function ownerName(id: string | null) { if (!id) return tx("غير موزع", "Unassigned"); return profiles.find((profile) => profile.id === id)?.full_name ?? id; }
+  function courseTitle(course?: Course | null) { if (!course) return tx("لم يتم اختيار دورة", "No course selected"); return isArabic ? course.name_ar ?? course.name : course.name_en ?? course.name; }
+  function getCourse(id: string | null) { if (!id) return null; return courses.find((course) => course.id === id) ?? null; }
+  function registrationLabel(value: string | null) { const labels: Record<string, { ar: string; en: string }> = { not_registered: { ar: "غير مسجل", en: "Not registered" }, registered: { ar: "مسجل", en: "Registered" }, canceled: { ar: "ملغي", en: "Canceled" } }; return labels[value ?? ""]?.[language] ?? value ?? "-"; }
+  function paymentLabel(value: string | null) { const labels: Record<string, { ar: string; en: string }> = { unpaid: { ar: "غير مدفوع", en: "Unpaid" }, partial: { ar: "دفع جزئي", en: "Partial" }, paid: { ar: "مدفوع", en: "Paid" }, refunded: { ar: "مسترد", en: "Refunded" } }; return labels[value ?? ""]?.[language] ?? value ?? "-"; }
+  const scopedLeads = useMemo(() => { if (scope.mode === "user" && scope.targetId) return leads.filter((lead) => lead.owner_id === scope.targetId); if (scope.mode === "company" && scope.targetName) return leads.filter((lead) => (lead.company_name ?? "").toLowerCase().includes(scope.targetName.toLowerCase())); return leads; }, [leads, scope]);
+  const filteredLeads = useMemo(() => { const keyword = search.trim().toLowerCase(); return scopedLeads.filter((lead) => { const course = getCourse(lead.course_id); const matchesSearch = !keyword || [lead.full_name, lead.phone, lead.email, lead.company_name, lead.program, course?.name, course?.name_ar, course?.code, ownerName(lead.owner_id)].filter(Boolean).join(" ").toLowerCase().includes(keyword); const matchesRegistration = registrationFilter === "all" || (lead.registration_status ?? "not_registered") === registrationFilter; const matchesPayment = paymentFilter === "all" || (lead.payment_status ?? "unpaid") === paymentFilter; return matchesSearch && matchesRegistration && matchesPayment; }); }, [scopedLeads, search, registrationFilter, paymentFilter, courses]);
+  const stats = useMemo(() => { const registered = scopedLeads.filter((lead) => lead.registration_status === "registered").length; const paid = scopedLeads.filter((lead) => lead.payment_status === "paid").length; const totalValue = scopedLeads.reduce((sum, lead) => sum + Number(lead.final_price ?? 0), 0); const pendingPayment = scopedLeads.filter((lead) => ["registered", "paid"].includes(lead.registration_status ?? "") && (lead.payment_status ?? "unpaid") !== "paid").length; return { total: scopedLeads.length, registered, paid, pendingPayment, totalValue }; }, [scopedLeads]);
+  async function updateLead(lead: Lead, updates: Partial<Lead>) { setMessage(""); setError(""); setSavingId(lead.id); const nextCourse = getCourse(updates.course_id ?? lead.course_id); const nextRegistration = updates.registration_status ?? lead.registration_status ?? "not_registered"; const nextPayment = updates.payment_status ?? lead.payment_status ?? "unpaid"; const coursePrice = updates.course_price ?? lead.course_price ?? courseBase(nextCourse); const discountValue = updates.discount_value ?? lead.discount_value ?? Number(nextCourse?.discount_value ?? 0); const finalPrice = updates.final_price ?? Math.max(Number(coursePrice ?? 0) - Number(discountValue ?? 0), 0); const nextCustomerStatus = nextPayment === "paid" ? "paid" : nextRegistration === "registered" ? "registered" : lead.customer_status ?? "interested"; const payload = { registration_status: nextRegistration, payment_status: nextPayment, customer_status: nextCustomerStatus, course_id: updates.course_id ?? lead.course_id, course_price: coursePrice, discount_code: updates.discount_code ?? lead.discount_code ?? nextCourse?.discount_code ?? null, discount_value: discountValue, final_price: finalPrice, registration_notes: updates.registration_notes ?? lead.registration_notes ?? null, program: nextCourse ? courseTitle(nextCourse) : lead.program, last_contact_at: new Date().toISOString() }; const supabase = createClient(); const { data, error } = await supabase.from("leads").update(payload).eq("id", lead.id).select("id,full_name,phone,email,company_name,source,status,priority,owner_id,program,assigned_at,last_contact_at,next_follow_up_at,last_note,customer_status,registration_status,payment_status,course_id,course_price,discount_code,discount_value,final_price,registration_notes,created_at").single(); setSavingId(null); if (error || !data) { setError(tx("تعذر حفظ التحديث. تأكد من تشغيل ملف SQL الخاص بالدورات.", "Unable to save update. Make sure the courses SQL file is applied.")); return; } setLeads((current) => current.map((item) => item.id === lead.id ? (data as Lead) : item)); setMessage(tx("تم تحديث التسجيل بنجاح.", "Registration updated successfully.")); }
+  const canEdit = role === "developer" || role === "admin" || role === "manager" || role === "sales" || role === "finance";
+  return <AppShell titleKey="registrations" userEmail={userEmail} fullName={fullName} role={role}><div className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"><p className="text-sm text-emerald-300">{pageDescription}</p><h1 className="mt-2 text-3xl font-black text-white">{pageTitle}</h1></div><div className="mb-6 grid gap-4 md:grid-cols-5"><Stat label={tx("كل العملاء", "All customers")} value={stats.total} /><Stat label={tx("مسجل", "Registered")} value={stats.registered} /><Stat label={tx("مدفوع", "Paid")} value={stats.paid} /><Stat label={tx("بانتظار الدفع", "Pending payment")} value={stats.pendingPayment} /><Stat label={tx("قيمة التسجيلات", "Registration value")} value={toMoney(stats.totalValue)} /></div><section className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5"><div className="grid gap-3 xl:grid-cols-[1fr_auto_auto]"><div className="relative"><Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={tx("ابحث باسم العميل أو الدورة أو رقم الجوال...", "Search customer, course, or phone...")} className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-11 py-3 text-sm text-white outline-none focus:border-emerald-400" /></div><select value={registrationFilter} onChange={(event) => setRegistrationFilter(event.target.value)} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"><option value="all">{tx("كل حالات التسجيل", "All registration statuses")}</option>{registrationOptions.map((status) => <option key={status} value={status}>{registrationLabel(status)}</option>)}</select><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"><option value="all">{tx("كل حالات الدفع", "All payment statuses")}</option>{paymentOptions.map((status) => <option key={status} value={status}>{paymentLabel(status)}</option>)}</select></div>{message ? <div className="mt-4 text-sm font-bold text-emerald-300">{message}</div> : null}{error ? <div className="mt-4 text-sm font-bold text-red-300">{error}</div> : null}</section><div className="grid gap-4 xl:grid-cols-2">{filteredLeads.map((lead) => { const course = getCourse(lead.course_id); return <article key={lead.id} className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5"><div className="mb-4 flex items-start justify-between gap-3"><div><p className="text-xs text-slate-400">{ownerName(lead.owner_id)}</p><h2 className="mt-1 text-xl font-black text-white">{lead.full_name}</h2><p className="mt-1 text-sm text-slate-400">{courseTitle(course)}</p></div><div className="flex flex-wrap justify-end gap-2"><span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs font-bold text-sky-300">{registrationLabel(lead.registration_status ?? "not_registered")}</span><span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">{paymentLabel(lead.payment_status ?? "unpaid")}</span></div></div><div className="grid gap-3 md:grid-cols-2"><Info icon={<CreditCard className="h-4 w-4" />} label={tx("رقم الجوال", "Phone")} value={lead.phone ?? "-"} /><Info icon={<CalendarClock className="h-4 w-4" />} label={tx("متابعة قادمة", "Next follow-up")} value={lead.next_follow_up_at ? new Date(lead.next_follow_up_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US") : "-"} /></div><div className="mt-4 grid gap-3 md:grid-cols-3"><Info icon={<BookOpen className="h-4 w-4" />} label={tx("الدورة", "Course")} value={courseTitle(course)} /><Info icon={<CreditCard className="h-4 w-4" />} label={tx("السعر", "Price")} value={toMoney(lead.course_price ?? courseBase(course), course?.currency ?? "SAR")} /><Info icon={<CheckCircle2 className="h-4 w-4" />} label={tx("الصافي", "Final")} value={toMoney(lead.final_price ?? Math.max(Number(lead.course_price ?? courseBase(course)) - Number(lead.discount_value ?? 0), 0), course?.currency ?? "SAR")} /></div>{lead.last_note ? <p className="mt-4 rounded-2xl bg-white/[0.03] p-3 text-sm text-slate-300">{lead.last_note}</p> : null}{canEdit ? <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3"><select value={lead.course_id ?? ""} onChange={(event) => { const selected = getCourse(event.target.value); const price = courseBase(selected); const discount = Number(selected?.discount_value ?? 0); updateLead(lead, { course_id: event.target.value || null, course_price: price, discount_code: selected?.discount_code ?? null, discount_value: discount, final_price: Math.max(price - discount, 0) }); }} disabled={savingId === lead.id} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:opacity-60"><option value="">{tx("اختر الدورة", "Choose course")}</option>{courses.map((item) => <option key={item.id} value={item.id}>{courseTitle(item)} - {toMoney(courseBase(item), item.currency ?? "SAR")}</option>)}</select><select value={lead.registration_status ?? "not_registered"} onChange={(event) => updateLead(lead, { registration_status: event.target.value })} disabled={savingId === lead.id} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:opacity-60">{registrationOptions.map((status) => <option key={status} value={status}>{registrationLabel(status)}</option>)}</select><select value={lead.payment_status ?? "unpaid"} onChange={(event) => updateLead(lead, { payment_status: event.target.value })} disabled={savingId === lead.id} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:opacity-60">{paymentOptions.map((status) => <option key={status} value={status}>{paymentLabel(status)}</option>)}</select><input defaultValue={lead.course_price ?? courseBase(course)} onBlur={(event) => updateLead(lead, { course_price: Number(event.target.value) })} type="number" placeholder={tx("سعر الدورة", "Course price")} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400" /><input defaultValue={lead.discount_value ?? course?.discount_value ?? 0} onBlur={(event) => updateLead(lead, { discount_value: Number(event.target.value) })} type="number" placeholder={tx("قيمة الخصم", "Discount value")} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400" /><input defaultValue={lead.discount_code ?? course?.discount_code ?? ""} onBlur={(event) => updateLead(lead, { discount_code: event.target.value || null })} placeholder={tx("كود الخصم", "Discount code")} className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400" dir="ltr" /></div> : null}</article>; })}{filteredLeads.length === 0 ? <div className="safe-card rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">{tx("لا توجد تسجيلات.", "No registrations found.")}</div> : null}</div></AppShell>;
 }
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="safe-card rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5">
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="mt-2 text-3xl font-black text-white">{value}</p>
-    </div>
-  );
-}
-
-function Info({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-      <p className="flex items-center gap-2 text-xs text-slate-500">{icon} {label}</p>
-      <p className="mt-1 font-bold text-white">{value}</p>
-    </div>
-  );
-}
+function Stat({ label, value }: { label: string; value: number | string }) { return <div className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5"><p className="text-sm text-slate-400">{label}</p><h2 className="mt-2 text-3xl font-black text-white">{value}</h2></div>; }
+function Info({ icon, label, value }: { icon: ReactNode; label: string; value: string }) { return <div className="flex items-start gap-3 rounded-2xl bg-white/[0.03] p-3"><span className="text-emerald-300">{icon}</span><span><span className="block text-xs text-slate-500">{label}</span><span className="mt-1 block text-sm font-bold text-white">{value}</span></span></div>; }

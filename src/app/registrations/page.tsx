@@ -3,7 +3,7 @@ import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { isFeatureEnabled, loadPublicSystemSettings } from "@/lib/settings/server";
 import { RegistrationsClient } from "./registrations-client";
 
-const allowedRoles = new Set(["admin", "manager", "sales", "finance"]);
+const allowedRoles = new Set(["developer", "admin", "manager", "sales", "finance"]);
 
 export default async function RegistrationsPage() {
   const { supabase, user, profile } = await getCurrentUserProfile();
@@ -53,19 +53,25 @@ export default async function RegistrationsPage() {
     leadsQuery = leadsQuery.eq("owner_id", user.id);
   }
 
-  const [{ data: leads }, { data: profiles }] = await Promise.all([
+  const [{ data: leads }, { data: profiles }, { data: courses }] = await Promise.all([
     leadsQuery,
     supabase
       .from("profiles")
       .select("id,full_name,role,is_active")
       .eq("is_active", true)
       .order("full_name", { ascending: true }),
+    supabase
+      .from("courses")
+      .select("id,code,name,name_ar,name_en,base_price,sale_price,discount_type,discount_value,discount_code,currency,is_active,sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
   ]);
 
   return (
     <RegistrationsClient
       initialLeads={(leads ?? []) as any}
       profiles={(profiles ?? []) as any}
+      courses={(courses ?? []) as any}
       currentUserId={user.id}
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}

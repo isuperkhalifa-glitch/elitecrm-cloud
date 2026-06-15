@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   BadgeDollarSign,
+  BookOpen,
   Building2,
   CheckSquare,
   ContactRound,
@@ -75,6 +76,7 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       { href: "/customers", labelKey: "customers", icon: UsersRound, roles: allRoles },
+      { href: "/courses", labelKey: "courses", icon: BookOpen, roles: ["developer", "admin", "manager"] },
       { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["developer", "admin", "manager", "sales"] },
     ],
   },
