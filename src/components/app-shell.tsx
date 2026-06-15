@@ -75,27 +75,28 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       { href: "/customers", labelKey: "customers", icon: UsersRound, roles: allRoles },
-      { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["admin", "manager", "sales"] },
+      { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["developer", "admin", "manager", "sales"] },
     ],
   },
   {
     labelAr: "المالية",
     labelEn: "Finance",
     items: [
-      { href: "/invoices", labelKey: "invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["admin", "manager", "finance", "sales"] },
-      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["admin", "manager", "finance", "sales"] },
+      { href: "/invoices", labelKey: "invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["developer", "admin", "manager", "finance", "sales"] },
+      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["developer", "admin", "manager", "finance", "sales"] },
     ],
   },
   {
     labelAr: "الإدارة",
     labelEn: "Admin",
     items: [
-      { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["admin", "manager", "moderator"] },
-      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["admin", "manager", "moderator"] },
-      { href: "/companies", labelKey: "companies", icon: Building2, roles: ["admin", "manager"] },
-      { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["admin", "manager"] },
+      { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/companies", labelKey: "companies", icon: Building2, roles: ["developer", "admin", "manager"] },
+      { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["developer", "admin", "manager"] },
       { href: "/users", labelKey: "users", icon: UserCog, roles: ["developer", "admin"] },
       { href: "/settings", labelKey: "settings", icon: Settings, roles: ["developer", "admin"] },
+      { href: "/customize", labelKey: "customize", icon: Settings, roles: ["developer", "admin"] },
     ],
   },
 ];
@@ -111,7 +112,7 @@ function normalizeRole(role?: string | null): Role {
 
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    developer: { ar: "مطور النظام", en: "Developer" },
+    developer: { ar: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Developer" },
     admin: { ar: "مدير النظام", en: "Admin" },
     manager: { ar: "مدير", en: "Manager" },
     moderator: { ar: "موديريتور", en: "Moderator" },

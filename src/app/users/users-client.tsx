@@ -47,7 +47,7 @@ export function UsersClient({
 }: Props) {
   const { language } = useI18n();
   const isArabic = language === "ar";
-  const canManage = role === "admin";
+  const canManage = role === "developer" || role === "admin";
 
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [form, setForm] = useState(emptyForm);
@@ -62,12 +62,12 @@ export function UsersClient({
   }
 
   function roleLabel(value: string | null) {
-    if (value === "developer") return tx("مطور النظام", "Developer");
-    if (value === "admin") return tx("مدير النظام", "Admin");
-    if (value === "manager") return tx("مدير", "Manager");
-    if (value === "moderator") return tx("مراقب", "Moderator");
-    if (value === "finance") return tx("مالية", "Finance");
-    return tx("سيلز", "Sales");
+    if (value === "developer") return tx("\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", "Developer");
+    if (value === "admin") return tx("\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", "Admin");
+    if (value === "manager") return tx("\u0645\u062f\u064a\u0631", "Manager");
+    if (value === "moderator") return tx("\u0645\u0634\u0631\u0641 \u0627\u0644\u062a\u0648\u0632\u064a\u0639", "Moderator");
+    if (value === "finance") return tx("\u0627\u0644\u0645\u0627\u0644\u064a\u0629", "Finance");
+    return tx("\u0633\u064a\u0644\u0632", "Sales");
   }
 
   const filteredUsers = useMemo(() => {
@@ -172,7 +172,7 @@ export function UsersClient({
         </div>
 
         <div className="safe-card rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
-          <p className="text-sm text-emerald-300">{tx("نشطون", "Active")}</p>
+          <p className="text-sm text-emerald-300">{tx("\u0646\u0634\u0637", "Active")}</p>
           <h2 className="mt-2 text-3xl font-black text-emerald-300">{stats.active}</h2>
         </div>
 
@@ -182,7 +182,7 @@ export function UsersClient({
         </div>
 
         <div className="safe-card rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-5">
-          <p className="text-sm text-yellow-300">{tx("ط¥ط¯ط§ط±ط©", "Admins")}</p>
+          <p className="text-sm text-yellow-300">{tx("\u0627\u0644\u0625\u062f\u0627\u0631\u0629", "Admins")}</p>
           <h2 className="mt-2 text-3xl font-black text-yellow-300">{stats.admins}</h2>
         </div>
       </div>
@@ -194,8 +194,8 @@ export function UsersClient({
               <UserPlus className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-emerald-300">{tx("ط¥ط¶ط§ظپط© ظ…ط³طھط®ط¯ظ…", "Add user")}</p>
-              <h2 className="text-2xl font-black text-white">{tx("ظ…ط³طھط®ط¯ظ… ط¬ط¯ظٹط¯", "New User")}</h2>
+              <p className="text-sm text-emerald-300">{tx("\u0625\u0636\u0627\u0641\u0629 \u0645\u0633\u062a\u062e\u062f\u0645", "Add user")}</p>
+              <h2 className="text-2xl font-black text-white">{tx("\u0645\u0633\u062a\u062e\u062f\u0645 \u062c\u062f\u064a\u062f", "New User")}</h2>
             </div>
           </div>
 
@@ -203,14 +203,14 @@ export function UsersClient({
             <input
               value={form.full_name}
               onChange={(event) => setForm({ ...form, full_name: event.target.value })}
-              placeholder={tx("ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…", "Full name")}
+              placeholder={tx("\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645", "Full name")}
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
             />
 
             <input
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
-              placeholder={tx("ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", "Email")}
+              placeholder={tx("\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a", "Email")}
               type="email"
               dir="ltr"
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
@@ -219,7 +219,7 @@ export function UsersClient({
             <input
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
-              placeholder={tx("ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±", "Password")}
+              placeholder={tx("\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631", "Password")}
               type="text"
               dir="ltr"
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400"
@@ -244,7 +244,7 @@ export function UsersClient({
               type="button"
             >
               {creating ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserPlus className="h-5 w-5" />}
-              {tx("ط¥ظ†ط´ط§ط، ظ…ط³طھط®ط¯ظ…", "Create user")}
+              {tx("\u0625\u0646\u0634\u0627\u0621 \u0645\u0633\u062a\u062e\u062f\u0645", "Create user")}
             </button>
 
             {error ? (
@@ -266,14 +266,14 @@ export function UsersClient({
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm text-emerald-300">{tx("ط§ظ„طµظ„ط§ط­ظٹط§طھ", "Permissions")}</p>
-              <h2 className="text-2xl font-black text-white">{tx("ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†", "Users")}</h2>
+              <p className="text-sm text-emerald-300">{tx("\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a", "Permissions")}</p>
+              <h2 className="text-2xl font-black text-white">{tx("\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646", "Users")}</h2>
             </div>
 
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={tx("ط¨ط­ط«...", "Search...")}
+              placeholder={tx("\u0628\u062d\u062b...", "Search...")}
               className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400 md:max-w-sm"
             />
           </div>
@@ -294,7 +294,7 @@ export function UsersClient({
 
                       {user.id === currentUserId ? (
                         <span className="rounded-full bg-sky-400/10 px-2 py-1 text-xs text-sky-300">
-                          {tx("ط£ظ†طھ", "You")}
+                          {tx("\u0623\u0646\u062a", "You")}
                         </span>
                       ) : null}
                     </div>
@@ -331,10 +331,10 @@ export function UsersClient({
                     type="button"
                   >
                     {savingId === user.id
-                      ? tx("ط¬ط§ط±ظٹ...", "Saving...")
+                      ? tx("\u062c\u0627\u0631\u064a...", "Saving...")
                       : user.is_active
-                        ? tx("ظ†ط´ط·", "Active")
-                        : tx("ظ…ظˆظ‚ظˆظپ", "Inactive")}
+                        ? tx("\u0646\u0634\u0637", "Active")
+                        : tx("\u0645\u0648\u0642\u0648\u0641", "Inactive")}
                   </button>
 
                   <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
@@ -347,7 +347,7 @@ export function UsersClient({
 
             {filteredUsers.length === 0 ? (
               <div className="rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">
-                {tx("ظ„ط§ ظٹظˆط¬ط¯ ظ…ط³طھط®ط¯ظ…ظٹظ†.", "No users found.")}
+                {tx("\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646.", "No users found.")}
               </div>
             ) : null}
           </div>
