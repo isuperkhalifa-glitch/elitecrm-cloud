@@ -80,7 +80,7 @@ export function TasksClient({
 
     if (!keyword) return scopedTasks;
 
-    return scopedTasks.filter((task) =>
+    return tasks.filter((task) =>
       [
         task.title,
         task.description,
@@ -529,6 +529,7 @@ export function TasksClient({
     </AppShell>
   );
 }
+
 
 
 
