@@ -13,7 +13,7 @@ export async function PATCH(request: Request, context: Context) {
 
     if (!isAdmin(profile?.role)) {
       return NextResponse.json(
-        { error: "ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ„ظ„ط£ط¯ظ…ظ† ظپظ‚ط·." },
+        { error: "هذه الصلاحية للأدمن فقط." },
         { status: 403 }
       );
     }
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, context: Context) {
     if (typeof body.role === "string") {
       if (!isRole(body.role)) {
         return NextResponse.json(
-          { error: "طµظ„ط§ط­ظٹط© ط؛ظٹط± طµط­ظٹط­ط©." },
+          { error: "صلاحية غير صحيحة." },
           { status: 400 }
         );
       }
@@ -45,7 +45,7 @@ export async function PATCH(request: Request, context: Context) {
     if (typeof body.is_active === "boolean") {
       if (userId === user.id && body.is_active === false) {
         return NextResponse.json(
-          { error: "ظ„ط§ ظٹظ…ظƒظ†ظƒ ط¥ظٹظ‚ط§ظپ ط­ط³ط§ط¨ظƒ ط§ظ„ط­ط§ظ„ظٹ." },
+          { error: "لا يمكنك إيقاف حسابك الحالي." },
           { status: 400 }
         );
       }
@@ -54,7 +54,7 @@ export async function PATCH(request: Request, context: Context) {
 
     if (Object.keys(patch).length === 0) {
       return NextResponse.json(
-        { error: "ظ„ط§ طھظˆط¬ط¯ طھط¹ط¯ظٹظ„ط§طھ طµط§ظ„ط­ط©." },
+        { error: "لا توجد تعديلات صالحة." },
         { status: 400 }
       );
     }
@@ -70,7 +70,7 @@ export async function PATCH(request: Request, context: Context) {
 
     if (error || !data) {
       return NextResponse.json(
-        { error: error?.message ?? "طھط¹ط°ط± طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ…." },
+        { error: error?.message ?? "تعذر تحديث المستخدم." },
         { status: 400 }
       );
     }

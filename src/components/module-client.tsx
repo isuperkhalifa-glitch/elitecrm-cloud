@@ -1,11 +1,10 @@
-﻿"use client";
+"use client";
 
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
-import type { TranslationKey } from "@/lib/i18n/translations";
 
 type ModuleClientProps = {
-  titleKey: TranslationKey;
+  titleKey: string;
   userEmail: string | null;
   fullName: string | null;
   role: string | null;

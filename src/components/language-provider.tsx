@@ -8,14 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { translations, type Language, type TranslationKey } from "@/lib/i18n/translations";
+import { translations, type Language } from "@/lib/i18n/translations";
 
 type I18nContextValue = {
   language: Language;
   dir: "rtl" | "ltr";
   setLanguage: (language: Language) => void;
   toggleLanguage: () => void;
-  t: (key: TranslationKey | string) => string;
+  t: (key: string) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -53,7 +53,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       dir,
       setLanguage,
       toggleLanguage,
-      t: (key) => translations[language][key as TranslationKey] ?? String(key),
+      t: (key) => (translations[language] as Record<string, string>)[String(key)] ?? String(key),
     }),
     [language]
   );

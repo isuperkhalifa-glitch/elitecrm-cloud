@@ -110,13 +110,13 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
 
   function tx(ar: string, en: string) { return isArabic ? ar : en; }
   function leadName(id: string | null) { return leads.find((lead) => lead.id === id)?.full_name ?? "-"; }
-  function centerName(id: string | null) { return trainingCenters.find((center) => center.id === id)?.name ?? tx("ط؛ظٹط± ظ…ط­ط¯ط¯", "Not selected"); }
+  function centerName(id: string | null) { return trainingCenters.find((center) => center.id === id)?.name ?? tx("غير محدد", "Not selected"); }
   function courseName(id: string | null) {
     const course = courses.find((item) => item.id === id);
     if (!course) return "-";
     return isArabic ? course.name_ar ?? course.name ?? course.name_en ?? "-" : course.name_en ?? course.name_ar ?? course.name ?? "-";
   }
-  function salesName(id: string | null) { return profiles.find((profile) => profile.id === id)?.full_name ?? tx("ط؛ظٹط± ظ…ط­ط¯ط¯", "Not selected"); }
+  function salesName(id: string | null) { return profiles.find((profile) => profile.id === id)?.full_name ?? tx("غير محدد", "Not selected"); }
 
   const filteredCourses = useMemo(() => {
     if (!form.company_id) return [];
@@ -177,7 +177,7 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
     setError("");
 
     if (!form.lead_id || !form.company_id || !form.course_id) {
-      setError(tx("ط§ط®طھظٹط§ط± ط§ظ„ط¹ظ…ظٹظ„ ظˆظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨ ظˆط§ظ„ط¯ظˆط±ط© ظ…ط·ظ„ظˆط¨.", "Customer, training center, and course are required."));
+      setError(tx("اختيار العميل ومركز التدريب والدورة مطلوب.", "Customer, training center, and course are required."));
       return;
     }
 
@@ -207,7 +207,7 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
     if (error || !data) {
       console.error(error);
       setSaving(false);
-      setError(error?.message ?? tx("طھط¹ط°ط± ط­ظپط¸ ط§ظ„طھط³ط¬ظٹظ„.", "Unable to save registration."));
+      setError(error?.message ?? tx("تعذر حفظ التسجيل.", "Unable to save registration."));
       return;
     }
 
@@ -234,7 +234,7 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
     setLeads((current) => current.map((lead) => lead.id === form.lead_id ? { ...lead, company_id: form.company_id, course_id: form.course_id, company_name: centerName(form.company_id), program: courseName(form.course_id), registration_status: form.registration_status, payment_status: form.payment_status, registration_amount: num(form.list_price), discount_amount: num(form.discount_amount), final_amount: num(form.final_price), discount_code: form.discount_code, paid_amount: num(form.paid_amount) } : lead));
     setForm(emptyForm);
     setSaving(false);
-    setMessage(tx("طھظ… طھط³ط¬ظٹظ„ ط§ظ„ط¹ظ…ظٹظ„ ط¨ظ†ط¬ط§ط­.", "Customer registered successfully."));
+    setMessage(tx("تم تسجيل العميل بنجاح.", "Customer registered successfully."));
   }
 
   const canEdit = ["developer", "admin", "manager", "moderator", "sales", "finance"].includes(role ?? "");
@@ -242,15 +242,15 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
   return (
     <AppShell titleKey="registrations" userEmail={userEmail} fullName={fullName} role={role}>
       <div className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-        <p className="text-sm text-emerald-300">{tx("ط³ط¬ظ„ ط§ظ„ط¹ظ…ظٹظ„ ظپظٹ ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨ ظˆط§ظ„ط¯ظˆط±ط© ط§ظ„ظ…ظ†ط§ط³ط¨ط© ظ…ط¹ ط§ظ„ط³ط¹ط± ظˆط§ظ„ط®طµظ… ظˆط§ظ„ط¯ظپط¹.", "Register the customer into the correct center/course with price, discount, and payment.")}</p>
-        <h1 className="mt-2 text-3xl font-black text-white">{tx("ط§ظ„طھط³ط¬ظٹظ„ط§طھ", "Registrations")}</h1>
+        <p className="text-sm text-emerald-300">{tx("سجل العميل في مركز التدريب والدورة المناسبة مع السعر والخصم والدفع.", "Register the customer into the correct center/course with price, discount, and payment.")}</p>
+        <h1 className="mt-2 text-3xl font-black text-white">{tx("التسجيلات", "Registrations")}</h1>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <Stat label={tx("ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„طھط³ط¬ظٹظ„ط§طھ", "Total registrations")} value={stats.total} />
-        <Stat label={tx("ظ…ط¯ظپظˆط¹ط©", "Paid")} value={stats.paid} />
-        <Stat label={tx("ظ‚ظٹظ…ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ", "Registration value")} value={stats.revenue.toFixed(2)} />
-        <Stat label={tx("ط§ظ„ظ…ط­طµظ„", "Collected")} value={stats.collected.toFixed(2)} />
+        <Stat label={tx("إجمالي التسجيلات", "Total registrations")} value={stats.total} />
+        <Stat label={tx("مدفوعة", "Paid")} value={stats.paid} />
+        <Stat label={tx("قيمة التسجيلات", "Registration value")} value={stats.revenue.toFixed(2)} />
+        <Stat label={tx("المحصل", "Collected")} value={stats.collected.toFixed(2)} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
@@ -258,65 +258,65 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300"><Save className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm text-emerald-300">{tx("طھط³ط¬ظٹظ„ ط¬ط¯ظٹط¯", "New registration")}</p>
-              <h2 className="text-2xl font-black text-white">{tx("ط¨ظٹط§ظ†ط§طھ ط§ظ„طھط³ط¬ظٹظ„", "Registration details")}</h2>
+              <p className="text-sm text-emerald-300">{tx("تسجيل جديد", "New registration")}</p>
+              <h2 className="text-2xl font-black text-white">{tx("بيانات التسجيل", "Registration details")}</h2>
             </div>
           </div>
 
           <div className="space-y-3">
             <select value={form.lead_id} onChange={(event) => chooseLead(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400">
-              <option value="">{tx("ط§ط®طھط± ط§ظ„ط¹ظ…ظٹظ„", "Choose customer")}</option>
-              {leads.map((lead) => <option key={lead.id} value={lead.id}>{lead.full_name} â€” {lead.phone ?? lead.email ?? ""}</option>)}
+              <option value="">{tx("اختر العميل", "Choose customer")}</option>
+              {leads.map((lead) => <option key={lead.id} value={lead.id}>{lead.full_name} — {lead.phone ?? lead.email ?? ""}</option>)}
             </select>
 
             <select value={form.company_id} onChange={(event) => chooseCenter(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400">
-              <option value="">{tx("ط§ط®طھط± ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨", "Choose training center")}</option>
+              <option value="">{tx("اختر مركز التدريب", "Choose training center")}</option>
               {trainingCenters.map((center) => <option key={center.id} value={center.id}>{center.name}</option>)}
             </select>
 
             <select value={form.course_id} onChange={(event) => chooseCourse(event.target.value)} disabled={!form.company_id} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-60">
-              <option value="">{tx("ط§ط®طھط± ط§ظ„ط¯ظˆط±ط©", "Choose course")}</option>
+              <option value="">{tx("اختر الدورة", "Choose course")}</option>
               {filteredCourses.map((course) => <option key={course.id} value={course.id}>{isArabic ? course.name_ar ?? course.name : course.name_en ?? course.name_ar ?? course.name}</option>)}
             </select>
 
             <div className="grid gap-3 md:grid-cols-2">
               <select value={form.registration_status} onChange={(event) => setForm({ ...form, registration_status: event.target.value })} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400">
-                <option value="registered">{tx("ظ…ط³ط¬ظ„", "Registered")}</option>
-                <option value="pending">{tx("ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©", "Pending")}</option>
-                <option value="canceled">{tx("ظ…ظ„ط؛ظٹ", "Canceled")}</option>
+                <option value="registered">{tx("مسجل", "Registered")}</option>
+                <option value="pending">{tx("قيد المراجعة", "Pending")}</option>
+                <option value="canceled">{tx("ملغي", "Canceled")}</option>
               </select>
               <select value={form.payment_status} onChange={(event) => setForm({ ...form, payment_status: event.target.value })} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400">
-                <option value="unpaid">{tx("ط؛ظٹط± ظ…ط¯ظپظˆط¹", "Unpaid")}</option>
-                <option value="partial">{tx("ط¯ظپط¹ ط¬ط²ط¦ظٹ", "Partial")}</option>
-                <option value="paid">{tx("ظ…ط¯ظپظˆط¹", "Paid")}</option>
-                <option value="refunded">{tx("ظ…ط³طھط±ط¯", "Refunded")}</option>
+                <option value="unpaid">{tx("غير مدفوع", "Unpaid")}</option>
+                <option value="partial">{tx("دفع جزئي", "Partial")}</option>
+                <option value="paid">{tx("مدفوع", "Paid")}</option>
+                <option value="refunded">{tx("مسترد", "Refunded")}</option>
               </select>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <input value={form.list_price} onChange={(event) => updateMoney("list_price", event.target.value)} type="number" placeholder={tx("ط§ظ„ط³ط¹ط±", "Price")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
-              <input value={form.discount_amount} onChange={(event) => updateMoney("discount_amount", event.target.value)} type="number" placeholder={tx("ط§ظ„ط®طµظ…", "Discount")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
-              <input value={form.final_price} readOnly type="number" placeholder={tx("ط§ظ„طµط§ظپظٹ", "Net")} className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-emerald-300 outline-none" />
-              <input value={form.paid_amount} onChange={(event) => updateMoney("paid_amount", event.target.value)} type="number" placeholder={tx("ط§ظ„ظ…ط¯ظپظˆط¹", "Paid amount")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+              <input value={form.list_price} onChange={(event) => updateMoney("list_price", event.target.value)} type="number" placeholder={tx("السعر", "Price")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+              <input value={form.discount_amount} onChange={(event) => updateMoney("discount_amount", event.target.value)} type="number" placeholder={tx("الخصم", "Discount")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+              <input value={form.final_price} readOnly type="number" placeholder={tx("الصافي", "Net")} className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-emerald-300 outline-none" />
+              <input value={form.paid_amount} onChange={(event) => updateMoney("paid_amount", event.target.value)} type="number" placeholder={tx("المدفوع", "Paid amount")} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
             </div>
 
-            <input value={form.discount_code} onChange={(event) => setForm({ ...form, discount_code: event.target.value })} placeholder={tx("ظƒظˆط¯ ط§ظ„ط®طµظ…", "Discount code")} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
-            <textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={tx("ظ…ظ„ط§ط­ط¸ط§طھ", "Notes")} className="min-h-24 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+            <input value={form.discount_code} onChange={(event) => setForm({ ...form, discount_code: event.target.value })} placeholder={tx("كود الخصم", "Discount code")} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+            <textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={tx("ملاحظات", "Notes")} className="min-h-24 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400" />
 
             {error ? <div className="flex gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200"><XCircle className="h-4 w-4" />{error}</div> : null}
             {message ? <div className="flex gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200"><CheckCircle2 className="h-4 w-4" />{message}</div> : null}
 
             <button onClick={saveRegistration} disabled={saving || !canEdit} type="button" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-60">
-              <Save className="h-5 w-5" /> {saving ? tx("ط¬ط§ط±ظٹ ط§ظ„ط­ظپط¸...", "Saving...") : tx("ط­ظپط¸ ط§ظ„طھط³ط¬ظٹظ„", "Save registration")}
+              <Save className="h-5 w-5" /> {saving ? tx("جاري الحفظ...", "Saving...") : tx("حفظ التسجيل", "Save registration")}
             </button>
           </div>
         </section>
 
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5 grid gap-3 xl:grid-cols-[1fr_240px]">
-            <div className="relative"><Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={tx("ط§ط¨ط­ط« ظپظٹ ط§ظ„طھط³ط¬ظٹظ„ط§طھ...", "Search registrations...")} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-11 py-3 text-white outline-none focus:border-emerald-400" /></div>
+            <div className="relative"><Search className="absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={tx("ابحث في التسجيلات...", "Search registrations...")} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-11 py-3 text-white outline-none focus:border-emerald-400" /></div>
             <select value={centerFilter} onChange={(event) => setCenterFilter(event.target.value)} className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white outline-none focus:border-emerald-400">
-              <option value="all">{tx("ظƒظ„ ظ…ط±ط§ظƒط² ط§ظ„طھط¯ط±ظٹط¨", "All centers")}</option>
+              <option value="all">{tx("كل مراكز التدريب", "All centers")}</option>
               {trainingCenters.map((center) => <option key={center.id} value={center.id}>{center.name}</option>)}
             </select>
           </div>
@@ -331,22 +331,22 @@ export function RegistrationsClient({ initialLeads, profiles, trainingCenters, c
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/10 px-3 py-1 text-emerald-300"><BookOpen className="h-3 w-3" />{courseName(registration.course_id)}</span>
                     </div>
                     <h2 className="mt-3 text-xl font-black text-white"><UserRound className="me-2 inline h-5 w-5 text-emerald-300" />{leadName(registration.lead_id)}</h2>
-                    <p className="mt-1 text-sm text-slate-400">{tx("ط§ظ„ط³ظٹظ„ط²", "Sales")}: {salesName(registration.sales_id)}</p>
+                    <p className="mt-1 text-sm text-slate-400">{tx("السيلز", "Sales")}: {salesName(registration.sales_id)}</p>
                     {registration.notes ? <p className="mt-3 rounded-2xl bg-white/[0.03] p-3 text-sm text-slate-300">{registration.notes}</p> : null}
                   </div>
                   <div className="min-w-52 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm">
-                    <p className="text-slate-400">{tx("ط§ظ„ط³ط¹ط±", "Price")}: <span className="text-white">{registration.list_price ?? 0}</span></p>
-                    <p className="text-slate-400">{tx("ط§ظ„ط®طµظ…", "Discount")}: <span className="text-white">{registration.discount_amount ?? 0}</span></p>
-                    <p className="text-slate-400">{tx("ط§ظ„طµط§ظپظٹ", "Net")}: <span className="font-black text-emerald-300">{registration.final_price ?? 0}</span></p>
-                    <p className="text-slate-400">{tx("ط§ظ„ظ…ط¯ظپظˆط¹", "Paid")}: <span className="text-white">{registration.paid_amount ?? 0}</span></p>
-                    {registration.discount_code ? <p className="text-slate-400">{tx("ط§ظ„ظƒظˆط¯", "Code")}: <span className="text-sky-300">{registration.discount_code}</span></p> : null}
+                    <p className="text-slate-400">{tx("السعر", "Price")}: <span className="text-white">{registration.list_price ?? 0}</span></p>
+                    <p className="text-slate-400">{tx("الخصم", "Discount")}: <span className="text-white">{registration.discount_amount ?? 0}</span></p>
+                    <p className="text-slate-400">{tx("الصافي", "Net")}: <span className="font-black text-emerald-300">{registration.final_price ?? 0}</span></p>
+                    <p className="text-slate-400">{tx("المدفوع", "Paid")}: <span className="text-white">{registration.paid_amount ?? 0}</span></p>
+                    {registration.discount_code ? <p className="text-slate-400">{tx("الكود", "Code")}: <span className="text-sky-300">{registration.discount_code}</span></p> : null}
                     <span className="mt-3 inline-flex rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300"><CreditCard className="me-1 h-3 w-3" />{registration.payment_status ?? "-"}</span>
                   </div>
                 </div>
               </article>
             ))}
 
-            {filteredRegistrations.length === 0 ? <div className="rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">{tx("ظ„ط§ طھظˆط¬ط¯ طھط³ط¬ظٹظ„ط§طھ ط¨ط¹ط¯.", "No registrations yet.")}</div> : null}
+            {filteredRegistrations.length === 0 ? <div className="rounded-[2rem] border border-dashed border-white/10 p-10 text-center text-slate-400">{tx("لا توجد تسجيلات بعد.", "No registrations yet.")}</div> : null}
           </div>
         </section>
       </div>

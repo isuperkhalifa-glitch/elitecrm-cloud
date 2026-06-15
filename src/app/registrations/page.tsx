@@ -14,8 +14,8 @@ export default async function RegistrationsPage() {
     return (
       <AppShell titleKey="registrations" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
         <div className="safe-card rounded-[2rem] border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
-          <h2 className="text-2xl font-black">ط§ظ„طھط³ط¬ظٹظ„ط§طھ ظ…طھظˆظ‚ظپط© ط­ط§ظ„ظٹظ‹ط§</h2>
-          <p className="mt-3 text-sm leading-7 text-amber-100/80">ظٹظ…ظƒظ† طھط´ط؛ظٹظ„ طµظپط­ط© ط§ظ„طھط³ط¬ظٹظ„ط§طھ ظ…ظ† ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ظ†ط¸ط§ظ….</p>
+          <h2 className="text-2xl font-black">التسجيلات متوقفة حاليًا</h2>
+          <p className="mt-3 text-sm leading-7 text-amber-100/80">يمكن تشغيل صفحة التسجيلات من إعدادات النظام.</p>
         </div>
       </AppShell>
     );
@@ -24,7 +24,7 @@ export default async function RegistrationsPage() {
   if (!allowedRoles.has(role ?? "")) {
     return (
       <AppShell titleKey="registrations" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
-        <div className="safe-card rounded-[2rem] border border-red-400/20 bg-red-400/10 p-8 text-red-100">ظ‡ط°ظ‡ ط§ظ„طµظپط­ط© ط؛ظٹط± ظ…طھط§ط­ط© ظ„طµظ„ط§ط­ظٹطھظƒ ط§ظ„ط­ط§ظ„ظٹط©.</div>
+        <div className="safe-card rounded-[2rem] border border-red-400/20 bg-red-400/10 p-8 text-red-100">هذه الصفحة غير متاحة لصلاحيتك الحالية.</div>
       </AppShell>
     );
   }
