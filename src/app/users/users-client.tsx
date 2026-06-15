@@ -29,7 +29,7 @@ type Props = {
   role: string | null;
 };
 
-const roleOptions = ["admin", "manager", "moderator", "sales", "finance"];
+const roleOptions = ["developer", "admin", "manager", "moderator", "sales", "finance"];
 
 const emptyForm = {
   full_name: "",
@@ -62,6 +62,7 @@ export function UsersClient({
   }
 
   function roleLabel(value: string | null) {
+    if (value === "developer") return tx("مطور النظام", "Developer");
     if (value === "admin") return tx("مدير النظام", "Admin");
     if (value === "manager") return tx("مدير", "Manager");
     if (value === "moderator") return tx("مراقب", "Moderator");
@@ -93,7 +94,7 @@ export function UsersClient({
       total: users.length,
       active: users.filter((user) => user.is_active).length,
       sales: users.filter((user) => user.role === "sales").length,
-      admins: users.filter((user) => ["admin", "manager"].includes(user.role ?? "")).length,
+      admins: users.filter((user) => ["developer", "admin", "manager"].includes(user.role ?? "")).length,
     };
   }, [users]);
 

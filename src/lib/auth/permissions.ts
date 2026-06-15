@@ -1,4 +1,4 @@
-export type AppRole = "admin" | "manager" | "moderator" | "sales" | "finance";
+export type AppRole = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
 
 export type PermissionDefinition = {
   role: AppRole;
@@ -11,11 +11,11 @@ export type PermissionDefinition = {
   actionsEn: string[];
 };
 
-export const appRoles: AppRole[] = ["admin", "manager", "moderator", "sales", "finance"];
+export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
 
 export const routeAccess: Record<string, AppRole[]> = {
-  "/dashboard": ["admin", "manager", "moderator", "sales", "finance"],
-  "/customers": ["admin", "manager", "moderator", "sales", "finance"],
+  "/dashboard": ["developer", "admin", "manager", "moderator", "sales", "finance"],
+  "/customers": ["developer", "admin", "manager", "moderator", "sales", "finance"],
   "/leads": ["admin", "manager", "moderator", "sales"],
   "/my-customers": ["admin", "manager", "sales"],
   "/distribution": ["admin", "manager", "moderator"],
@@ -26,11 +26,22 @@ export const routeAccess: Record<string, AppRole[]> = {
   "/commissions": ["admin", "manager", "sales", "finance"],
   "/companies": ["admin", "manager"],
   "/contacts": ["admin", "manager"],
-  "/users": ["admin"],
-  "/settings": ["admin"],
+  "/users": ["developer", "admin"],
+  "/customize": ["developer", "admin"],
+  "/settings": ["developer", "admin"],
 };
 
 export const permissionDefinitions: PermissionDefinition[] = [
+  {
+    role: "developer",
+    labelAr: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
+    labelEn: "Developer",
+    summaryAr: "\u0635\u0644\u0627\u062d\u064a\u0629 \u0645\u062a\u0642\u062f\u0645\u0629 \u0644\u062a\u062e\u0635\u064a\u0635 \u0648\u062a\u0639\u062f\u064a\u0644 \u0643\u0644 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0646\u0638\u0627\u0645.",
+    summaryEn: "Advanced role for detailed system customization.",
+    routes: ["/dashboard", "/customers", "/leads", "/my-customers", "/distribution", "/imports", "/tasks", "/deals", "/invoices", "/commissions", "/companies", "/contacts", "/users", "/settings", "/customize"],
+    actionsAr: ["\u062a\u062e\u0635\u064a\u0635 \u0627\u0644\u0646\u0638\u0627\u0645", "\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0627\u062a", "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a", "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a"],
+    actionsEn: ["Customize system", "Edit pages", "Manage settings", "Manage permissions"],
+  },
   {
     role: "admin",
     labelAr: "\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
@@ -84,6 +95,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
 ];
 
 export function normalizeRole(role?: string | null): AppRole {
+  if (role === "developer") return "developer";
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";

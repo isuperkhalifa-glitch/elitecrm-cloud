@@ -13,7 +13,7 @@ export default async function SettingsPage({ searchParams }: any) {
 
   const { supabase, user, profile } = await getCurrentUserProfile();
 
-  if (profile?.role !== "admin") {
+  if (!["developer", "admin"].includes(profile?.role ?? "")) {
     return (
       <AppShell
         titleKey="settings"
@@ -22,7 +22,7 @@ export default async function SettingsPage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-200">
-          هذه الصفحة متاحة للأدمن فقط.
+          هذه الصفحة متاحة للمطور أو الأدمن فقط.
         </div>
       </AppShell>
     );

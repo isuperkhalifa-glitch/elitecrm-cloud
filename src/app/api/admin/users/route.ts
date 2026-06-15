@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const allowedRoles = ["admin", "manager", "moderator", "sales", "finance"];
+const allowedRoles = ["developer", "admin", "manager", "moderator", "sales", "finance"];
 const selectColumns = "id,email,full_name,role,is_active,created_at";
 
 async function requireAdmin() {
   const { user, profile } = await getCurrentUserProfile();
 
-  if (profile?.role !== "admin") {
+  if (!["developer", "admin"].includes(profile?.role ?? "")) {
     return {
       user,
       blocked: NextResponse.json(

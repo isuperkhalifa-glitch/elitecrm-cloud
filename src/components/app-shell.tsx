@@ -37,7 +37,7 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-type Role = "admin" | "manager" | "moderator" | "sales" | "finance";
+type Role = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
 
 type NavItem = {
   href: string;
@@ -53,8 +53,8 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const allRoles: Role[] = ["admin", "manager", "moderator", "sales", "finance"];
-const previewAdminRoles: Role[] = ["admin", "manager"];
+const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
+const previewAdminRoles: Role[] = ["developer", "admin", "manager"];
 
 const hiddenNavHrefs = new Set([
   "/leads",
@@ -94,13 +94,14 @@ const navGroups: NavGroup[] = [
       { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["admin", "manager", "moderator"] },
       { href: "/companies", labelKey: "companies", icon: Building2, roles: ["admin", "manager"] },
       { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["admin", "manager"] },
-      { href: "/users", labelKey: "users", icon: UserCog, roles: ["admin"] },
-      { href: "/settings", labelKey: "settings", icon: Settings, roles: ["admin"] },
+      { href: "/users", labelKey: "users", icon: UserCog, roles: ["developer", "admin"] },
+      { href: "/settings", labelKey: "settings", icon: Settings, roles: ["developer", "admin"] },
     ],
   },
 ];
 
 function normalizeRole(role?: string | null): Role {
+  if (role === "developer") return "developer";
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";
@@ -110,6 +111,7 @@ function normalizeRole(role?: string | null): Role {
 
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
+    developer: { ar: "مطور النظام", en: "Developer" },
     admin: { ar: "مدير النظام", en: "Admin" },
     manager: { ar: "مدير", en: "Manager" },
     moderator: { ar: "موديريتور", en: "Moderator" },

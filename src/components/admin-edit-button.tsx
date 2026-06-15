@@ -36,7 +36,7 @@ export function AdminEditButton({ role }: Props) {
   const [editEnabled, setEditEnabled] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  const canEdit = role === "admin";
+  const canEdit = role === "developer" || role === "admin";
 
   const pageKey = useMemo(() => {
     if (pathname === "/") return "dashboard";

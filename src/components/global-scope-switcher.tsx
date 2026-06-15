@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Eye, RotateCcw } from "lucide-react";
@@ -21,7 +21,7 @@ export function GlobalScopeSwitcher({ role }: { role: string | null }) {
   const { language } = useI18n();
   const { scope, setScope, resetScope } = useScope();
   const isArabic = language === "ar";
-  const canUseSwitcher = role === "admin" || role === "manager";
+  const canUseSwitcher = role === "developer" || role === "admin" || role === "manager";
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);

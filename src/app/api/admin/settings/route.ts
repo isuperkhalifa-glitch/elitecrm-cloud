@@ -7,9 +7,9 @@ const selectColumns = "key,label,group_name,value,description,is_public,updated_
 async function requireAdmin() {
   const { profile } = await getCurrentUserProfile();
 
-  if (profile?.role !== "admin") {
+  if (!["developer", "admin"].includes(profile?.role ?? "")) {
     return NextResponse.json(
-      { error: "إعدادات النظام متاحة للأدمن فقط." },
+      { error: "إعدادات النظام متاحة للمطور أو الأدمن فقط." },
       { status: 403 }
     );
   }

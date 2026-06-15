@@ -1,4 +1,4 @@
-﻿import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { mergeSystemSettings } from "@/lib/settings/defaults";
 import { CustomizerClient } from "./customizer-client";
@@ -12,7 +12,7 @@ export default async function CustomizePage({ searchParams }: any) {
 
   const { supabase, user, profile } = await getCurrentUserProfile();
 
-  if (profile?.role !== "admin") {
+  if (!["developer", "admin"].includes(profile?.role ?? "")) {
     return (
       <AppShell
         titleKey="settings"
@@ -21,7 +21,7 @@ export default async function CustomizePage({ searchParams }: any) {
         role={profile?.role ?? null}
       >
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          هذه الصفحة متاحة للأدمن فقط.
+          هذه الصفحة متاحة للمطور أو الأدمن فقط.
         </div>
       </AppShell>
     );

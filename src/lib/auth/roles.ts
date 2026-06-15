@@ -1,4 +1,4 @@
-export type Role = "admin" | "manager" | "moderator" | "sales" | "finance";
+export type Role = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
 
 export type PageKey =
   | "dashboard"
@@ -16,26 +16,27 @@ export type PageKey =
   | "users"
   | "settings";
 
-export const allRoles: Role[] = ["admin", "manager", "moderator", "sales", "finance"];
+export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
-  "my-customers": ["admin", "manager", "sales"],
-  leads: ["admin", "manager", "moderator", "sales"],
-  tasks: ["admin", "manager", "sales"],
-  deals: ["admin", "manager", "sales"],
-  invoices: ["admin", "manager", "finance", "sales"],
-  commissions: ["admin", "manager", "finance", "sales"],
-  distribution: ["admin", "manager", "moderator"],
-  imports: ["admin", "manager", "moderator"],
-  companies: ["admin", "manager"],
-  contacts: ["admin", "manager"],
-  users: ["admin"],
-  settings: ["admin"],
+  "my-customers": ["developer", "admin", "manager", "sales"],
+  leads: ["developer", "admin", "manager", "moderator", "sales"],
+  tasks: ["developer", "admin", "manager", "sales"],
+  deals: ["developer", "admin", "manager", "sales"],
+  invoices: ["developer", "admin", "manager", "finance", "sales"],
+  commissions: ["developer", "admin", "manager", "finance", "sales"],
+  distribution: ["developer", "admin", "manager", "moderator"],
+  imports: ["developer", "admin", "manager", "moderator"],
+  companies: ["developer", "admin", "manager"],
+  contacts: ["developer", "admin", "manager"],
+  users: ["developer", "admin"],
+  settings: ["developer", "admin"],
 };
 
 export function normalizeRole(role?: string | null): Role {
+  if (role === "developer") return "developer";
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";
@@ -48,7 +49,8 @@ export function canAccessPage(role: string | null | undefined, pageKey: PageKey)
 }
 
 export function isAdmin(role: string | null | undefined) {
-  return normalizeRole(role) === "admin";
+  const normalized = normalizeRole(role);
+  return normalized === "developer" || normalized === "admin";
 }
 
 export function isRole(value: string): value is Role {
