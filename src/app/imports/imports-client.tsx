@@ -25,16 +25,16 @@ type RawImportRow = Record<string, unknown>;
 const allowedImportRoles = new Set(["developer", "admin", "moderator", "marketer"]);
 
 const templateColumns = [
-  { key: "studentName", label: "ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„", required: true, example: "ظ…ط­ظ…ط¯ ط£ط­ظ…ط¯" },
-  { key: "studentMobileNumber", label: "ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„", required: true, example: "0551234567" },
-  { key: "email", label: "ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", required: false, example: "client@example.com" },
-  { key: "trainingCenter", label: "ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨", required: false, example: "ظ…ط±ظƒط² ط±ظٹظپ ط§ظ„ظ…ظ‡ط§ط±ط§طھ" },
-  { key: "program", label: "ط§ظ„ط¯ظˆط±ط© / ط§ظ„ط¨ط±ظ†ط§ظ…ط¬", required: false, example: "PMP" },
-  { key: "source", label: "ط§ظ„ظ…طµط¯ط±", required: false, example: "Meta Ads" },
-  { key: "campaign", label: "ط§ظ„ط­ظ…ظ„ط©", required: false, example: "PMP June" },
-  { key: "status", label: "ط­ط§ظ„ط© ط§ظ„ط¹ظ…ظٹظ„", required: false, example: "interested" },
-  { key: "leadType", label: "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظٹظ„", required: false, example: "fresh" },
-  { key: "notes", label: "ظ…ظ„ط§ط­ط¸ط§طھ", required: false, example: "ط·ظ„ط¨ ط§ظ„طھظˆط§طµظ„ ظ…ط³ط§ط،ظ‹" },
+  { key: "studentName", label: "اسم العميل", required: true, example: "محمد أحمد" },
+  { key: "studentMobileNumber", label: "رقم الجوال", required: true, example: "0551234567" },
+  { key: "email", label: "البريد الإلكتروني", required: false, example: "client@example.com" },
+  { key: "trainingCenter", label: "مركز التدريب", required: false, example: "مركز ريف المهارات" },
+  { key: "program", label: "الدورة / البرنامج", required: false, example: "PMP" },
+  { key: "source", label: "المصدر", required: false, example: "Meta Ads" },
+  { key: "campaign", label: "الحملة", required: false, example: "PMP June" },
+  { key: "status", label: "حالة العميل", required: false, example: "interested" },
+  { key: "leadType", label: "نوع العميل", required: false, example: "fresh" },
+  { key: "notes", label: "ملاحظات", required: false, example: "طلب التواصل مساءً" },
 ];
 
 type PreparedLead = {
@@ -138,23 +138,23 @@ function buildLeadPayload(
 
   for (const row of rows) {
     const externalId = readText(row, ["id"]);
-    const name = readText(row, ["studentName", "name", "full_name", "ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„", "ط§ظ„ط§ط³ظ…"]);
+    const name = readText(row, ["studentName", "name", "full_name", "اسم العميل", "الاسم"]);
     const rawPhone = readText(row, [
       "studentMobileNumber",
       "allNumbers",
       "phone",
       "mobile",
-      "ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„",
-      "ط§ظ„ط¬ظˆط§ظ„",
-      "ط§ظ„ظ…ظˆط¨ط§ظٹظ„",
+      "رقم الجوال",
+      "الجوال",
+      "الموبايل",
     ]);
     const phone = normalizePhone(rawPhone);
     const phoneParts = splitPhone(phone);
-    const program = readText(row, ["program", "course", "ط§ظ„ط¯ظˆط±ط©", "ط§ظ„ط¨ط±ظ†ط§ظ…ط¬"]);
+    const program = readText(row, ["program", "course", "الدورة", "البرنامج"]);
     const courseId = guessCourseId(program);
     const notes = cleanNotes(
       [
-        readText(row, ["notes", "ظ…ظ„ط§ط­ط¸ط§طھ"]),
+        readText(row, ["notes", "ملاحظات"]),
         readText(row, ["otherDetails"]),
       ]
         .filter(Boolean)
@@ -181,15 +181,15 @@ function buildLeadPayload(
       phone,
       country_code: phoneParts.country_code,
       phone_number: phoneParts.phone_number || null,
-      email: readText(row, ["email", "ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", "ط§ظ„ط¨ط±ظٹط¯"]) || null,
-      company_name: readText(row, ["trainingCenter", "company", "company_name", "ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨", "ط§ظ„ط´ط±ظƒط©"]) || program || null,
-      source: readText(row, ["source", "campaign", "ط§ظ„ظ…طµط¯ط±", "ط§ظ„ط­ظ…ظ„ط©"]) || "excel_import",
+      email: readText(row, ["email", "البريد الإلكتروني", "البريد"]) || null,
+      company_name: readText(row, ["trainingCenter", "company", "company_name", "مركز التدريب", "الشركة"]) || program || null,
+      source: readText(row, ["source", "campaign", "المصدر", "الحملة"]) || "excel_import",
       status: mapStatus(readText(row, ["status"])),
       priority: readNumber(row, ["potential"]) ? "high" : "medium",
       owner_id: null,
       program: program || null,
       course_id: courseId,
-      lead_type: readText(row, ["leadType", "lead_type", "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظٹظ„"]) || "fresh",
+      lead_type: readText(row, ["leadType", "lead_type", "نوع العميل"]) || "fresh",
       customer_status: mapStatus(readText(row, ["status"])),
       registration_status: "not_registered",
       payment_status: mapStatus(readText(row, ["status"])) === "paid" ? "paid" : "unpaid",
@@ -284,7 +284,7 @@ export function ImportsClient({
     setError("");
 
     if (!canImport) {
-      setError("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ…طھط§ط­ط© ظ„ظ„ظ…ط·ظˆط± ظˆط§ظ„ظ…ط¯ظٹط± ط§ظ„ط¹ط§ظ… ظˆط§ظ„ظ…ظˆط¯ظٹط±ظٹطھظˆط± ظˆط§ظ„ظ…ط³ظˆظ‚ ظپظ‚ط·.");
+      setError("هذه الصلاحية متاحة للمطور والمدير العام والموديريتور والمسوق فقط.");
       return;
     }
 
@@ -394,20 +394,20 @@ export function ImportsClient({
       <section className="mb-6 safe-card rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm text-sky-200">ط´ظƒظ„ ط§ظ„ط´ظٹطھ ط§ظ„ظ…ظ‚ط¨ظˆظ„</p>
-            <h2 className="mt-1 text-2xl font-black text-white">ط§ط³طھط®ط¯ظ… ط§ظ„ط£ط¹ظ…ط¯ط© ط§ظ„طھط§ظ„ظٹط© ط¹ظ†ط¯ ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¹ظ…ظ„ط§ط،</h2>
-            <p className="mt-2 text-sm leading-7 text-sky-100/80">ط§ظ„ط£ط¹ظ…ط¯ط© ط§ظ„ظ…ط·ظ„ظˆط¨ط© ظپظ‚ط·: ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„ ظˆط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„. ط¨ط§ظ‚ظٹ ط§ظ„ط£ط¹ظ…ط¯ط© ط§ط®طھظٹط§ط±ظٹط© ظ„طھط¬ظ‡ظٹط² ط±ط­ظ„ط© ط§ظ„ط¹ظ…ظٹظ„ ظ…ظ† ط§ظ„ظ…طµط¯ط± ط­طھظ‰ ط§ظ„طھط³ط¬ظٹظ„ ظˆط§ظ„ط¯ظپط¹.</p>
+            <p className="text-sm text-sky-200">شكل الشيت المقبول</p>
+            <h2 className="mt-1 text-2xl font-black text-white">استخدم الأعمدة التالية عند استيراد العملاء</h2>
+            <p className="mt-2 text-sm leading-7 text-sky-100/80">الأعمدة المطلوبة فقط: اسم العميل ورقم الجوال. باقي الأعمدة اختيارية لتجهيز رحلة العميل من المصدر حتى التسجيل والدفع.</p>
           </div>
-          <button onClick={downloadTemplate} type="button" className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950 hover:bg-sky-200">طھط­ظ…ظٹظ„ ظ†ظ…ظˆط°ط¬ Excel</button>
+          <button onClick={downloadTemplate} type="button" className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950 hover:bg-sky-200">تحميل نموذج Excel</button>
         </div>
         <div className="mt-5 safe-scroll">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-white/10 text-sky-100">
-                <th className="px-3 py-3 text-start">ط§ط³ظ… ط§ظ„ط¹ظ…ظˆط¯ ظپظٹ Excel</th>
-                <th className="px-3 py-3 text-start">ط§ظ„ظ…ط¹ظ†ظ‰</th>
-                <th className="px-3 py-3 text-start">ط¥ط¬ط¨ط§ط±ظٹطں</th>
-                <th className="px-3 py-3 text-start">ظ…ط«ط§ظ„</th>
+                <th className="px-3 py-3 text-start">اسم العمود في Excel</th>
+                <th className="px-3 py-3 text-start">المعنى</th>
+                <th className="px-3 py-3 text-start">إجباري؟</th>
+                <th className="px-3 py-3 text-start">مثال</th>
               </tr>
             </thead>
             <tbody>
@@ -415,7 +415,7 @@ export function ImportsClient({
                 <tr key={column.key} className="border-b border-white/10">
                   <td className="px-3 py-3 font-mono text-white">{column.key}</td>
                   <td className="px-3 py-3 text-sky-50">{column.label}</td>
-                  <td className="px-3 py-3">{column.required ? "ظ†ط¹ظ…" : "ط§ط®طھظٹط§ط±ظٹ"}</td>
+                  <td className="px-3 py-3">{column.required ? "نعم" : "اختياري"}</td>
                   <td className="px-3 py-3 text-slate-200">{column.example}</td>
                 </tr>
               ))}
