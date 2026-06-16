@@ -29,7 +29,7 @@ type Props = {
   role: string | null;
 };
 
-const roleOptions = ["developer", "admin", "manager", "moderator", "sales", "finance"];
+const roleOptions = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
 
 const emptyForm = {
   full_name: "",

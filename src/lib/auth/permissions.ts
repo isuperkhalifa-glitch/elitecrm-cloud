@@ -1,4 +1,4 @@
-export type AppRole = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
+export type AppRole = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "marketer";
 
 export type PermissionDefinition = {
   role: AppRole;
@@ -11,17 +11,17 @@ export type PermissionDefinition = {
   actionsEn: string[];
 };
 
-export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
+export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
 
 export const routeAccess: Record<string, AppRole[]> = {
-  "/dashboard": ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  "/customers": ["developer", "admin", "manager", "moderator", "sales", "finance"],
+  "/dashboard": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
+  "/customers": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
   "/training-centers": ["developer", "admin", "manager"],
-  "/courses": ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  "/leads": ["developer", "admin", "manager", "moderator", "sales"],
+  "/courses": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
+  "/leads": ["developer", "admin", "moderator", "marketer"],
   "/my-customers": ["developer", "admin", "manager", "sales"],
   "/distribution": ["developer", "admin", "manager", "moderator"],
-  "/imports": ["developer", "admin", "manager", "moderator"],
+  "/imports": ["developer", "admin", "moderator", "marketer"],
   "/tasks": ["developer", "admin", "manager", "sales"],
   "/deals": ["developer", "admin", "manager", "sales", "finance"],
   "/invoices": ["developer", "admin", "manager", "sales", "finance"],
@@ -85,6 +85,17 @@ export const permissionDefinitions: PermissionDefinition[] = [
     actionsEn: ["Update customer status", "Write notes", "Set follow-up"],
   },
   {
+    role: "marketer",
+    labelAr: "ط§ظ„ظ…ط³ظˆظ‚",
+    labelEn: "Marketer",
+    summaryAr: "ظٹط¶ظٹظپ ط§ظ„ط¹ظ…ظ„ط§ط، ظ…ظ† ط§ظ„ط­ظ…ظ„ط§طھ ظٹط¯ظˆظٹظ‹ط§ ط£ظˆ ط¨ط§ظ„ط§ط³طھظٹط±ط§ط¯ ظˆظٹطھط§ط¨ط¹ ظ…طµط§ط¯ط± ط§ظ„ط¹ظ…ظ„ط§ط، ط¨ط¯ظˆظ† طµظ„ط§ط­ظٹط§طھ ظ…ط§ظ„ظٹط©.",
+    summaryEn: "Adds campaign customers manually or by import and tracks sources without finance access.",
+    routes: ["/dashboard", "/customers", "/leads", "/imports"],
+    actionsAr: ["ط¥ط¶ط§ظپط© ط¹ظ…ظ„ط§ط،", "ط§ط³طھظٹط±ط§ط¯ ط¹ظ…ظ„ط§ط،", "طھط­ط¯ظٹط¯ ط§ظ„ظ…طµط¯ط± ظˆط§ظ„ط­ظ…ظ„ط©", "طھط¬ظ‡ظٹط² ط§ظ„ط¹ظ…ظ„ط§ط، ظ„ظ„طھظˆط²ظٹط¹"],
+    actionsEn: ["Add customers", "Import customers", "Set source and campaign", "Prepare customers for assignment"],
+  },
+
+  {
     role: "finance",
     labelAr: "\u0645\u0627\u0644\u064a\u0629",
     labelEn: "Finance",
@@ -101,6 +112,7 @@ export function normalizeRole(role?: string | null): AppRole {
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";
+  if (role === "marketer") return "marketer";
   if (role === "finance") return "finance";
   return "sales";
 }

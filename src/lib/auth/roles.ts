@@ -1,4 +1,4 @@
-export type Role = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
+export type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "marketer";
 
 export type PageKey =
   | "dashboard"
@@ -19,21 +19,21 @@ export type PageKey =
   | "settings"
   | "customize";
 
-export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
+export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
-  courses: ["developer", "admin", "manager", "moderator", "sales", "finance"],
+  courses: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
   "training-centers": ["developer", "admin", "manager"],
   "my-customers": ["developer", "admin", "manager", "sales"],
-  leads: ["developer", "admin", "manager", "moderator", "sales"],
+  leads: ["developer", "admin", "moderator", "marketer"],
   tasks: ["developer", "admin", "manager", "sales"],
   deals: ["developer", "admin", "manager", "sales"],
   invoices: ["developer", "admin", "manager", "finance", "sales"],
   commissions: ["developer", "admin", "manager", "finance", "sales"],
   distribution: ["developer", "admin", "manager", "moderator"],
-  imports: ["developer", "admin", "manager", "moderator"],
+  imports: ["developer", "admin", "moderator", "marketer"],
   companies: ["developer", "admin", "manager"],
   contacts: ["developer", "admin", "manager"],
   users: ["developer", "admin"],
@@ -46,6 +46,7 @@ export function normalizeRole(role?: string | null): Role {
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";
+  if (role === "marketer") return "marketer";
   if (role === "finance") return "finance";
   return "sales";
 }

@@ -22,6 +22,21 @@ type ImportsClientProps = {
 
 type RawImportRow = Record<string, unknown>;
 
+const allowedImportRoles = new Set(["developer", "admin", "moderator", "marketer"]);
+
+const templateColumns = [
+  { key: "studentName", label: "ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„", required: true, example: "ظ…ط­ظ…ط¯ ط£ط­ظ…ط¯" },
+  { key: "studentMobileNumber", label: "ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„", required: true, example: "0551234567" },
+  { key: "email", label: "ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", required: false, example: "client@example.com" },
+  { key: "trainingCenter", label: "ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨", required: false, example: "ظ…ط±ظƒط² ط±ظٹظپ ط§ظ„ظ…ظ‡ط§ط±ط§طھ" },
+  { key: "program", label: "ط§ظ„ط¯ظˆط±ط© / ط§ظ„ط¨ط±ظ†ط§ظ…ط¬", required: false, example: "PMP" },
+  { key: "source", label: "ط§ظ„ظ…طµط¯ط±", required: false, example: "Meta Ads" },
+  { key: "campaign", label: "ط§ظ„ط­ظ…ظ„ط©", required: false, example: "PMP June" },
+  { key: "status", label: "ط­ط§ظ„ط© ط§ظ„ط¹ظ…ظٹظ„", required: false, example: "interested" },
+  { key: "leadType", label: "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظٹظ„", required: false, example: "fresh" },
+  { key: "notes", label: "ظ…ظ„ط§ط­ط¸ط§طھ", required: false, example: "ط·ظ„ط¨ ط§ظ„طھظˆط§طµظ„ ظ…ط³ط§ط،ظ‹" },
+];
+
 type PreparedLead = {
   external_id: string | null;
   full_name: string;
@@ -123,20 +138,23 @@ function buildLeadPayload(
 
   for (const row of rows) {
     const externalId = readText(row, ["id"]);
-    const name = readText(row, ["studentName", "name", "full_name"]);
+    const name = readText(row, ["studentName", "name", "full_name", "ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„", "ط§ظ„ط§ط³ظ…"]);
     const rawPhone = readText(row, [
       "studentMobileNumber",
       "allNumbers",
       "phone",
       "mobile",
+      "ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„",
+      "ط§ظ„ط¬ظˆط§ظ„",
+      "ط§ظ„ظ…ظˆط¨ط§ظٹظ„",
     ]);
     const phone = normalizePhone(rawPhone);
     const phoneParts = splitPhone(phone);
-    const program = readText(row, ["program"]);
+    const program = readText(row, ["program", "course", "ط§ظ„ط¯ظˆط±ط©", "ط§ظ„ط¨ط±ظ†ط§ظ…ط¬"]);
     const courseId = guessCourseId(program);
     const notes = cleanNotes(
       [
-        readText(row, ["notes"]),
+        readText(row, ["notes", "ظ…ظ„ط§ط­ط¸ط§طھ"]),
         readText(row, ["otherDetails"]),
       ]
         .filter(Boolean)
@@ -158,20 +176,20 @@ function buildLeadPayload(
     seen.add(uniqueKey);
 
     prepared.push({
-      external_id: externalId || null,
+      external_id: externalId || (phone ? `phone:${phone}` : null),
       full_name: name,
       phone,
       country_code: phoneParts.country_code,
       phone_number: phoneParts.phone_number || null,
-      email: null,
-      company_name: program || null,
-      source: readText(row, ["source"]) || "excel_import",
+      email: readText(row, ["email", "ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ", "ط§ظ„ط¨ط±ظٹط¯"]) || null,
+      company_name: readText(row, ["trainingCenter", "company", "company_name", "ظ…ط±ظƒط² ط§ظ„طھط¯ط±ظٹط¨", "ط§ظ„ط´ط±ظƒط©"]) || program || null,
+      source: readText(row, ["source", "campaign", "ط§ظ„ظ…طµط¯ط±", "ط§ظ„ط­ظ…ظ„ط©"]) || "excel_import",
       status: mapStatus(readText(row, ["status"])),
       priority: readNumber(row, ["potential"]) ? "high" : "medium",
       owner_id: null,
       program: program || null,
       course_id: courseId,
-      lead_type: "fresh",
+      lead_type: readText(row, ["leadType", "lead_type", "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظٹظ„"]) || "fresh",
       customer_status: mapStatus(readText(row, ["status"])),
       registration_status: "not_registered",
       payment_status: mapStatus(readText(row, ["status"])) === "paid" ? "paid" : "unpaid",
@@ -205,6 +223,7 @@ export function ImportsClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const canImport = allowedImportRoles.has(role ?? "");
   const preview = rows.slice(0, 8);
 
   const stats = useMemo(() => {
@@ -216,6 +235,14 @@ export function ImportsClient({
       skipped: result.skippedRows,
     };
   }, [rows, currentUserId]);
+
+  function downloadTemplate() {
+    const sample = [Object.fromEntries(templateColumns.map((column) => [column.key, column.example]))];
+    const worksheet = XLSX.utils.json_to_sheet(sample, { header: templateColumns.map((column) => column.key) });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "leads-template");
+    XLSX.writeFile(workbook, "elitecrm-leads-template.xlsx");
+  }
 
   async function handleFile(file: File | null) {
     setMessage("");
@@ -255,6 +282,11 @@ export function ImportsClient({
   async function runImport() {
     setMessage("");
     setError("");
+
+    if (!canImport) {
+      setError("ظ‡ط°ظ‡ ط§ظ„طµظ„ط§ط­ظٹط© ظ…طھط§ط­ط© ظ„ظ„ظ…ط·ظˆط± ظˆط§ظ„ظ…ط¯ظٹط± ط§ظ„ط¹ط§ظ… ظˆط§ظ„ظ…ظˆط¯ظٹط±ظٹطھظˆط± ظˆط§ظ„ظ…ط³ظˆظ‚ ظپظ‚ط·.");
+      return;
+    }
 
     const supabase = createClient();
 
@@ -359,6 +391,39 @@ export function ImportsClient({
         </div>
       </div>
 
+      <section className="mb-6 safe-card rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm text-sky-200">ط´ظƒظ„ ط§ظ„ط´ظٹطھ ط§ظ„ظ…ظ‚ط¨ظˆظ„</p>
+            <h2 className="mt-1 text-2xl font-black text-white">ط§ط³طھط®ط¯ظ… ط§ظ„ط£ط¹ظ…ط¯ط© ط§ظ„طھط§ظ„ظٹط© ط¹ظ†ط¯ ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¹ظ…ظ„ط§ط،</h2>
+            <p className="mt-2 text-sm leading-7 text-sky-100/80">ط§ظ„ط£ط¹ظ…ط¯ط© ط§ظ„ظ…ط·ظ„ظˆط¨ط© ظپظ‚ط·: ط§ط³ظ… ط§ظ„ط¹ظ…ظٹظ„ ظˆط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„. ط¨ط§ظ‚ظٹ ط§ظ„ط£ط¹ظ…ط¯ط© ط§ط®طھظٹط§ط±ظٹط© ظ„طھط¬ظ‡ظٹط² ط±ط­ظ„ط© ط§ظ„ط¹ظ…ظٹظ„ ظ…ظ† ط§ظ„ظ…طµط¯ط± ط­طھظ‰ ط§ظ„طھط³ط¬ظٹظ„ ظˆط§ظ„ط¯ظپط¹.</p>
+          </div>
+          <button onClick={downloadTemplate} type="button" className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-black text-slate-950 hover:bg-sky-200">طھط­ظ…ظٹظ„ ظ†ظ…ظˆط°ط¬ Excel</button>
+        </div>
+        <div className="mt-5 safe-scroll">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-sky-100">
+                <th className="px-3 py-3 text-start">ط§ط³ظ… ط§ظ„ط¹ظ…ظˆط¯ ظپظٹ Excel</th>
+                <th className="px-3 py-3 text-start">ط§ظ„ظ…ط¹ظ†ظ‰</th>
+                <th className="px-3 py-3 text-start">ط¥ط¬ط¨ط§ط±ظٹطں</th>
+                <th className="px-3 py-3 text-start">ظ…ط«ط§ظ„</th>
+              </tr>
+            </thead>
+            <tbody>
+              {templateColumns.map((column) => (
+                <tr key={column.key} className="border-b border-white/10">
+                  <td className="px-3 py-3 font-mono text-white">{column.key}</td>
+                  <td className="px-3 py-3 text-sky-50">{column.label}</td>
+                  <td className="px-3 py-3">{column.required ? "ظ†ط¹ظ…" : "ط§ط®طھظٹط§ط±ظٹ"}</td>
+                  <td className="px-3 py-3 text-slate-200">{column.example}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <div className="grid w-full min-w-0 gap-4 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl">
           <div className="mb-5 flex items-center gap-3">
@@ -414,7 +479,7 @@ export function ImportsClient({
 
           <button
             onClick={runImport}
-            disabled={importing || stats.valid === 0}
+            disabled={!canImport || importing || stats.valid === 0}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
             type="button"
           >

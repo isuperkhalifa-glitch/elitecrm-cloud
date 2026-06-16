@@ -38,7 +38,7 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-type Role = "developer" | "admin" | "manager" | "moderator" | "sales" | "finance";
+type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance";
 
 type NavItem = {
   href: string;
@@ -54,7 +54,7 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance"];
+const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
 const previewAdminRoles: Role[] = ["developer", "admin", "manager"];
 
 const hiddenNavHrefs = new Set([
@@ -76,7 +76,7 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       { href: "/customers", labelKey: "customers", icon: UsersRound, roles: allRoles },
-      { href: "/courses", labelKey: "courses", icon: BookOpen, roles: ["developer", "admin", "manager"] },
+      { href: "/courses", labelKey: "courses", icon: BookOpen, roles: ["marketer", "developer", "admin", "manager"] },
       { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["developer", "admin", "manager", "sales"] },
     ],
   },
@@ -93,7 +93,7 @@ const navGroups: NavGroup[] = [
     labelEn: "Admin",
     items: [
       { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["developer", "admin", "manager", "moderator"] },
-      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["marketer", "developer", "admin", "manager", "moderator"] },
       { href: "/training-centers", labelKey: "trainingCenters", icon: Building2, roles: ["developer", "admin", "manager"] },
       { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["developer", "admin", "manager"] },
       { href: "/users", labelKey: "users", icon: UserCog, roles: ["developer", "admin"] },
@@ -108,6 +108,7 @@ function normalizeRole(role?: string | null): Role {
   if (role === "admin") return "admin";
   if (role === "manager") return "manager";
   if (role === "moderator") return "moderator";
+  if (role === "marketer") return "marketer";
   if (role === "finance") return "finance";
   return "sales";
 }
@@ -117,8 +118,9 @@ function roleName(role: Role, isArabic: boolean) {
     developer: { ar: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Developer" },
     admin: { ar: "مدير النظام", en: "Admin" },
     manager: { ar: "تيم ليدر سيلز", en: "Sales Team Leader" },
-    moderator: { ar: "مسوق", en: "Marketer" },
-    sales: { ar: "سيلز", en: "Sales" },
+    moderator: { ar: "الموديريتور", en: "Moderator" },
+  marketer: { ar: "المسوق", en: "Marketer" },
+  sales: { ar: "سيلز", en: "Sales" },
     finance: { ar: "محلل بيانات", en: "Data Analyst" },
   };
 
