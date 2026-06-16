@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -566,7 +566,7 @@ export function CustomersClient({
                       <td className="px-4 py-4 text-slate-300">{leadTypeLabel(lead.lead_type ?? "fresh")}</td>
                       <td className="px-4 py-4 text-slate-300">{shortDate(lead.next_follow_up_at)}</td>
                       <td className="px-4 py-4">
-                        <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/10">
+                        <button type="button" onClick={(event) => { event.stopPropagation(); router.push("/customers/" + lead.id); }} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/10">
                           <Eye className="h-4 w-4" /> التفاصيل
                         </button>
                       </td>
@@ -699,3 +699,4 @@ function Info({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
