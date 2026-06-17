@@ -9,38 +9,46 @@ export type PageKey =
   | "distribution"
   | "imports"
   | "commissions"
-  | "invoices"
   | "users"
   | "settings"
   | "customize"
+  // Legacy routes kept for build compatibility only.
   | "leads"
   | "my-customers"
   | "tasks"
   | "deals"
+  | "invoices"
   | "companies"
   | "contacts";
 
 export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 
+export const adminRoles: Role[] = ["developer", "admin"];
+export const operationsRoles: Role[] = ["developer", "admin", "manager", "moderator"];
+export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
+export const intakeRoles: Role[] = ["developer", "admin", "moderator", "marketer"];
+export const financeRoles: Role[] = ["developer", "admin", "finance"];
+export const reportingRoles: Role[] = ["developer", "admin", "manager", "data_analyst"];
+
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
-  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"],
+  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance"],
   courses: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
   "training-centers": ["developer", "admin", "manager", "data_analyst"],
-  distribution: ["developer", "admin", "manager", "moderator"],
-  imports: ["developer", "admin", "moderator", "marketer"],
+  distribution: operationsRoles,
+  imports: intakeRoles,
   commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
-  invoices: ["developer", "admin", "finance"],
-  users: ["developer", "admin"],
-  settings: ["developer", "admin"],
-  customize: ["developer", "admin"],
+  users: adminRoles,
+  settings: adminRoles,
+  customize: adminRoles,
 
-  leads: ["developer", "admin", "moderator", "marketer"],
-  "my-customers": ["developer", "admin", "manager", "sales"],
-  tasks: ["developer", "admin", "manager", "sales"],
-  deals: ["developer", "admin", "manager", "sales", "finance"],
-  companies: ["developer", "admin", "manager"],
+  leads: intakeRoles,
+  "my-customers": salesRoles,
+  tasks: salesRoles,
+  deals: salesRoles,
+  invoices: ["developer", "admin", "manager", "finance", "sales"],
+  companies: ["developer", "admin", "manager", "data_analyst"],
   contacts: ["developer", "admin", "manager"],
 };
 

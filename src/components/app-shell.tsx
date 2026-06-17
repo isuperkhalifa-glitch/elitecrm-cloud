@@ -130,16 +130,15 @@ function normalizeRole(role?: string | null): Role {
 
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    developer: { ar: "مطور النظام", en: "Developer" },
-    admin: { ar: "المدير العام", en: "General Manager" },
-    manager: { ar: "تيم ليدر سيلز", en: "Sales Team Leader" },
-    moderator: { ar: "الموديريتور", en: "Moderator" },
-    marketer: { ar: "المسوق", en: "Marketer" },
-    sales: { ar: "سيلز", en: "Sales" },
-    finance: { ar: "مالية / حسابات", en: "Finance" },
-    data_analyst: { ar: "محلل بيانات", en: "Data Analyst" },
+    developer: { ar: "ظ…ط·ظˆط± ط§ظ„ظ†ط¸ط§ظ…", en: "Developer" },
+    admin: { ar: "ط§ظ„ظ…ط¯ظٹط± ط§ظ„ط¹ط§ظ…", en: "General Manager" },
+    manager: { ar: "طھظٹظ… ظ„ظٹط¯ط± ط³ظٹظ„ط²", en: "Sales Team Leader" },
+    moderator: { ar: "ط§ظ„ظ…ظˆط¯ظٹط±ظٹطھظˆط±", en: "Moderator" },
+    marketer: { ar: "ط§ظ„ظ…ط³ظˆظ‚", en: "Marketer" },
+    sales: { ar: "ط³ظٹظ„ط²", en: "Sales" },
+    finance: { ar: "ظ…ط§ظ„ظٹط© / ط­ط³ط§ط¨ط§طھ", en: "Finance" },
+    data_analyst: { ar: "ظ…ط­ظ„ظ„ ط¨ظٹط§ظ†ط§طھ", en: "Data Analyst" },
   };
-
   return isArabic ? labels[role].ar : labels[role].en;
 }
 
