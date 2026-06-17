@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const allowedRoles = ["developer", "admin", "manager", "moderator", "sales", "finance", "marketer"];
+const allowedRoles = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 const selectColumns = "id,email,full_name,role,is_active,created_at";
 
 async function requireAdmin() {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Lead = {
@@ -54,29 +54,32 @@ type Props = {
 
 const statusOptions = ["interested", "not_interested", "need_offer", "missed", "wrong_number", "paid", "busy"];
 const leadTypeOptions = ["fresh", "retargeted", "redirected"];
-const paymentStatusOptions = ["unpaid", "partial", "paid", "refunded"];
 const registrationStatusOptions = ["not_registered", "registered", "pending", "canceled"];
+const paymentStatusOptions = ["unpaid", "partial", "paid", "refunded"];
 
 function permissionsFor(role: string | null) {
+  const isDeveloper = role === "developer";
+  const isAdmin = role === "admin";
+  const isManager = role === "manager";
+  const isModerator = role === "moderator";
+  const isMarketer = role === "marketer";
+  const isSales = role === "sales";
+  const isFinance = role === "finance";
+
   return {
-    fullControl: role === "developer" || role === "admin",
-    canEditBasic: ["developer", "admin", "manager", "moderator", "marketer"].includes(role ?? ""),
-    canEditMarketing: ["developer", "admin", "manager", "moderator", "marketer"].includes(role ?? ""),
-    canEditSales: ["developer", "admin", "manager", "moderator", "sales"].includes(role ?? ""),
-    canAssign: ["developer", "admin", "manager", "moderator"].includes(role ?? ""),
-    canEditFinance: ["developer", "admin", "finance"].includes(role ?? ""),
+    isFullControl: isDeveloper || isAdmin,
+    canEditBasic: isDeveloper || isAdmin || isManager || isModerator || isMarketer,
+    canEditMarketing: isDeveloper || isAdmin || isManager || isModerator || isMarketer,
+    canEditSalesFlow: isDeveloper || isAdmin || isManager || isModerator || isSales,
+    canAssignOwner: isDeveloper || isAdmin || isManager || isModerator,
+    canEditProtected: isDeveloper || isAdmin,
+    canEditPayment: isDeveloper || isAdmin || isFinance,
+    canEditRegistrations: isDeveloper || isAdmin || isManager || isFinance,
   };
 }
 
-function label(value?: string | null) {
+function statusLabel(value?: string | null) {
   const map: Record<string, string> = {
-    developer: "مطور النظام",
-    admin: "المدير العام",
-    manager: "تيم ليدر سيلز",
-    moderator: "الموديريتور",
-    marketer: "المسوق",
-    sales: "سيلز",
-    finance: "مالية / حسابات",
     interested: "مهتم",
     not_interested: "غير مهتم",
     need_offer: "يحتاج عرض",
@@ -84,9 +87,6 @@ function label(value?: string | null) {
     wrong_number: "رقم خطأ",
     paid: "مدفوع",
     busy: "مشغول",
-    fresh: "جديد",
-    retargeted: "إعادة استهداف",
-    redirected: "محول",
     not_registered: "غير مسجل",
     registered: "مسجل",
     pending: "قيد المراجعة",
@@ -94,17 +94,17 @@ function label(value?: string | null) {
     unpaid: "غير مدفوع",
     partial: "دفع جزئي",
     refunded: "مسترد",
+    fresh: "جديد",
+    retargeted: "إعادة استهداف",
+    redirected: "محول",
     status_changed: "تغيير الحالة",
+    transferred: "تغيير المسؤول",
     note_added: "إضافة ملاحظة",
     customer_updated: "تحديث بيانات العميل",
     registration_updated: "تحديث التسجيل",
     payment_updated: "تحديث الدفع",
   };
   return value ? map[value] ?? value : "-";
-}
-
-function money(value?: number | null) {
-  return new Intl.NumberFormat("ar-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 2 }).format(Number(value ?? 0));
 }
 
 function formatDate(value?: string | null) {
@@ -120,27 +120,43 @@ function toInputDateTime(value?: string | null) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
   return local.toISOString().slice(0, 16);
 }
 
 function normalizePhone(countryCode: string, phoneNumber: string) {
   const code = (countryCode || "+966").trim().replace(/^00/, "+").replace(/[^\d+]/g, "");
   const number = (phoneNumber || "").replace(/\D/g, "").replace(/^0+/, "");
-  const cleanCode = code.startsWith("+") ? code : `+${code}`;
-  return { country_code: cleanCode, phone_number: number, phone: `${cleanCode}${number}`.replace(/^\+/, "") };
+  const phone = `${code}${number}`.replace(/^\+/, "");
+  return { country_code: code.startsWith("+") ? code : `+${code}`, phone_number: number, phone };
 }
 
-export function CustomerDetailsClient({ initialLead, profiles, companies, courses, activities, initialRegistrations, currentUserId, currentUserName, role }: Props) {
+function money(value?: number | null) {
+  return Number(value ?? 0).toFixed(2);
+}
+
+export function CustomerDetailsClient({
+  initialLead,
+  profiles,
+  companies,
+  courses,
+  activities,
+  initialRegistrations,
+  currentUserId,
+  currentUserName,
+  role,
+}: Props) {
   const supabase = createClient();
   const can = permissionsFor(role);
   const [lead, setLead] = useState<Lead>(initialLead);
-  const [timeline, setTimeline] = useState<Activity[]>(activities);
   const [registrations, setRegistrations] = useState<Registration[]>(initialRegistrations);
+  const [timeline, setTimeline] = useState<Activity[]>(activities);
   const [saving, setSaving] = useState(false);
-  const [savingReg, setSavingReg] = useState<string | null>(null);
+  const [savingRegistrationId, setSavingRegistrationId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
   const [form, setForm] = useState({
     customer_code: initialLead.customer_code ?? "",
     full_name: initialLead.full_name ?? "",
@@ -172,10 +188,12 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
     return { total, paid, remaining: Math.max(0, total - paid) };
   }, [registrations]);
 
+  const activeProfiles = useMemo(() => profiles.filter((profile) => profile.is_active !== false), [profiles]);
+
   function setField(field: keyof typeof form, value: string) {
     setForm((current) => {
       const next = { ...current, [field]: value };
-      if (field === "registration_amount" || field === "discount_amount") {
+      if (["registration_amount", "discount_amount"].includes(field)) {
         next.final_amount = String(Math.max(0, Number(next.registration_amount || 0) - Number(next.discount_amount || 0)).toFixed(2));
       }
       return next;
@@ -184,7 +202,7 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
 
   function profileName(id?: string | null) {
     if (!id) return "غير موزع";
-    const profile = profiles.find((item) => item.id === id);
+    const profile = activeProfiles.find((item) => item.id === id);
     return profile?.full_name ?? profile?.email ?? "غير معروف";
   }
 
@@ -205,6 +223,7 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
       .insert({ lead_id: lead.id, actor_id: currentUserId, actor_name: currentUserName, action, old_value: oldValue, new_value: newValue, note })
       .select("id,actor_name,action,old_value,new_value,note,created_at")
       .single();
+
     if (data) setTimeline((current) => [data as Activity, ...current]);
   }
 
@@ -216,7 +235,8 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
     const phone = normalizePhone(form.country_code, form.phone_number);
     const payload: Record<string, string | number | null> = { last_contact_at: new Date().toISOString() };
 
-    if (can.fullControl) payload.customer_code = form.customer_code.trim() || null;
+    if (can.isFullControl && form.customer_code) payload.customer_code = form.customer_code.trim();
+
     if (can.canEditBasic) {
       payload.full_name = form.full_name.trim() || null;
       payload.country_code = phone.country_code;
@@ -224,6 +244,7 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
       payload.phone = phone.phone || null;
       payload.email = form.email.trim() || null;
     }
+
     if (can.canEditMarketing) {
       payload.source = form.source.trim() || null;
       payload.lead_type = form.lead_type;
@@ -231,7 +252,8 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
       payload.program = form.program.trim() || courseName(form.course_id);
       payload.course_id = form.course_id || null;
     }
-    if (can.canEditSales) {
+
+    if (can.canEditSalesFlow) {
       payload.status = form.status;
       payload.customer_status = form.status;
       payload.priority = form.priority;
@@ -239,11 +261,13 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
       payload.last_note = form.last_note.trim() || null;
       payload.status_updated_at = new Date().toISOString();
     }
-    if (can.canAssign) {
+
+    if (can.canAssignOwner) {
       payload.owner_id = form.owner_id || null;
       payload.assigned_at = form.owner_id && form.owner_id !== lead.owner_id ? new Date().toISOString() : (lead as any).assigned_at ?? null;
     }
-    if (can.fullControl || can.canEditFinance) {
+
+    if (can.canEditProtected || can.canEditPayment) {
       payload.registration_status = form.registration_status;
       payload.payment_status = form.payment_status;
       payload.registration_amount = Number(form.registration_amount || 0);
@@ -261,80 +285,100 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
       return;
     }
 
-    setLead(data as Lead);
+    const updated = data as Lead;
+    const oldStatus = lead.customer_status ?? lead.status ?? "";
+    const newStatus = updated.customer_status ?? updated.status ?? "";
+    const oldOwner = lead.owner_id ?? "";
+    const newOwner = updated.owner_id ?? "";
+
+    setLead(updated);
     setMessage("تم حفظ بيانات العميل بنجاح.");
-    await addActivity("customer_updated", null, null, "تحديث بيانات العميل من صفحة العميل");
+
+    if (oldStatus !== newStatus) await addActivity("status_changed", oldStatus, newStatus, form.last_note || null);
+    if (oldOwner !== newOwner) await addActivity("transferred", profileName(oldOwner), profileName(newOwner), "تغيير المسؤول عن العميل");
+    if (form.last_note.trim()) await addActivity("note_added", null, null, form.last_note.trim());
   }
 
   function updateRegistrationField(id: string, field: keyof Registration, value: string) {
-    setRegistrations((current) => current.map((item) => {
-      if (item.id !== id) return item;
-      const next = { ...item, [field]: value } as Registration;
-      if (field === "list_price" || field === "discount_amount") next.final_price = Math.max(0, Number(next.list_price ?? 0) - Number(next.discount_amount ?? 0));
-      return next;
-    }));
+    setRegistrations((current) =>
+      current.map((item) => {
+        if (item.id !== id) return item;
+        const next = { ...item, [field]: value } as Registration;
+        if (field === "list_price" || field === "discount_amount") {
+          next.final_price = Math.max(0, Number(next.list_price ?? 0) - Number(next.discount_amount ?? 0));
+        }
+        return next;
+      })
+    );
   }
 
   async function saveRegistration(registration: Registration) {
-    if (!can.fullControl && !can.canEditFinance) return;
-    setSavingReg(registration.id);
+    if (!can.canEditRegistrations && !can.canEditPayment) return;
+    setSavingRegistrationId(registration.id);
     setMessage("");
     setError("");
 
-    const payload: Record<string, string | number | null> = {
-      status: registration.status,
+    const updatePayload: Record<string, string | number | null> = {
       payment_status: registration.payment_status,
-      list_price: Number(registration.list_price ?? 0),
-      discount_amount: Number(registration.discount_amount ?? 0),
-      final_price: Number(registration.final_price ?? 0),
-      discount_code: registration.discount_code ?? null,
       paid_amount: Number(registration.paid_amount ?? 0),
       notes: registration.notes ?? null,
     };
 
+    if (can.canEditRegistrations) {
+      updatePayload.status = registration.status;
+      updatePayload.list_price = Number(registration.list_price ?? 0);
+      updatePayload.discount_amount = Number(registration.discount_amount ?? 0);
+      updatePayload.final_price = Number(registration.final_price ?? 0);
+      updatePayload.discount_code = registration.discount_code ?? null;
+    }
+
     const { data, error } = await supabase
       .from("registrations")
-      .update(payload)
+      .update(updatePayload)
       .eq("id", registration.id)
       .select("id,lead_id,company_id,course_id,sales_id,status,payment_status,list_price,discount_amount,final_price,discount_code,paid_amount,notes,created_at")
       .single();
 
-    setSavingReg(null);
+    setSavingRegistrationId(null);
+
     if (error || !data) {
       setError(error?.message ?? "تعذر حفظ التسجيل.");
       return;
     }
+
     setRegistrations((current) => current.map((item) => (item.id === registration.id ? (data as Registration) : item)));
     setMessage("تم تحديث التسجيل بنجاح.");
     await addActivity("registration_updated", null, registration.payment_status ?? null, "تحديث بيانات التسجيل أو الدفع");
   }
 
   return (
-    <div className="space-y-5" dir="rtl">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/customers" className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-bold text-slate-200 hover:bg-white/10">رجوع للعملاء</Link>
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200">
-          صلاحيتك الحالية: {label(role)} {can.fullControl ? "— تحكم كامل" : ""}
-        </div>
+        <Link href="/customers" className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-bold text-slate-200 hover:bg-white/10">
+          رجوع للعملاء
+        </Link>
+        <Link href={`/registrations?leadId=${lead.id}`} className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-300">
+          تسجيل العميل في دورة
+        </Link>
       </div>
 
-      {(message || error) ? <div className={(error ? "border-red-400/20 bg-red-400/10 text-red-100" : "border-emerald-400/20 bg-emerald-400/10 text-emerald-100") + " rounded-2xl border px-4 py-3 text-sm"}>{error || message}</div> : null}
-
       <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-        <p className="text-sm text-emerald-300">صفحة العميل الكاملة</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-3xl font-black text-white">{lead.full_name ?? "بدون اسم"}</h1>
-            <p className="mt-2 text-sm text-slate-400">كود العميل: <span className="font-bold text-emerald-300">{lead.customer_code ?? lead.id}</span></p>
+            <p className="font-mono text-sm text-emerald-300" dir="ltr">{lead.customer_code ?? lead.id}</p>
+            <h1 className="mt-2 text-3xl font-black text-white">{lead.full_name ?? "بدون اسم"}</h1>
+            <p className="mt-2 text-sm text-slate-400">صفحة تشغيل واحدة للعميل: بيانات، متابعة، تسجيلات، مدفوعات، وسجل نشاط.</p>
           </div>
-          <Link href={`/registrations?leadId=${lead.id}`} className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-slate-950 hover:bg-emerald-300">تسجيل في دورة</Link>
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+            صلاحيتك الحالية: {role ?? "sales"} {can.isFullControl ? "— تحكم كامل" : ""}
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <Stat label="الحالة" value={label(lead.customer_status ?? lead.status)} />
+          <Stat label="الحالة" value={statusLabel(lead.customer_status ?? lead.status)} />
           <Stat label="المسؤول" value={profileName(lead.owner_id)} />
-          <Stat label="إجمالي التسجيلات" value={money(totals.total)} />
-          <Stat label="المتبقي" value={money(totals.remaining)} />
+          <Stat label="إجمالي التسجيلات" value={`${money(totals.total)} ر.س`} />
+          <Stat label="المتبقي" value={`${money(totals.remaining)} ر.س`} />
         </div>
       </section>
 
@@ -342,115 +386,145 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
         <div className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <h2 className="mb-4 text-2xl font-black text-white">بيانات العميل</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            <Field label="كود العميل" value={form.customer_code} onChange={(value) => setField("customer_code", value)} disabled={!can.fullControl} dir="ltr" />
+            <Field label="كود العميل" value={form.customer_code} onChange={(value) => setField("customer_code", value)} disabled={!can.isFullControl} dir="ltr" />
             <Field label="اسم العميل" value={form.full_name} onChange={(value) => setField("full_name", value)} disabled={!can.canEditBasic} />
             <Field label="البريد الإلكتروني" value={form.email} onChange={(value) => setField("email", value)} disabled={!can.canEditBasic} dir="ltr" />
             <Field label="كود الدولة" value={form.country_code} onChange={(value) => setField("country_code", value)} disabled={!can.canEditBasic} dir="ltr" />
             <Field label="رقم الجوال" value={form.phone_number} onChange={(value) => setField("phone_number", value.replace(/\D/g, ""))} disabled={!can.canEditBasic} dir="ltr" />
+
             <Field label="المصدر / الحملة" value={form.source} onChange={(value) => setField("source", value)} disabled={!can.canEditMarketing} />
-            <Select label="نوع العميل" value={form.lead_type} onChange={(value) => setField("lead_type", value)} disabled={!can.canEditMarketing} options={leadTypeOptions.map((value) => ({ value, label: label(value) }))} />
+            <Select label="نوع العميل" value={form.lead_type} onChange={(value) => setField("lead_type", value)} disabled={!can.canEditMarketing} options={leadTypeOptions.map((value) => ({ value, label: statusLabel(value) }))} />
             <Field label="مركز التدريب المبدئي" value={form.company_name} onChange={(value) => setField("company_name", value)} disabled={!can.canEditMarketing} />
             <Field label="الدورة المبدئية" value={form.program} onChange={(value) => setField("program", value)} disabled={!can.canEditMarketing} />
+
             <Select label="اختيار دورة من النظام" value={form.course_id} onChange={(value) => setField("course_id", value)} disabled={!can.canEditMarketing} options={[{ value: "", label: "بدون دورة" }, ...courses.map((course) => ({ value: course.id, label: course.name_ar ?? course.name ?? course.name_en ?? course.id }))]} />
-            <Select label="حالة العميل" value={form.status} onChange={(value) => setField("status", value)} disabled={!can.canEditSales} options={statusOptions.map((value) => ({ value, label: label(value) }))} />
-            <Field label="موعد المتابعة" type="datetime-local" value={form.next_follow_up_at} onChange={(value) => setField("next_follow_up_at", value)} disabled={!can.canEditSales} />
-            <Select label="المسؤول عن العميل" value={form.owner_id} onChange={(value) => setField("owner_id", value)} disabled={!can.canAssign} options={[{ value: "", label: "غير موزع" }, ...profiles.filter((profile) => profile.is_active !== false).map((profile) => ({ value: profile.id, label: profile.full_name ?? profile.email ?? profile.id }))]} />
+            <Select label="حالة العميل" value={form.status} onChange={(value) => setField("status", value)} disabled={!can.canEditSalesFlow} options={statusOptions.map((value) => ({ value, label: statusLabel(value) }))} />
+            <Field label="موعد المتابعة" type="datetime-local" value={form.next_follow_up_at} onChange={(value) => setField("next_follow_up_at", value)} disabled={!can.canEditSalesFlow} />
+            <Select label="المسؤول عن العميل" value={form.owner_id} onChange={(value) => setField("owner_id", value)} disabled={!can.canAssignOwner} options={[{ value: "", label: "غير موزع" }, ...activeProfiles.map((profile) => ({ value: profile.id, label: profile.full_name ?? profile.email ?? profile.id }))]} />
           </div>
 
-          <div className="mt-3"><Textarea label="آخر ملاحظة" value={form.last_note} onChange={(value) => setField("last_note", value)} disabled={!can.canEditSales} /></div>
+          <div className="mt-3">
+            <Textarea label="آخر ملاحظة" value={form.last_note} onChange={(value) => setField("last_note", value)} disabled={!can.canEditSalesFlow} />
+          </div>
 
-          {(can.fullControl || can.canEditFinance) ? (
+          {(can.canEditProtected || can.canEditPayment) ? (
             <div className="mt-5 rounded-[1.5rem] border border-amber-400/20 bg-amber-400/10 p-4">
-              <h3 className="mb-3 font-black text-amber-100">حقول محمية للإدارة والمالية</h3>
+              <h3 className="mb-3 font-black text-amber-100">حقول الإدارة والمالية</h3>
               <div className="grid gap-3 md:grid-cols-2">
-                <Select label="حالة التسجيل" value={form.registration_status} onChange={(value) => setField("registration_status", value)} options={registrationStatusOptions.map((value) => ({ value, label: label(value) }))} />
-                <Select label="حالة الدفع" value={form.payment_status} onChange={(value) => setField("payment_status", value)} options={paymentStatusOptions.map((value) => ({ value, label: label(value) }))} />
-                <Field label="السعر" value={form.registration_amount} onChange={(value) => setField("registration_amount", value)} dir="ltr" />
-                <Field label="الخصم" value={form.discount_amount} onChange={(value) => setField("discount_amount", value)} dir="ltr" />
-                <Field label="الصافي" value={form.final_amount} onChange={(value) => setField("final_amount", value)} dir="ltr" />
-                <Field label="المدفوع" value={form.paid_amount} onChange={(value) => setField("paid_amount", value)} dir="ltr" />
-                <Field label="كود الخصم" value={form.discount_code} onChange={(value) => setField("discount_code", value)} dir="ltr" />
+                <Select label="حالة التسجيل" value={form.registration_status} onChange={(value) => setField("registration_status", value)} disabled={!can.canEditProtected} options={registrationStatusOptions.map((value) => ({ value, label: statusLabel(value) }))} />
+                <Select label="حالة الدفع" value={form.payment_status} onChange={(value) => setField("payment_status", value)} disabled={!can.canEditPayment && !can.canEditProtected} options={paymentStatusOptions.map((value) => ({ value, label: statusLabel(value) }))} />
+                <Field label="قيمة التسجيل" value={form.registration_amount} onChange={(value) => setField("registration_amount", value)} disabled={!can.canEditProtected} dir="ltr" />
+                <Field label="الخصم" value={form.discount_amount} onChange={(value) => setField("discount_amount", value)} disabled={!can.canEditProtected} dir="ltr" />
+                <Field label="الصافي" value={form.final_amount} onChange={(value) => setField("final_amount", value)} disabled={!can.canEditProtected} dir="ltr" />
+                <Field label="المدفوع" value={form.paid_amount} onChange={(value) => setField("paid_amount", value)} disabled={!can.canEditPayment && !can.canEditProtected} dir="ltr" />
+                <Field label="كود الخصم" value={form.discount_code} onChange={(value) => setField("discount_code", value)} disabled={!can.canEditProtected} dir="ltr" />
               </div>
             </div>
           ) : null}
 
-          <button onClick={saveCustomer} disabled={saving} className="mt-5 w-full rounded-2xl bg-emerald-400 px-5 py-3 font-black text-slate-950 disabled:opacity-50" type="button">
-            {saving ? "جار الحفظ..." : "حفظ بيانات العميل"}
-          </button>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={saveCustomer} disabled={saving} className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300 disabled:opacity-60">
+              {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
+            </button>
+            {message ? <span className="text-sm text-emerald-300">{message}</span> : null}
+            {error ? <span className="text-sm text-red-300">{error}</span> : null}
+          </div>
         </div>
 
-        <aside className="space-y-4">
-          <InfoCard title="ملخص العميل" rows={[
-            ["كود العميل", lead.customer_code ?? lead.id],
-            ["الجوال", lead.phone ?? "-"],
-            ["المصدر", lead.source ?? "-"],
-            ["الدورة", lead.program ?? courseName(lead.course_id)],
-            ["آخر تواصل", formatDate(lead.last_contact_at)],
-            ["موعد المتابعة", formatDate(lead.next_follow_up_at)],
-          ]} />
+        <aside className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+          <h2 className="mb-4 text-2xl font-black text-white">سجل النشاط</h2>
+          <div className="space-y-3">
+            {timeline.length ? timeline.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+                <p className="text-sm font-bold text-white">{statusLabel(item.action)}</p>
+                <p className="mt-1 text-xs text-slate-500">{formatDate(item.created_at)} — {item.actor_name ?? "النظام"}</p>
+                {item.note ? <p className="mt-2 text-sm leading-6 text-slate-300">{item.note}</p> : null}
+              </div>
+            )) : <p className="text-sm text-slate-400">لا يوجد نشاط مسجل بعد.</p>}
+          </div>
         </aside>
       </section>
 
       <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-black text-white">التسجيلات والمدفوعات</h2>
-          <Link href={`/registrations?leadId=${lead.id}`} className="rounded-2xl border border-emerald-400/30 px-4 py-2 text-sm font-bold text-emerald-200 hover:bg-emerald-400/10">إضافة تسجيل</Link>
+          <div>
+            <h2 className="text-2xl font-black text-white">التسجيلات والمدفوعات</h2>
+            <p className="mt-1 text-sm text-slate-400">إدارة التسجيلات الحالية للعميل، وإنشاء تسجيل جديد من زر تسجيل العميل في دورة.</p>
+          </div>
         </div>
+
         <div className="space-y-3">
           {registrations.length ? registrations.map((registration) => (
-            <div key={registration.id} className="rounded-[1.5rem] border border-white/10 bg-slate-950/50 p-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <Stat label="مركز التدريب" value={centerName(registration.company_id)} />
-                <Stat label="الدورة" value={courseName(registration.course_id)} />
-                <Stat label="السيلز" value={profileName(registration.sales_id)} />
+            <div key={registration.id} className="rounded-3xl border border-white/10 bg-slate-950/50 p-4">
+              <div className="grid gap-3 lg:grid-cols-6 lg:items-end">
+                <Info label="مركز التدريب" value={centerName(registration.company_id)} />
+                <Info label="الدورة" value={courseName(registration.course_id)} />
+                <Select label="حالة التسجيل" value={registration.status ?? "registered"} onChange={(value) => updateRegistrationField(registration.id, "status", value)} disabled={!can.canEditRegistrations} options={registrationStatusOptions.map((value) => ({ value, label: statusLabel(value) }))} />
+                <Select label="حالة الدفع" value={registration.payment_status ?? "unpaid"} onChange={(value) => updateRegistrationField(registration.id, "payment_status", value)} disabled={!can.canEditPayment && !can.canEditRegistrations} options={paymentStatusOptions.map((value) => ({ value, label: statusLabel(value) }))} />
+                <Field label="المدفوع" value={String(registration.paid_amount ?? 0)} onChange={(value) => updateRegistrationField(registration.id, "paid_amount", value)} disabled={!can.canEditPayment && !can.canEditRegistrations} dir="ltr" />
+                <button type="button" disabled={savingRegistrationId === registration.id || (!can.canEditPayment && !can.canEditRegistrations)} onClick={() => saveRegistration(registration)} className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 disabled:opacity-50">
+                  {savingRegistrationId === registration.id ? "جاري الحفظ..." : "حفظ التسجيل"}
+                </button>
               </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-4">
-                <Select label="حالة التسجيل" value={registration.status ?? "registered"} onChange={(value) => updateRegistrationField(registration.id, "status", value)} disabled={!can.fullControl && !can.canEditFinance} options={registrationStatusOptions.map((value) => ({ value, label: label(value) }))} />
-                <Select label="حالة الدفع" value={registration.payment_status ?? "unpaid"} onChange={(value) => updateRegistrationField(registration.id, "payment_status", value)} disabled={!can.fullControl && !can.canEditFinance} options={paymentStatusOptions.map((value) => ({ value, label: label(value) }))} />
-                <Field label="الصافي" value={String(registration.final_price ?? 0)} onChange={(value) => updateRegistrationField(registration.id, "final_price", value)} disabled={!can.fullControl && !can.canEditFinance} dir="ltr" />
-                <Field label="المدفوع" value={String(registration.paid_amount ?? 0)} onChange={(value) => updateRegistrationField(registration.id, "paid_amount", value)} disabled={!can.fullControl && !can.canEditFinance} dir="ltr" />
+              <div className="mt-3 grid gap-3 md:grid-cols-4">
+                <Info label="السعر" value={`${money(registration.list_price)} ر.س`} />
+                <Info label="الخصم" value={`${money(registration.discount_amount)} ر.س`} />
+                <Info label="الصافي" value={`${money(registration.final_price)} ر.س`} />
+                <Info label="المتبقي" value={`${money(Math.max(0, Number(registration.final_price ?? 0) - Number(registration.paid_amount ?? 0)))} ر.س`} />
               </div>
-              {(can.fullControl || can.canEditFinance) ? <button onClick={() => saveRegistration(registration)} disabled={savingReg === registration.id} className="mt-3 rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950" type="button">{savingReg === registration.id ? "جار الحفظ..." : "حفظ التسجيل"}</button> : null}
             </div>
-          )) : <div className="rounded-2xl border border-white/10 p-6 text-center text-slate-400">لا توجد تسجيلات لهذا العميل حتى الآن.</div>}
-        </div>
-      </section>
-
-      <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-        <h2 className="mb-4 text-2xl font-black text-white">سجل النشاط</h2>
-        <div className="space-y-3">
-          {timeline.length ? timeline.map((item) => (
-            <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-sm text-slate-300">
-              <div className="flex flex-wrap justify-between gap-2">
-                <b className="text-white">{label(item.action)}</b>
-                <span className="text-slate-500">{formatDate(item.created_at)}</span>
-              </div>
-              <p className="mt-2">{item.note ?? `${item.old_value ?? "-"} → ${item.new_value ?? "-"}`}</p>
-              <p className="mt-1 text-xs text-slate-500">بواسطة: {item.actor_name ?? "النظام"}</p>
-            </div>
-          )) : <div className="rounded-2xl border border-white/10 p-6 text-center text-slate-400">لا يوجد نشاط مسجل بعد.</div>}
+          )) : (
+            <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-slate-400">لا توجد تسجيلات لهذا العميل حتى الآن.</div>
+          )}
         </div>
       </section>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 font-black text-white">{value}</p></div>;
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-2 text-lg font-black text-white">{value}</p>
+    </div>
+  );
 }
 
-function Field({ label, value, onChange, disabled, type = "text", dir }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean; type?: string; dir?: "rtl" | "ltr" }) {
-  return <label className="block"><span className="mb-2 block text-xs font-bold text-slate-400">{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} dir={dir ?? "rtl"} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60 disabled:cursor-not-allowed disabled:opacity-50" /></label>;
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs text-slate-500">{label}</p>
+      <p className="text-sm font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, disabled, type = "text", dir }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean; type?: string; dir?: "ltr" | "rtl" }) {
+  return (
+    <label>
+      <span className="mb-2 block text-xs text-slate-500">{label}</span>
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} dir={dir} className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50" />
+    </label>
+  );
 }
 
 function Textarea({ label, value, onChange, disabled }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean }) {
-  return <label className="block"><span className="mb-2 block text-xs font-bold text-slate-400">{label}</span><textarea value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} rows={4} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60 disabled:cursor-not-allowed disabled:opacity-50" /></label>;
+  return (
+    <label>
+      <span className="mb-2 block text-xs text-slate-500">{label}</span>
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} rows={4} className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50" />
+    </label>
+  );
 }
 
-function Select({ label, value, onChange, options, disabled }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; disabled?: boolean }) {
-  return <label className="block"><span className="mb-2 block text-xs font-bold text-slate-400">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60 disabled:cursor-not-allowed disabled:opacity-50">{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
-}
-
-function InfoCard({ title, rows }: { title: string; rows: [string, string | number][] }) {
-  return <div className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5"><h3 className="mb-4 text-xl font-black text-white">{title}</h3><div className="space-y-3">{rows.map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-slate-950/40 p-3"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 break-words text-sm font-bold text-white">{value}</p></div>)}</div></div>;
+function Select({ label, value, onChange, disabled, options }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean; options: { value: string; label: string }[] }) {
+  return (
+    <label>
+      <span className="mb-2 block text-xs text-slate-500">{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+        {options.map((option) => <option key={option.value || "empty"} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
 }

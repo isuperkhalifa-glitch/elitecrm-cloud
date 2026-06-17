@@ -3,44 +3,45 @@ export type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" 
 export type PageKey =
   | "dashboard"
   | "customers"
+  | "registrations"
   | "courses"
   | "training-centers"
-  | "registrations"
-  | "my-customers"
-  | "leads"
-  | "tasks"
-  | "deals"
-  | "invoices"
-  | "commissions"
   | "distribution"
   | "imports"
-  | "companies"
-  | "contacts"
+  | "commissions"
+  | "invoices"
   | "users"
   | "settings"
-  | "customize";
+  | "customize"
+  | "leads"
+  | "my-customers"
+  | "tasks"
+  | "deals"
+  | "companies"
+  | "contacts";
 
 export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
+  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"],
   courses: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
-  "training-centers": ["developer", "admin", "manager"],
-  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  "my-customers": ["developer", "admin", "manager", "sales"],
-  leads: ["developer", "admin", "moderator", "marketer"],
-  tasks: ["developer", "admin", "manager", "sales"],
-  deals: ["developer", "admin", "manager", "sales"],
-  invoices: ["developer", "admin", "manager", "finance", "sales"],
-  commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
+  "training-centers": ["developer", "admin", "manager", "data_analyst"],
   distribution: ["developer", "admin", "manager", "moderator"],
   imports: ["developer", "admin", "moderator", "marketer"],
-  companies: ["developer", "admin", "manager"],
-  contacts: ["developer", "admin", "manager"],
+  commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
+  invoices: ["developer", "admin", "finance"],
   users: ["developer", "admin"],
   settings: ["developer", "admin"],
   customize: ["developer", "admin"],
+
+  leads: ["developer", "admin", "moderator", "marketer"],
+  "my-customers": ["developer", "admin", "manager", "sales"],
+  tasks: ["developer", "admin", "manager", "sales"],
+  deals: ["developer", "admin", "manager", "sales", "finance"],
+  companies: ["developer", "admin", "manager"],
+  contacts: ["developer", "admin", "manager"],
 };
 
 export function normalizeRole(role?: string | null): Role {

@@ -6,15 +6,7 @@ import { CustomersClient } from "./customers-client";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 const pageSizeOptions = [25, 50, 100];
-const allowedStatuses = new Set([
-  "interested",
-  "not_interested",
-  "need_offer",
-  "missed",
-  "wrong_number",
-  "paid",
-  "busy",
-]);
+const allowedStatuses = new Set(["interested", "not_interested", "need_offer", "missed", "wrong_number", "paid", "busy"]);
 const allowedLeadTypes = new Set(["fresh", "retargeted", "redirected"]);
 
 function firstValue(value: string | string[] | undefined) {
@@ -44,8 +36,10 @@ function addDays(date: Date, days: number) {
   return next;
 }
 
-function toIso(date: Date) {
-  return date.toISOString();
+function validDate(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function dateRangeForFollowup(filter: string | null, from?: string | null, to?: string | null) {
@@ -53,35 +47,22 @@ function dateRangeForFollowup(filter: string | null, from?: string | null, to?: 
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  if (filter === "overdue") {
-    return { lte: toIso(now) };
-  }
-
-  if (filter === "today") {
-    return { gte: toIso(todayStart), lte: toIso(todayEnd) };
-  }
-
+  if (filter === "overdue") return { lte: now.toISOString() };
+  if (filter === "today") return { gte: todayStart.toISOString(), lte: todayEnd.toISOString() };
   if (filter === "tomorrow") {
     const tomorrow = addDays(todayStart, 1);
-    return { gte: toIso(tomorrow), lte: toIso(endOfDay(tomorrow)) };
+    return { gte: tomorrow.toISOString(), lte: endOfDay(tomorrow).toISOString() };
   }
-
-  if (filter === "3days") {
-    return { gte: toIso(todayStart), lte: toIso(endOfDay(addDays(todayStart, 3))) };
-  }
-
-  if (filter === "7days" || filter === "week") {
-    return { gte: toIso(todayStart), lte: toIso(endOfDay(addDays(todayStart, 7))) };
-  }
-
-  if (filter === "month") {
-    return { gte: toIso(todayStart), lte: toIso(endOfDay(addDays(todayStart, 30))) };
-  }
+  if (filter === "3days") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 3)).toISOString() };
+  if (filter === "7days" || filter === "week") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 7)).toISOString() };
+  if (filter === "month") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 30)).toISOString() };
 
   if (filter === "custom") {
     const range: { gte?: string; lte?: string } = {};
-    if (from) range.gte = toIso(startOfDay(new Date(from)));
-    if (to) range.lte = toIso(endOfDay(new Date(to)));
+    const fromDate = validDate(from);
+    const toDate = validDate(to);
+    if (fromDate) range.gte = startOfDay(fromDate).toISOString();
+    if (toDate) range.lte = endOfDay(toDate).toISOString();
     return range;
   }
 
@@ -120,13 +101,7 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (role === "sales") {
-    leadsQuery = leadsQuery.eq("owner_id", user.id);
-  }
-
-  if (role === "finance") {
-    leadsQuery = leadsQuery.or("payment_status.eq.paid,status.eq.paid,customer_status.eq.paid");
-  }
+  if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
 
   if (q) {
     leadsQuery = leadsQuery.or(
@@ -134,21 +109,10 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     );
   }
 
-  if (allowedStatuses.has(status)) {
-    leadsQuery = leadsQuery.or(`status.eq.${status},customer_status.eq.${status}`);
-  }
-
-  if (allowedLeadTypes.has(leadType)) {
-    leadsQuery = leadsQuery.eq("lead_type", leadType);
-  }
-
-  if (owner && role !== "sales") {
-    leadsQuery = leadsQuery.eq("owner_id", owner);
-  }
-
-  if (course) {
-    leadsQuery = leadsQuery.or(`program.ilike.%${course}%,course_name.ilike.%${course}%`);
-  }
+  if (allowedStatuses.has(status)) leadsQuery = leadsQuery.or(`status.eq.${status},customer_status.eq.${status}`);
+  if (allowedLeadTypes.has(leadType)) leadsQuery = leadsQuery.eq("lead_type", leadType);
+  if (owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", owner);
+  if (course) leadsQuery = leadsQuery.or(`program.ilike.%${course}%,course_name.ilike.%${course}%`);
 
   const followupRange = dateRangeForFollowup(followup, startDate, endDate);
   if (followupRange?.gte) leadsQuery = leadsQuery.gte("next_follow_up_at", followupRange.gte);
@@ -156,39 +120,16 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
 
   const [{ data: leads, count }, { data: profiles }] = await Promise.all([
     leadsQuery,
-    supabase
-      .from("profiles")
-      .select("id,full_name,email,role,is_active")
-      .order("full_name", { ascending: true }),
+    supabase.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name", { ascending: true }),
   ]);
 
-  const leadIds = (leads ?? []).map((lead: any) => lead.id);
-  let activities: any[] = [];
-
-  if (leadIds.length) {
-    const { data } = await supabase
-      .from("customer_activities")
-      .select("id,lead_id,actor_id,actor_name,action,old_value,new_value,note,created_at")
-      .in("lead_id", leadIds)
-      .order("created_at", { ascending: false })
-      .limit(300);
-
-    activities = data ?? [];
-  }
-
   return (
-    <AppShell
-      titleKey="customers"
-      userEmail={user.email ?? null}
-      fullName={profile?.full_name ?? null}
-      role={role}
-    >
+    <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
       <CustomersClient
         initialLeads={(leads ?? []) as any}
-        initialActivities={activities as any}
         profiles={(profiles ?? []) as any}
         currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? "User"}
+        currentUserName={profile?.full_name ?? user.email ?? "النظام"}
         userEmail={user.email ?? null}
         fullName={profile?.full_name ?? null}
         role={role}

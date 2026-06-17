@@ -29,7 +29,7 @@ type Props = {
   role: string | null;
 };
 
-const roleOptions = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
+const roleOptions = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 
 const emptyForm = {
   full_name: "",
@@ -66,8 +66,10 @@ export function UsersClient({
     if (value === "admin") return tx("\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", "Admin");
     if (value === "manager") return tx("\u0645\u062f\u064a\u0631", "Manager");
     if (value === "moderator") return tx("\u0645\u0634\u0631\u0641 \u0627\u0644\u062a\u0648\u0632\u064a\u0639", "Moderator");
-    if (value === "finance") return tx("\u0627\u0644\u0645\u0627\u0644\u064a\u0629", "Finance");
-    return tx("\u0633\u064a\u0644\u0632", "Sales");
+    if (value === "marketer") return tx("المسوق", "Marketer");
+    if (value === "finance") return tx("مالية / حسابات", "Finance");
+    if (value === "data_analyst") return tx("محلل بيانات", "Data Analyst");
+    return tx("سيلز", "Sales");
   }
 
   const filteredUsers = useMemo(() => {

@@ -5,10 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   BadgeDollarSign,
+  BarChart3,
   BookOpen,
   Building2,
-  CheckSquare,
-  ContactRound,
   FileSpreadsheet,
   LayoutDashboard,
   LogOut,
@@ -42,7 +41,8 @@ type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sale
 
 type NavItem = {
   href: string;
-  labelKey: string;
+  labelAr: string;
+  labelEn: string;
   icon: LucideIcon;
   roles: Role[];
   featureKey?: string;
@@ -55,54 +55,67 @@ type NavGroup = {
 };
 
 const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
-const previewAdminRoles: Role[] = ["developer", "admin", "manager"];
-
-const hiddenNavHrefs = new Set([
-  "/leads",
-  "/my-customers",
-  "/tasks",
-  "/deals",
-  "/invoices",
-]);
+const adminRoles: Role[] = ["developer", "admin", "manager"];
 
 const navGroups: NavGroup[] = [
   {
-    labelAr: "نظرة عامة",
+    labelAr: "الرئيسية",
     labelEn: "Overview",
-    items: [{ href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard, roles: allRoles }],
-  },
-  {
-    labelAr: "مساحة العمل",
-    labelEn: "Workspace",
     items: [
-      { href: "/customers", labelKey: "customers", icon: UsersRound, roles: allRoles },
-      { href: "/registrations", labelKey: "registrations", icon: Receipt, roles: ["developer", "admin", "manager", "moderator", "sales", "finance"] },
-      { href: "/courses", labelKey: "courses", icon: BookOpen, roles: ["marketer", "developer", "admin", "manager"] },
-      { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["developer", "admin", "manager", "sales"] },
+      { href: "/dashboard", labelAr: "لوحة التحكم", labelEn: "Dashboard", icon: LayoutDashboard, roles: allRoles },
     ],
   },
   {
-    labelAr: "المالية",
-    labelEn: "Finance",
+    labelAr: "التشغيل",
+    labelEn: "Operations",
     items: [
-      { href: "/invoices", labelKey: "invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["developer", "admin", "manager", "finance", "sales"] },
-      { href: "/commissions", labelKey: "commissions", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["developer", "admin", "manager", "finance", "sales"] },
+      { href: "/customers", labelAr: "العملاء", labelEn: "Customers", icon: UsersRound, roles: allRoles },
+      { href: "/registrations", labelAr: "التسجيلات", labelEn: "Registrations", icon: Receipt, roles: ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"] },
+      { href: "/courses", labelAr: "الدورات", labelEn: "Courses", icon: BookOpen, roles: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"] },
+      { href: "/training-centers", labelAr: "مراكز التدريب", labelEn: "Training Centers", icon: Building2, roles: ["developer", "admin", "manager", "data_analyst"] },
     ],
   },
   {
-    labelAr: "الإدارة",
-    labelEn: "Admin",
+    labelAr: "الإدخال والتوزيع",
+    labelEn: "Intake & Assignment",
     items: [
-      { href: "/distribution", labelKey: "distribution", icon: UsersRound, roles: ["developer", "admin", "manager", "moderator"] },
-      { href: "/imports", labelKey: "imports", icon: FileSpreadsheet, roles: ["marketer", "developer", "admin", "manager", "moderator"] },
-      { href: "/training-centers", labelKey: "trainingCenters", icon: Building2, roles: ["developer", "admin", "manager"] },
-      { href: "/contacts", labelKey: "contacts", icon: ContactRound, roles: ["developer", "admin", "manager"] },
-      { href: "/users", labelKey: "users", icon: UserCog, roles: ["developer", "admin"] },
-      { href: "/settings", labelKey: "settings", icon: Settings, roles: ["developer", "admin"] },
-      { href: "/customize", labelKey: "customize", icon: Settings, roles: ["developer", "admin"] },
+      { href: "/imports", labelAr: "استيراد العملاء", labelEn: "Imports", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
+      { href: "/distribution", labelAr: "توزيع العملاء", labelEn: "Distribution", icon: UsersRound, roles: ["developer", "admin", "manager", "moderator"] },
+    ],
+  },
+  {
+    labelAr: "التقارير والمالية",
+    labelEn: "Reports & Finance",
+    items: [
+      { href: "/commissions", labelAr: "العمولات والتقارير", labelEn: "Commissions & Reports", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["developer", "admin", "manager", "finance", "sales", "data_analyst"] },
+      { href: "/invoices", labelAr: "الفواتير القديمة", labelEn: "Legacy Invoices", icon: Receipt, featureKey: "features.invoices.enabled", roles: ["developer", "admin", "finance"] },
+    ],
+  },
+  {
+    labelAr: "النظام",
+    labelEn: "System",
+    items: [
+      { href: "/users", labelAr: "المستخدمون والصلاحيات", labelEn: "Users & Roles", icon: UserCog, roles: ["developer", "admin"] },
+      { href: "/settings", labelAr: "الإعدادات", labelEn: "Settings", icon: Settings, roles: ["developer", "admin"] },
+      { href: "/customize", labelAr: "تخصيص النظام", labelEn: "Customizer", icon: BarChart3, roles: ["developer", "admin"] },
     ],
   },
 ];
+
+const pageTitles: Record<string, { ar: string; en: string }> = {
+  dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
+  customers: { ar: "العملاء", en: "Customers" },
+  registrations: { ar: "التسجيلات", en: "Registrations" },
+  courses: { ar: "الدورات", en: "Courses" },
+  trainingCenters: { ar: "مراكز التدريب", en: "Training Centers" },
+  imports: { ar: "استيراد العملاء", en: "Imports" },
+  distribution: { ar: "توزيع العملاء", en: "Distribution" },
+  commissions: { ar: "العمولات والتقارير", en: "Commissions & Reports" },
+  invoices: { ar: "الفواتير القديمة", en: "Legacy Invoices" },
+  users: { ar: "المستخدمون والصلاحيات", en: "Users & Roles" },
+  settings: { ar: "الإعدادات", en: "Settings" },
+  customize: { ar: "تخصيص النظام", en: "Customizer" },
+};
 
 function normalizeRole(role?: string | null): Role {
   if (role === "developer") return "developer";
@@ -133,14 +146,14 @@ function roleName(role: Role, isArabic: boolean) {
 export function AppShell({ titleKey, userEmail, fullName, role, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { t, language } = useI18n();
+  const { language, t } = useI18n();
   const { scope } = useScope();
   const { getBooleanSetting } = useSystemSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isArabic = language === "ar";
   const realRole = normalizeRole(role);
-  const isRealAdmin = previewAdminRoles.includes(realRole);
+  const isRealAdmin = adminRoles.includes(realRole);
 
   const previewRole =
     isRealAdmin && scope.mode === "user" && scope.previewMode === "selected" && scope.targetRole
@@ -153,13 +166,14 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) => !hiddenNavHrefs.has(item.href) &&
-          item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))
+        (item) => item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))
       ),
     }))
     .filter((group) => group.items.length > 0);
 
-  function label(key: string) {
+  function pageTitle(key: string) {
+    const entry = pageTitles[key];
+    if (entry) return isArabic ? entry.ar : entry.en;
     return t(key);
   }
 
@@ -177,7 +191,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
   const sidebar = (
     <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
       <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
-        <p className="text-xs text-emerald-300">{isArabic ? "مساحة العمل" : "Workspace"}</p>
+        <p className="text-xs text-emerald-300">{isArabic ? "مساحة العمل النظيفة" : "Clean Workspace"}</p>
         <h2 className="mt-1 truncate text-lg font-black">{fullName ?? userEmail ?? "-"}</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">{roleName(realRole, isArabic)}</span>
@@ -208,7 +222,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
                     }
                   >
                     <Icon className="h-5 w-5 shrink-0" />
-                    <span>{label(item.labelKey)}</span>
+                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
                   </Link>
                 );
               })}
@@ -217,13 +231,11 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
         ))}
       </nav>
 
-      {isPreviewMode ? (
-        <div className="mt-auto rounded-[1.5rem] border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-100">
-          {isArabic
-            ? "أنت الآن تشاهد القائمة والصلاحيات كما تظهر للمستخدم المختار."
-            : "You are previewing the menu and permissions as the selected user."}
-        </div>
-      ) : null}
+      <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 text-xs leading-6 text-slate-400">
+        {isArabic
+          ? "تم إخفاء الصفحات المكررة من القائمة بدون حذف بياناتها. التشغيل الأساسي الآن من العملاء والتسجيلات والمدفوعات."
+          : "Legacy duplicate pages are hidden from navigation without deleting their data."}
+      </div>
     </div>
   );
 
@@ -244,7 +256,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
             <p className="text-xs text-emerald-300">
               {isPreviewMode ? (isArabic ? "معاينة مستخدم" : "User preview") : isArabic ? "رؤية النظام" : "System view"}
             </p>
-            <h1 className="truncate text-lg font-black md:text-xl">{label(titleKey)}</h1>
+            <h1 className="truncate text-lg font-black md:text-xl">{pageTitle(titleKey)}</h1>
           </div>
 
           <div className="hidden min-w-0 flex-1 justify-center xl:flex">
