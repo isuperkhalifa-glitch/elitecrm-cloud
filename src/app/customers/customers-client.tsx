@@ -264,8 +264,10 @@ export function CustomersClient({
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  function setFilter(field: keyof Filters, value: string) {
-    setFilters((current) => ({ ...current, [field]: value }));
+  function setFilter(field: keyof Filters, value: string, applyNow = false) {
+    const next = { ...filters, [field]: value };
+    setFilters(next);
+    if (applyNow) updateQuery(next, 1, pageSize);
   }
 
   function applyFilters() {
@@ -481,7 +483,7 @@ export function CustomersClient({
 
           <label>
             <span className="mb-2 block text-xs text-slate-500">الحالة</span>
-            <select value={filters.status} onChange={(event) => setFilter("status", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400">
+            <select value={filters.status} onChange={(event) => setFilter("status", event.target.value, true)} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400">
               <option value="">كل الحالات</option>
               {statusOptions.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
             </select>
@@ -489,9 +491,9 @@ export function CustomersClient({
 
           <label>
             <span className="mb-2 block text-xs text-slate-500">السيلز</span>
-            <select value={filters.owner} onChange={(event) => setFilter("owner", event.target.value)} disabled={role === "sales"} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400 disabled:opacity-50">
+            <select value={filters.owner} onChange={(event) => setFilter("owner", event.target.value, true)} disabled={role === "sales"} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400 disabled:opacity-50">
               <option value="">كل السيلز</option>
-              {profiles.filter((profile) => profile.role === "sales" || profile.role === "admin" || profile.role === "manager").map((profile) => (
+              {profiles.map((profile) => (
                 <option key={profile.id} value={profile.id}>{profile.full_name ?? profile.email ?? profile.id}</option>
               ))}
             </select>
@@ -499,7 +501,7 @@ export function CustomersClient({
 
           <label>
             <span className="mb-2 block text-xs text-slate-500">نوع العميل</span>
-            <select value={filters.leadType} onChange={(event) => setFilter("leadType", event.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400">
+            <select value={filters.leadType} onChange={(event) => setFilter("leadType", event.target.value, true)} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm outline-none focus:border-emerald-400">
               <option value="">كل الأنواع</option>
               {leadTypeOptions.map((type) => <option key={type} value={type}>{leadTypeLabel(type)}</option>)}
             </select>

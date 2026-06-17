@@ -354,7 +354,7 @@ export function CustomerDetailsClient({ initialLead, profiles, companies, course
             <Select label="اختيار دورة من النظام" value={form.course_id} onChange={(value) => setField("course_id", value)} disabled={!can.canEditMarketing} options={[{ value: "", label: "بدون دورة" }, ...courses.map((course) => ({ value: course.id, label: course.name_ar ?? course.name ?? course.name_en ?? course.id }))]} />
             <Select label="حالة العميل" value={form.status} onChange={(value) => setField("status", value)} disabled={!can.canEditSales} options={statusOptions.map((value) => ({ value, label: label(value) }))} />
             <Field label="موعد المتابعة" type="datetime-local" value={form.next_follow_up_at} onChange={(value) => setField("next_follow_up_at", value)} disabled={!can.canEditSales} />
-            <Select label="المسؤول عن العميل" value={form.owner_id} onChange={(value) => setField("owner_id", value)} disabled={!can.canAssign} options={[{ value: "", label: "غير موزع" }, ...profiles.filter((profile) => ["sales", "manager", "moderator", "admin"].includes(profile.role ?? "")).map((profile) => ({ value: profile.id, label: profile.full_name ?? profile.email ?? profile.id }))]} />
+            <Select label="المسؤول عن العميل" value={form.owner_id} onChange={(value) => setField("owner_id", value)} disabled={!can.canAssign} options={[{ value: "", label: "غير موزع" }, ...profiles.filter((profile) => profile.is_active !== false).map((profile) => ({ value: profile.id, label: profile.full_name ?? profile.email ?? profile.id }))]} />
           </div>
 
           <div className="mt-3"><Textarea label="آخر ملاحظة" value={form.last_note} onChange={(value) => setField("last_note", value)} disabled={!can.canEditSales} /></div>

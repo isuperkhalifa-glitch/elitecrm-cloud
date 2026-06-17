@@ -159,7 +159,6 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     supabase
       .from("profiles")
       .select("id,full_name,email,role,is_active")
-      .eq("is_active", true)
       .order("full_name", { ascending: true }),
   ]);
 
