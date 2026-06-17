@@ -1,0 +1,55 @@
+
+> elitecrm-cloud@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 52s
+  Running TypeScript ...
+  Finished TypeScript in 18.3s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/27) ...
+  Generating static pages using 3 workers (6/27) 
+  Generating static pages using 3 workers (13/27) 
+  Generating static pages using 3 workers (20/27) 
+✓ Generating static pages using 3 workers (27/27) in 855ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/admin/courses
+├ ƒ /api/admin/settings
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]
+├ ƒ /api/system-settings
+├ ƒ /api/v1/leads/[id]/status
+├ ƒ /commissions
+├ ƒ /companies
+├ ƒ /contacts
+├ ƒ /courses
+├ ƒ /customers
+├ ƒ /customers/[id]
+├ ƒ /customize
+├ ƒ /dashboard
+├ ƒ /deals
+├ ƒ /distribution
+├ ƒ /imports
+├ ƒ /invoices
+├ ƒ /leads
+├ ○ /login
+├ ƒ /my-customers
+├ ƒ /registrations
+├ ƒ /settings
+├ ƒ /tasks
+├ ƒ /training-centers
+└ ƒ /users
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -10,8 +10,8 @@ export default async function UsersPage() {
     return (
       <AppShell titleKey="users" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          <h2 className="text-2xl font-black">ط؛ظٹط± ظ…ط³ظ…ظˆط­</h2>
-          <p className="mt-3 text-sm leading-7 text-red-100/80">ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ظ…طھط§ط­ط© ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ط¹ط§ظ… ط£ظˆ ظ…ط·ظˆط± ط§ظ„ظ†ط¸ط§ظ… ظپظ‚ط·.</p>
+          <h2 className="text-2xl font-black">غير مسموح</h2>
+          <p className="mt-3 text-sm leading-7 text-red-100/80">إدارة المستخدمين متاحة للمدير العام أو مطور النظام فقط.</p>
         </div>
       </AppShell>
     );

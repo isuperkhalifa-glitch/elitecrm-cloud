@@ -10,7 +10,7 @@ async function requireAdmin() {
   if (!["developer", "admin"].includes(profile?.role ?? "")) {
     return {
       user,
-      blocked: NextResponse.json({ error: "ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ظ…طھط§ط­ط© ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ط¹ط§ظ… ط£ظˆ ظ…ط·ظˆط± ط§ظ„ظ†ط¸ط§ظ… ظپظ‚ط·." }, { status: 403 }),
+      blocked: NextResponse.json({ error: "إدارة المستخدمين متاحة للمدير العام أو مطور النظام فقط." }, { status: 403 }),
     };
   }
   return { user, blocked: null };
@@ -47,15 +47,15 @@ export async function POST(request: Request) {
     const role = String(body.role ?? "sales");
 
     if (!email || !password || !fullName) {
-      return NextResponse.json({ error: "ط§ظ„ط§ط³ظ… ظˆط§ظ„ط¨ط±ظٹط¯ ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ظ…ط·ظ„ظˆط¨ط©." }, { status: 400 });
+      return NextResponse.json({ error: "الاسم والبريد وكلمة المرور مطلوبة." }, { status: 400 });
     }
 
     if (!allowedRoles.includes(role)) {
-      return NextResponse.json({ error: "طµظ„ط§ط­ظٹط© ط؛ظٹط± طµط­ظٹط­ط©." }, { status: 400 });
+      return NextResponse.json({ error: "صلاحية غير صحيحة." }, { status: 400 });
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ error: "ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ظ„ط§ط²ظ… طھظƒظˆظ† 8 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„." }, { status: 400 });
+      return NextResponse.json({ error: "كلمة المرور لازم تكون 8 أحرف على الأقل." }, { status: 400 });
     }
 
     const admin = createAdminClient();
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     });
 
     if (error || !data.user) {
-      return NextResponse.json({ error: error?.message ?? "طھط¹ط°ط± ط¥ظ†ط´ط§ط، ط§ظ„ظ…ط³طھط®ط¯ظ…." }, { status: 400 });
+      return NextResponse.json({ error: error?.message ?? "تعذر إنشاء المستخدم." }, { status: 400 });
     }
 
     const { data: savedProfile, error: profileError } = await admin
@@ -95,23 +95,23 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const id = String(body.id ?? "").trim();
 
-    if (!id) return NextResponse.json({ error: "ظ…ط¹ط±ظپ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ…ط·ظ„ظˆط¨." }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "معرف المستخدم مطلوب." }, { status: 400 });
 
     const patch: Record<string, unknown> = {};
     if (typeof body.full_name === "string") patch.full_name = body.full_name.trim();
     if (typeof body.is_active === "boolean") patch.is_active = body.is_active;
 
     if (typeof body.role === "string") {
-      if (!allowedRoles.includes(body.role)) return NextResponse.json({ error: "طµظ„ط§ط­ظٹط© ط؛ظٹط± طµط­ظٹط­ط©." }, { status: 400 });
+      if (!allowedRoles.includes(body.role)) return NextResponse.json({ error: "صلاحية غير صحيحة." }, { status: 400 });
       patch.role = body.role;
     }
 
     if (id === user.id && patch.is_active === false) {
-      return NextResponse.json({ error: "ظ„ط§ ظٹظ…ظƒظ†ظƒ ط¥ظٹظ‚ط§ظپ ط­ط³ط§ط¨ظƒ ط§ظ„ط­ط§ظ„ظٹ." }, { status: 400 });
+      return NextResponse.json({ error: "لا يمكنك إيقاف حسابك الحالي." }, { status: 400 });
     }
 
     if (Object.keys(patch).length === 0) {
-      return NextResponse.json({ error: "ظ„ط§ طھظˆط¬ط¯ طھط؛ظٹظٹط±ط§طھ." }, { status: 400 });
+      return NextResponse.json({ error: "لا توجد تغييرات." }, { status: 400 });
     }
 
     const admin = createAdminClient();
@@ -123,7 +123,7 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ error: error?.message ?? "طھط¹ط°ط± طھط­ط¯ظٹط« ط§ظ„ظ…ط³طھط®ط¯ظ…." }, { status: 400 });
+      return NextResponse.json({ error: error?.message ?? "تعذر تحديث المستخدم." }, { status: 400 });
     }
 
     return NextResponse.json({ user: data });
