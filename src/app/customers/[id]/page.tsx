@@ -7,29 +7,32 @@ type Props = {
   params: Promise<{ id: string }> | { id: string };
 };
 
+function looksLikeUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 export default async function CustomerPage({ params }: Props) {
   const resolved = await params;
-  const customerRef = decodeURIComponent(resolved.id);
+  const customerKey = decodeURIComponent(resolved.id);
   const { supabase, user, profile } = await getCurrentUserProfile();
   const role = profile?.role ?? null;
 
   requirePageAccess(role, "customers");
 
   let lead: any = null;
+  const byCode = await supabase.from("leads").select("*").eq("customer_code", customerKey).maybeSingle();
+  lead = byCode.data;
 
-  const byId = await supabase.from("leads").select("*").eq("id", customerRef).maybeSingle();
-  lead = byId.data ?? null;
-
-  if (!lead) {
-    const byCode = await supabase.from("leads").select("*").eq("customer_code", customerRef).maybeSingle();
-    lead = byCode.data ?? null;
+  if (!lead && looksLikeUuid(customerKey)) {
+    const byId = await supabase.from("leads").select("*").eq("id", customerKey).maybeSingle();
+    lead = byId.data;
   }
 
   if (!lead) {
     return (
       <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          ط§ظ„ط¹ظ…ظٹظ„ ط؛ظٹط± ظ…ظˆط¬ظˆط¯ ط£ظˆ ظ„ط§ ظٹظ…ظƒظ† ط§ظ„ظˆطµظˆظ„ ط¥ظ„ظٹظ‡.
+          العميل غير موجود أو تم حذفه.
         </div>
       </AppShell>
     );
@@ -39,7 +42,7 @@ export default async function CustomerPage({ params }: Props) {
     return (
       <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          ظ‡ط°ط§ ط§ظ„ط¹ظ…ظٹظ„ ط؛ظٹط± ظ…طھط§ط­ ظ„طµظ„ط§ط­ظٹطھظƒ ط§ظ„ط­ط§ظ„ظٹط©.
+          هذا العميل غير متاح لصلاحيتك الحالية.
         </div>
       </AppShell>
     );
@@ -82,7 +85,7 @@ export default async function CustomerPage({ params }: Props) {
         companies={(companies ?? []) as any}
         courses={(courses ?? []) as any}
         currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? "ط§ظ„ظ†ط¸ط§ظ…"}
+        currentUserName={profile?.full_name ?? user.email ?? "النظام"}
         role={role}
       />
     </AppShell>
