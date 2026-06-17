@@ -38,7 +38,7 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance";
+type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "data_analyst";
 
 type NavItem = {
   href: string;
@@ -54,7 +54,7 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
+const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 const previewAdminRoles: Role[] = ["developer", "admin", "manager"];
 
 const hiddenNavHrefs = new Set([
@@ -76,6 +76,7 @@ const navGroups: NavGroup[] = [
     labelEn: "Workspace",
     items: [
       { href: "/customers", labelKey: "customers", icon: UsersRound, roles: allRoles },
+      { href: "/registrations", labelKey: "registrations", icon: Receipt, roles: ["developer", "admin", "manager", "moderator", "sales", "finance"] },
       { href: "/courses", labelKey: "courses", icon: BookOpen, roles: ["marketer", "developer", "admin", "manager"] },
       { href: "/tasks", labelKey: "tasks", icon: CheckSquare, roles: ["developer", "admin", "manager", "sales"] },
     ],
@@ -110,18 +111,20 @@ function normalizeRole(role?: string | null): Role {
   if (role === "moderator") return "moderator";
   if (role === "marketer") return "marketer";
   if (role === "finance") return "finance";
+  if (role === "data_analyst") return "data_analyst";
   return "sales";
 }
 
 function roleName(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    developer: { ar: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", en: "Developer" },
-    admin: { ar: "مدير النظام", en: "Admin" },
+    developer: { ar: "مطور النظام", en: "Developer" },
+    admin: { ar: "المدير العام", en: "General Manager" },
     manager: { ar: "تيم ليدر سيلز", en: "Sales Team Leader" },
     moderator: { ar: "الموديريتور", en: "Moderator" },
-  marketer: { ar: "المسوق", en: "Marketer" },
-  sales: { ar: "سيلز", en: "Sales" },
-    finance: { ar: "محلل بيانات", en: "Data Analyst" },
+    marketer: { ar: "المسوق", en: "Marketer" },
+    sales: { ar: "سيلز", en: "Sales" },
+    finance: { ar: "مالية / حسابات", en: "Finance" },
+    data_analyst: { ar: "محلل بيانات", en: "Data Analyst" },
   };
 
   return isArabic ? labels[role].ar : labels[role].en;

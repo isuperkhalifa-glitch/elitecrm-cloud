@@ -24,7 +24,7 @@ export default async function CustomerPage({ params }: Props) {
     return (
       <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          ط§ظ„ط¹ظ…ظٹظ„ ط؛ظٹط± ظ…ظˆط¬ظˆط¯.
+          العميل غير موجود.
         </div>
       </AppShell>
     );
@@ -34,7 +34,7 @@ export default async function CustomerPage({ params }: Props) {
     return (
       <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
         <div className="safe-card rounded-[2rem] border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          ظ‡ط°ط§ ط§ظ„ط¹ظ…ظٹظ„ ط؛ظٹط± ظ…طھط§ط­ ظ„طµظ„ط§ط­ظٹطھظƒ ط§ظ„ط­ط§ظ„ظٹط©.
+          هذا العميل غير متاح لصلاحيتك الحالية.
         </div>
       </AppShell>
     );
@@ -77,7 +77,7 @@ export default async function CustomerPage({ params }: Props) {
         companies={(companies ?? []) as any}
         courses={(courses ?? []) as any}
         currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? "ط§ظ„ظ†ط¸ط§ظ…"}
+        currentUserName={profile?.full_name ?? user.email ?? "النظام"}
         role={role}
       />
     </AppShell>

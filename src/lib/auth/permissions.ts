@@ -1,4 +1,4 @@
-export type AppRole = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "marketer";
+export type AppRole = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "data_analyst";
 
 export type PermissionDefinition = {
   role: AppRole;
@@ -11,13 +11,14 @@ export type PermissionDefinition = {
   actionsEn: string[];
 };
 
-export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
+export const appRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
 
 export const routeAccess: Record<string, AppRole[]> = {
-  "/dashboard": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
-  "/customers": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
+  "/dashboard": appRoles,
+  "/customers": appRoles,
   "/training-centers": ["developer", "admin", "manager"],
-  "/courses": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"],
+  "/courses": ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
+  "/registrations": ["developer", "admin", "manager", "moderator", "sales", "finance"],
   "/leads": ["developer", "admin", "moderator", "marketer"],
   "/my-customers": ["developer", "admin", "manager", "sales"],
   "/distribution": ["developer", "admin", "manager", "moderator"],
@@ -25,7 +26,7 @@ export const routeAccess: Record<string, AppRole[]> = {
   "/tasks": ["developer", "admin", "manager", "sales"],
   "/deals": ["developer", "admin", "manager", "sales", "finance"],
   "/invoices": ["developer", "admin", "manager", "sales", "finance"],
-  "/commissions": ["developer", "admin", "manager", "sales", "finance"],
+  "/commissions": ["developer", "admin", "manager", "sales", "finance", "data_analyst"],
   "/companies": ["developer", "admin", "manager"],
   "/contacts": ["developer", "admin", "manager"],
   "/users": ["developer", "admin"],
@@ -36,74 +37,83 @@ export const routeAccess: Record<string, AppRole[]> = {
 export const permissionDefinitions: PermissionDefinition[] = [
   {
     role: "developer",
-    labelAr: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
+    labelAr: "مطور النظام",
     labelEn: "Developer",
-    summaryAr: "\u0635\u0644\u0627\u062d\u064a\u0629 \u0645\u062a\u0642\u062f\u0645\u0629 \u0644\u062a\u062e\u0635\u064a\u0635 \u0648\u062a\u0639\u062f\u064a\u0644 \u0643\u0644 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0646\u0638\u0627\u0645.",
-    summaryEn: "Advanced role for detailed system customization.",
-    routes: ["/dashboard", "/customers", "/leads", "/my-customers", "/distribution", "/imports", "/tasks", "/deals", "/invoices", "/commissions", "/companies", "/contacts", "/users", "/settings", "/customize"],
-    actionsAr: ["\u062a\u062e\u0635\u064a\u0635 \u0627\u0644\u0646\u0638\u0627\u0645", "\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0627\u062a", "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a", "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a"],
-    actionsEn: ["Customize system", "Edit pages", "Manage settings", "Manage permissions"],
+    summaryAr: "يتحكم في النظام بالكامل: الإعدادات، الصلاحيات، الصفحات، البيانات، والتخصيص.",
+    summaryEn: "Full technical control over settings, permissions, pages, data, and customization.",
+    routes: Object.keys(routeAccess),
+    actionsAr: ["تخصيص النظام", "إدارة الصلاحيات", "تعديل الحقول المحمية", "إدارة الصفحات"],
+    actionsEn: ["Customize system", "Manage permissions", "Edit protected fields", "Manage pages"],
   },
   {
     role: "admin",
-    labelAr: "\u0645\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
-    labelEn: "Admin",
-    summaryAr: "\u064a\u0631\u0649 \u0643\u0644 \u0634\u064a\u0621 \u0648\u064a\u062f\u064a\u0631 \u0627\u0644\u0646\u0638\u0627\u0645 \u0648\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a.",
-    summaryEn: "Sees and manages the whole system.",
-    routes: ["/dashboard", "/leads", "/my-customers", "/distribution", "/imports", "/tasks", "/deals", "/invoices", "/commissions", "/companies", "/contacts", "/users", "/settings"],
-    actionsAr: ["\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646", "\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a", "\u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0639\u0645\u0644\u0627\u0621", "\u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0648\u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a"],
-    actionsEn: ["Manage users", "Edit settings", "Distribute customers", "Finance and commissions"],
-  },
-  {
-    role: "manager",
-    labelAr: "\u0645\u062f\u064a\u0631",
-    labelEn: "Manager",
-    summaryAr: "\u064a\u0631\u0627\u0642\u0628 \u0648\u064a\u062f\u064a\u0631 \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0628\u062f\u0648\u0646 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0646\u0638\u0627\u0645 \u0623\u0648 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646.",
-    summaryEn: "Runs operations without system/user admin controls.",
-    routes: ["/dashboard", "/leads", "/my-customers", "/distribution", "/imports", "/tasks", "/deals", "/invoices", "/commissions", "/companies", "/contacts"],
-    actionsAr: ["\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0641\u0631\u064a\u0642", "\u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0639\u0645\u0644\u0627\u0621", "\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a"],
-    actionsEn: ["Monitor team", "Distribute customers", "Review invoices and commissions"],
+    labelAr: "المدير العام",
+    labelEn: "General Manager",
+    summaryAr: "يرى الصورة الكاملة ويدير التشغيل والتقارير والصلاحيات الأساسية.",
+    summaryEn: "Sees the full picture and manages operations, reports, and core permissions.",
+    routes: ["/dashboard", "/customers", "/training-centers", "/courses", "/registrations", "/distribution", "/imports", "/commissions", "/users", "/settings", "/customize"],
+    actionsAr: ["إدارة المستخدمين", "توزيع العملاء", "مراجعة التسجيلات", "مراجعة الأداء"],
+    actionsEn: ["Manage users", "Assign customers", "Review registrations", "Review performance"],
   },
   {
     role: "moderator",
-    labelAr: "\u0645\u0648\u062f\u064a\u0631\u064a\u062a\u0648\u0631",
+    labelAr: "الموديريتور",
     labelEn: "Moderator",
-    summaryAr: "\u064a\u0636\u064a\u0641 \u0648\u064a\u0633\u062a\u0648\u0631\u062f \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u064a\u0648\u0632\u0639\u0647\u0645 \u0639\u0644\u0649 \u0627\u0644\u0633\u064a\u0644\u0632.",
-    summaryEn: "Adds/imports customers and assigns them to sales.",
-    routes: ["/dashboard", "/leads", "/distribution", "/imports"],
-    actionsAr: ["\u0625\u0636\u0627\u0641\u0629 \u0639\u0645\u0644\u0627\u0621", "\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0628\u064a\u0627\u0646\u0627\u062a", "\u062a\u0648\u0632\u064a\u0639 \u0639\u0644\u0649 \u0627\u0644\u0633\u064a\u0644\u0632"],
-    actionsEn: ["Add customers", "Import data", "Assign to sales"],
-  },
-  {
-    role: "sales",
-    labelAr: "\u0633\u064a\u0644\u0632",
-    labelEn: "Sales",
-    summaryAr: "\u064a\u062a\u0627\u0628\u0639 \u0639\u0645\u0644\u0627\u0621\u0647 \u0648\u0645\u0647\u0627\u0645\u0647 \u0648\u0635\u0641\u0642\u0627\u062a\u0647 \u0648\u0639\u0645\u0648\u0644\u0627\u062a\u0647.",
-    summaryEn: "Follows own customers, tasks, deals, invoices, and commissions.",
-    routes: ["/dashboard", "/leads", "/my-customers", "/tasks", "/deals", "/invoices", "/commissions"],
-    actionsAr: ["\u062a\u063a\u064a\u064a\u0631 \u062d\u0627\u0644\u0629 \u0627\u0644\u0639\u0645\u064a\u0644", "\u0643\u062a\u0627\u0628\u0629 \u0645\u0644\u0627\u062d\u0638\u0627\u062a", "\u062a\u062d\u062f\u064a\u062f \u0645\u0648\u0639\u062f \u0645\u062a\u0627\u0628\u0639\u0629"],
-    actionsEn: ["Update customer status", "Write notes", "Set follow-up"],
+    summaryAr: "يراجع العملاء الجدد، ينضف البيانات، ويوزع العملاء على فريق السيلز.",
+    summaryEn: "Reviews new customers, cleans data, and assigns customers to sales.",
+    routes: ["/dashboard", "/customers", "/leads", "/distribution", "/imports", "/registrations"],
+    actionsAr: ["إضافة عملاء", "استيراد عملاء", "تنظيف البيانات", "توزيع العملاء"],
+    actionsEn: ["Add customers", "Import customers", "Clean data", "Assign customers"],
   },
   {
     role: "marketer",
-    labelAr: "ط§ظ„ظ…ط³ظˆظ‚",
+    labelAr: "المسوق",
     labelEn: "Marketer",
-    summaryAr: "ظٹط¶ظٹظپ ط§ظ„ط¹ظ…ظ„ط§ط، ظ…ظ† ط§ظ„ط­ظ…ظ„ط§طھ ظٹط¯ظˆظٹظ‹ط§ ط£ظˆ ط¨ط§ظ„ط§ط³طھظٹط±ط§ط¯ ظˆظٹطھط§ط¨ط¹ ظ…طµط§ط¯ط± ط§ظ„ط¹ظ…ظ„ط§ط، ط¨ط¯ظˆظ† طµظ„ط§ط­ظٹط§طھ ظ…ط§ظ„ظٹط©.",
-    summaryEn: "Adds campaign customers manually or by import and tracks sources without finance access.",
-    routes: ["/dashboard", "/customers", "/leads", "/imports"],
-    actionsAr: ["ط¥ط¶ط§ظپط© ط¹ظ…ظ„ط§ط،", "ط§ط³طھظٹط±ط§ط¯ ط¹ظ…ظ„ط§ط،", "طھط­ط¯ظٹط¯ ط§ظ„ظ…طµط¯ط± ظˆط§ظ„ط­ظ…ظ„ط©", "طھط¬ظ‡ظٹط² ط§ظ„ط¹ظ…ظ„ط§ط، ظ„ظ„طھظˆط²ظٹط¹"],
-    actionsEn: ["Add customers", "Import customers", "Set source and campaign", "Prepare customers for assignment"],
+    summaryAr: "يدخل العملاء من الحملات ويدير المصدر والحملة والدورة المبدئية.",
+    summaryEn: "Adds campaign leads and manages source, campaign, and initial course interest.",
+    routes: ["/dashboard", "/customers", "/leads", "/imports", "/courses"],
+    actionsAr: ["إضافة عملاء", "استيراد عملاء", "تحديد المصدر", "تجهيز العملاء للتوزيع"],
+    actionsEn: ["Add customers", "Import customers", "Set source", "Prepare customers for assignment"],
   },
-
+  {
+    role: "manager",
+    labelAr: "تيم ليدر سيلز",
+    labelEn: "Sales Team Leader",
+    summaryAr: "يتابع فريق السيلز، يرى العملاء الموزعين، ويساعد في التسجيلات والتقارير.",
+    summaryEn: "Manages the sales team, assigned customers, registrations, and reports.",
+    routes: ["/dashboard", "/customers", "/my-customers", "/distribution", "/registrations", "/commissions", "/courses"],
+    actionsAr: ["متابعة الفريق", "إعادة توزيع العملاء", "مراجعة التسجيلات", "مراجعة العمولات"],
+    actionsEn: ["Monitor team", "Reassign customers", "Review registrations", "Review commissions"],
+  },
+  {
+    role: "sales",
+    labelAr: "سيلز",
+    labelEn: "Sales",
+    summaryAr: "يتابع عملاءه، يسجل العملاء في الدورات، ويحدث حالة المتابعة.",
+    summaryEn: "Follows assigned customers, registers them in courses, and updates follow-up status.",
+    routes: ["/dashboard", "/customers", "/my-customers", "/registrations", "/tasks", "/commissions"],
+    actionsAr: ["تحديث حالة العميل", "كتابة ملاحظات", "تحديد متابعة", "تسجيل عميل"],
+    actionsEn: ["Update customer status", "Write notes", "Set follow-up", "Register customer"],
+  },
   {
     role: "finance",
-    labelAr: "\u0645\u0627\u0644\u064a\u0629",
+    labelAr: "مالية / حسابات",
     labelEn: "Finance",
-    summaryAr: "\u064a\u062f\u064a\u0631 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a \u0648\u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a.",
-    summaryEn: "Manages invoices, payments, and commissions.",
-    routes: ["/dashboard", "/deals", "/invoices", "/commissions"],
-    actionsAr: ["\u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0627\u0644\u062f\u0641\u0639", "\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a", "\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u062a\u062d\u0635\u064a\u0644"],
-    actionsEn: ["Update payment status", "Review commissions", "Track collection"],
+    summaryAr: "يراجع المدفوعات، الخصومات، المتبقي، والعمولات.",
+    summaryEn: "Reviews payments, discounts, remaining balances, and commissions.",
+    routes: ["/dashboard", "/customers", "/registrations", "/invoices", "/commissions"],
+    actionsAr: ["تحديث الدفع", "مراجعة الخصومات", "متابعة التحصيل", "مراجعة العمولات"],
+    actionsEn: ["Update payment", "Review discounts", "Track collection", "Review commissions"],
+  },
+  {
+    role: "data_analyst",
+    labelAr: "محلل بيانات",
+    labelEn: "Data Analyst",
+    summaryAr: "يرى التقارير والتحليلات بدون صلاحيات تعديل تشغيلية أو مالية.",
+    summaryEn: "Views reports and analytics without operational or finance editing permissions.",
+    routes: ["/dashboard", "/customers", "/courses", "/commissions"],
+    actionsAr: ["تحليل الأداء", "مراجعة التحويلات", "قراءة التقارير"],
+    actionsEn: ["Analyze performance", "Review conversion", "Read reports"],
   },
 ];
 
@@ -114,15 +124,13 @@ export function normalizeRole(role?: string | null): AppRole {
   if (role === "moderator") return "moderator";
   if (role === "marketer") return "marketer";
   if (role === "finance") return "finance";
+  if (role === "data_analyst") return "data_analyst";
   return "sales";
 }
 
 export function canAccessRoute(role: string | null | undefined, pathname: string) {
   const normalized = normalizeRole(role);
-  const entry = Object.entries(routeAccess).find(([route]) =>
-    pathname === route || pathname.startsWith(route + "/")
-  );
-
+  const entry = Object.entries(routeAccess).find(([route]) => pathname === route || pathname.startsWith(route + "/"));
   if (!entry) return true;
   return entry[1].includes(normalized);
 }
