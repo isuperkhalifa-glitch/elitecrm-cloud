@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   CalendarClock,
@@ -231,6 +231,13 @@ export function CustomersClient({
   const [draftFollowup, setDraftFollowup] = useState("");
   const [draftNote, setDraftNote] = useState("");
 
+  useEffect(() => {
+    setLeads(initialLeads);
+    setActivities(initialActivities);
+    setFilters(initialFilters);
+    setSelectedId(null);
+  }, [initialLeads, initialActivities, initialFilters]);
+
   const selectedLead = useMemo(
     () => leads.find((lead) => lead.id === selectedId) ?? null,
     [leads, selectedId]
@@ -265,9 +272,12 @@ export function CustomersClient({
   }
 
   function setFilter(field: keyof Filters, value: string, applyNow = false) {
-    const next = { ...filters, [field]: value };
-    setFilters(next);
-    if (applyNow) updateQuery(next, 1, pageSize);
+    const nextFilters = { ...filters, [field]: value };
+    setFilters(nextFilters);
+
+    if (applyNow) {
+      updateQuery(nextFilters, 1, pageSize);
+    }
   }
 
   function applyFilters() {
