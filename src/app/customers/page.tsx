@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getEffectiveScope } from "@/lib/auth/effective-scope";
 import { requirePageAccess } from "@/lib/auth/server-guards";
 import { CustomersClient } from "./customers-client";
 
@@ -76,9 +77,13 @@ function cleanSearch(value: string) {
 export default async function CustomersPage({ searchParams }: { searchParams?: Promise<SearchParams> | SearchParams }) {
   const resolved = searchParams ? await searchParams : {};
   const { supabase, user, profile } = await getCurrentUserProfile();
-  requirePageAccess(profile?.role, "customers");
+  const scope = await getEffectiveScope(profile?.role);
+  const role = scope.effectiveRole;
+  const scopedUserId = scope.scopedUserId;
+  const scopedCompanyId = scope.scopedCompanyId;
+  const actingUserId = scope.previewAsUser && scopedUserId ? scopedUserId : user.id;
+  requirePageAccess(role, "customers");
 
-  const role = profile?.role ?? null;
   const page = safeNumber(resolved.page, 1);
   const pageSizeInput = safeNumber(resolved.pageSize, 50);
   const pageSize = pageSizeOptions.includes(pageSizeInput) ? pageSizeInput : 50;
@@ -101,7 +106,10 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
+  if (scopedUserId) leadsQuery = leadsQuery.eq("owner_id", scopedUserId);
+  else if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
+
+  if (scopedCompanyId) leadsQuery = leadsQuery.eq("company_id", scopedCompanyId);
 
   if (q) {
     leadsQuery = leadsQuery.or(
@@ -111,7 +119,7 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
 
   if (allowedStatuses.has(status)) leadsQuery = leadsQuery.or(`status.eq.${status},customer_status.eq.${status}`);
   if (allowedLeadTypes.has(leadType)) leadsQuery = leadsQuery.eq("lead_type", leadType);
-  if (owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", owner);
+  if (!scopedUserId && owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", owner);
   if (course) leadsQuery = leadsQuery.or(`program.ilike.%${course}%,course_name.ilike.%${course}%`);
 
   const followupRange = dateRangeForFollowup(followup, startDate, endDate);
@@ -124,12 +132,12 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   ]);
 
   return (
-    <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={role}>
+    <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
       <CustomersClient
         initialLeads={(leads ?? []) as any}
         profiles={(profiles ?? []) as any}
-        currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? "النظام"}
+        currentUserId={actingUserId}
+        currentUserName={profile?.full_name ?? user.email ?? "\u0627\u0644\u0646\u0638\u0627\u0645"}
         userEmail={user.email ?? null}
         fullName={profile?.full_name ?? null}
         role={role}
