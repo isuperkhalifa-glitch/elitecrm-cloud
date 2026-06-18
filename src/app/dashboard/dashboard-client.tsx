@@ -4,19 +4,16 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { useI18n } from "@/components/language-provider";
 import { useScope } from "@/components/scope-provider";
-import { usePageText } from "@/components/page-settings";
-import { useSystemSettings } from "@/components/system-settings-provider";
 import {
   BadgeDollarSign,
   Banknote,
+  BookOpen,
   Building2,
   CalendarClock,
-  Eye,
+  FileSpreadsheet,
   Receipt,
   Route,
   ShieldCheck,
-  UploadCloud,
-  UserCheck,
   UsersRound,
 } from "lucide-react";
 
@@ -109,24 +106,30 @@ type Props = {
 
 function isToday(value: string | null) {
   if (!value) return false;
-
   const date = new Date(value);
   const now = new Date();
-
   return date.toDateString() === now.toDateString();
 }
 
 function isOverdue(value: string | null) {
   if (!value) return false;
-
   const date = new Date(value);
   const now = new Date();
-
   return date < now && date.toDateString() !== now.toDateString();
 }
 
+function normalizeRole(role?: string | null) {
+  if (role === "developer") return "developer";
+  if (role === "admin") return "admin";
+  if (role === "manager") return "manager";
+  if (role === "moderator") return "moderator";
+  if (role === "marketer") return "marketer";
+  if (role === "finance") return "finance";
+  if (role === "data_analyst") return "data_analyst";
+  return "sales";
+}
+
 export function DashboardClient({
-  currentUserId,
   userEmail,
   fullName,
   role,
@@ -146,29 +149,31 @@ export function DashboardClient({
     return isArabic ? ar : en;
   }
 
-
-  const { getBooleanSetting } = useSystemSettings();
-  
-  const dealsEnabled = false;
-  const invoicesEnabled = false;
-  const commissionsEnabled = getBooleanSetting("features.commissions.enabled", true);
-  const pageTitle = usePageText("pages.dashboard.title", "ط¸â€‍ط¸ث†ط·آ­ط·آ© ط·آ§ط¸â€‍ط·ع¾ط·آ­ط¸ئ’ط¸â€¦", "Dashboard");
-  const pageDescription = usePageText(
-    "pages.dashboard.description",
-    "ط·ع¾ط·آ§ط·آ¨ط·آ¹ ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ­ط·آ³ط·آ¨ ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط·آ¹ط·آ±ط·آ¶.",
-    "Track customers, follow-ups, invoices, and commissions by scope."
-  );
-
   function money(value: number | string | null) {
-    return new Intl.NumberFormat(isArabic ? "ar-EG" : "en-US", {
+    return new Intl.NumberFormat(isArabic ? "ar-SA" : "en-US", {
       style: "currency",
       currency: "SAR",
       maximumFractionDigits: 0,
     }).format(Number(value ?? 0));
   }
 
-  const selectedCompanyName =
-    companies.find((company) => company.id === scope.targetId)?.name ?? scope.targetName;
+  const selectedCompanyName = companies.find((company) => company.id === scope.targetId)?.name ?? scope.targetName;
+
+  const scopedLeads =
+    scope.mode === "user"
+      ? leads.filter((lead) => lead.owner_id === scope.targetId)
+      : scope.mode === "company"
+        ? leads.filter((lead) =>
+            selectedCompanyName ? (lead.company_name ?? "").toLowerCase().includes(selectedCompanyName.toLowerCase()) : false
+          )
+        : leads;
+
+  const scopedTasks =
+    scope.mode === "user"
+      ? tasks.filter((task) => task.owner_id === scope.targetId)
+      : scope.mode === "company"
+        ? tasks.filter((task) => task.related_type === "company" && task.related_id === scope.targetId)
+        : tasks;
 
   const scopedDeals =
     scope.mode === "user"
@@ -177,92 +182,38 @@ export function DashboardClient({
         ? deals.filter((deal) => deal.company_id === scope.targetId)
         : deals;
 
-  const scopedDealIds = new Set(scopedDeals.map((deal) => deal.id));
-
   const scopedInvoices =
     scope.mode === "user"
       ? invoices.filter((invoice) => invoice.owner_id === scope.targetId)
       : scope.mode === "company"
-        ? invoices.filter(
-            (invoice) =>
-              invoice.company_id === scope.targetId ||
-              Boolean(invoice.deal_id && scopedDealIds.has(invoice.deal_id))
-          )
+        ? invoices.filter((invoice) => invoice.company_id === scope.targetId)
         : invoices;
-
-  const scopedInvoiceIds = new Set(scopedInvoices.map((invoice) => invoice.id));
-
-  const scopedLeads =
-    scope.mode === "user"
-      ? leads.filter((lead) => lead.owner_id === scope.targetId)
-      : scope.mode === "company"
-        ? leads.filter((lead) =>
-            selectedCompanyName
-              ? (lead.company_name ?? "").toLowerCase().includes(selectedCompanyName.toLowerCase())
-              : false
-          )
-        : leads;
-
-  const scopedTasks =
-    scope.mode === "user"
-      ? tasks.filter((task) => task.owner_id === scope.targetId)
-      : scope.mode === "company"
-        ? tasks.filter(
-            (task) =>
-              task.related_type === "company" &&
-              task.related_id === scope.targetId
-          )
-        : tasks;
 
   const scopedCommissions =
     scope.mode === "user"
       ? commissions.filter((commission) => commission.sales_id === scope.targetId)
       : scope.mode === "company"
-        ? commissions.filter(
-            (commission) =>
-              commission.company_id === scope.targetId ||
-              Boolean(commission.invoice_id && scopedInvoiceIds.has(commission.invoice_id))
-          )
+        ? commissions.filter((commission) => commission.company_id === scope.targetId)
         : commissions;
 
-  const isUserPreview = scope.mode === "user" && scope.previewMode === "selected";
-  const previewRole = isUserPreview ? scope.targetRole : role ?? "admin";
-
-  const paidInvoices = scopedInvoices.filter((invoice) => invoice.status === "paid");
-  const unpaidInvoices = scopedInvoices.filter(
-    (invoice) => invoice.status !== "paid" && invoice.status !== "canceled"
-  );
-  const overdueInvoices = scopedInvoices.filter(
-    (invoice) =>
-      invoice.status !== "paid" &&
-      invoice.status !== "canceled" &&
-      isOverdue(invoice.due_date)
-  );
+  const previewRole =
+    scope.mode === "user" && scope.previewMode === "selected" && scope.targetRole
+      ? normalizeRole(scope.targetRole)
+      : normalizeRole(role);
 
   const todayTasks = scopedTasks.filter((task) => isToday(task.due_date));
   const overdueTasks = scopedTasks.filter((task) => isOverdue(task.due_date));
-  const dueCommissions = scopedCommissions.filter((item) => item.status === "due");
-  const paidCommissions = scopedCommissions.filter((item) => item.status === "paid");
+  const paidRevenue = scopedInvoices
+    .filter((invoice) => invoice.status === "paid")
+    .reduce((sum, invoice) => sum + Number(invoice.amount ?? 0), 0);
+  const dueCommissionAmount = scopedCommissions
+    .filter((commission) => commission.status === "due")
+    .reduce((sum, commission) => sum + Number(commission.commission_amount ?? 0), 0);
 
-  const paidRevenue = paidInvoices.reduce(
-    (sum, invoice) => sum + Number(invoice.amount ?? 0),
-    0
-  );
-
-  const unpaidRevenue = unpaidInvoices.reduce(
-    (sum, invoice) => sum + Number(invoice.amount ?? 0),
-    0
-  );
-
-  const dueCommissionAmount = dueCommissions.reduce(
-    (sum, item) => sum + Number(item.commission_amount ?? 0),
-    0
-  );
-
-  const paidCommissionAmount = paidCommissions.reduce(
-    (sum, item) => sum + Number(item.commission_amount ?? 0),
-    0
-  );
+  const activeUsers = profiles.filter((profile) => profile.is_active !== false).length;
+  const canImport = ["developer", "admin", "moderator", "marketer"].includes(previewRole);
+  const canDistribute = ["developer", "admin", "manager", "moderator"].includes(previewRole);
+  const canSeeMoney = ["developer", "admin", "manager", "finance", "data_analyst"].includes(previewRole);
 
   function StatCard({
     title,
@@ -322,202 +273,82 @@ export function DashboardClient({
     );
   }
 
-  const isSalesPreview = previewRole === "sales";
-  const isModeratorPreview = previewRole === "moderator";
-  const isFinancePreview = previewRole === "finance";
-
   return (
-    <AppShell
-      titleKey="dashboard"
-      userEmail={userEmail}
-      fullName={fullName}
-      role={role}
-    >
+    <AppShell titleKey="dashboard" userEmail={userEmail} fullName={fullName} role={role}>
       <div className="mb-6 safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm text-emerald-300">
-              {pageDescription}
+              {tx("تشغيل مبسط للنظام بدون صفحات مكررة.", "A simplified operating view without duplicate pages.")}
             </p>
             <h1 className="mt-1 text-3xl font-black text-white">
-              {scope.mode === "all"
-                ? pageTitle
-                : `${pageTitle} أ¢â‚¬â€‌ ${scope.targetName ?? ""}`}
+              {scope.mode === "all" ? tx("لوحة التحكم", "Dashboard") : `${tx("لوحة التحكم", "Dashboard")} — ${scope.targetName ?? ""}`}
             </h1>
-            <p className="mt-2 text-sm text-slate-400">
-              {isUserPreview
-                ? tx("ط·آ£ط¸â€ ط·ع¾ ط·ع¾ط·آ´ط·آ§ط¸â€،ط·آ¯ ط·ع¾ط¸â€ڑط·آ±ط¸ظ¹ط·آ¨ط¸â€¹ط·آ§ ط¸â€¦ط·آ§ ط¸ظ¹ط·آ¸ط¸â€،ط·آ± ط¸â€‍ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ±.", "You are previewing what the selected user sees.")
-                : tx("ط·آ£ط¸â€ ط·ع¾ ط·ع¾ط·آ´ط·آ§ط¸â€،ط·آ¯ ط·آ§ط¸â€‍ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ¨ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸â€¦ط¸â€  ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط¸â€¦ط·آ­ط·آ¯ط·آ¯.", "You are viewing the selected scope with admin visibility.")}
+            <p className="mt-2 text-sm leading-7 text-slate-400">
+              {scope.mode === "user"
+                ? tx("أنت تشاهد النظام حسب المستخدم المختار.", "You are viewing the system as the selected user.")
+                : scope.mode === "company"
+                  ? tx("أنت تشاهد بيانات مركز التدريب المختار.", "You are viewing the selected training center.")
+                  : tx("أنت تشاهد كل النظام.", "You are viewing the whole system.")}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">
-              {scope.mode === "all"
-                ? tx("ط·آ§ط¸â€‍ط¸ئ’ط¸â€‍", "All")
-                : scope.mode === "user"
-                  ? tx("ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦", "User")
-                  : tx("ط·آ´ط·آ±ط¸ئ’ط·آ©", "Company")}
+              {scope.mode === "all" ? tx("كل النظام", "All system") : scope.mode === "user" ? tx("كمستخدم", "As user") : tx("مركز تدريب", "Training center")}
             </span>
-
             <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm font-bold text-sky-300">
-              {isUserPreview ? tx("ط¸â€¦ط·آ¹ط·آ§ط¸ظ¹ط¸â€ ط·آ© ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦", "User preview") : tx("ط·آ±ط·آ¤ط¸ظ¹ط·آ© ط·آ£ط·آ¯ط¸â€¦ط¸â€ ", "Admin view")}
+              {previewRole}
             </span>
           </div>
         </div>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ", "Customers")} value={scopedLeads.length} icon={UsersRound} />
-        <StatCard title={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸ظ¹ط¸ث†ط¸â€¦", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
-        <StatCard title={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸â€¦ط·ع¾ط·آ£ط·آ®ط·آ±ط·آ©", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
-        <StatCard title={tx("ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾", "Paid revenue")} value={money(paidRevenue)} icon={Banknote} tone="green" />
+        <StatCard title={tx("العملاء", "Customers")} value={scopedLeads.length} icon={UsersRound} />
+        <StatCard title={tx("متابعات اليوم", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
+        <StatCard title={tx("متابعات متأخرة", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
+        <StatCard title={tx("المدفوعات المحصلة", "Collected payments")} value={money(paidRevenue)} icon={Banknote} tone="green" />
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dealsEnabled ? <StatCard title={tx("ط·آ§ط¸â€‍ط·آµط¸ظ¾ط¸â€ڑط·آ§ط·ع¾", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
-        {invoicesEnabled ? <StatCard title={tx("ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط·ط›ط¸ظ¹ط·آ± ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط¸â€¦ط·آ³ط·ع¾ط·آ­ط¸â€ڑط·آ©", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
+        <StatCard title={tx("الدورات / الفرص", "Courses / opportunities")} value={scopedDeals.length} icon={BookOpen} />
+        <StatCard title={tx("المستخدمون النشطون", "Active users")} value={activeUsers} icon={ShieldCheck} tone="green" />
+        <StatCard title={tx("مراكز التدريب", "Training centers")} value={companies.length} icon={Building2} tone="blue" />
+        <StatCard title={tx("عمولات مستحقة", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="yellow" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <div className="mb-5">
-            <p className="text-sm text-emerald-300">
-              {tx("ط¸â€¦ط·آ§ط·آ°ط·آ§ ط¸ظ¹ط·آ¸ط¸â€،ط·آ±ط·ع؛", "Visibility")}
-            </p>
-            <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط·آ±ط·آ¶ ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط¸ظ¹ط·آ©", "Current View Permission")}
-            </h2>
-          </div>
-
-          <div className="space-y-3 text-sm leading-7 text-slate-300">
-            <p className="flex gap-2">
-              <ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-emerald-300" />
-              {isUserPreview
-                ? tx("ط¸â€،ط·آ°ط¸â€، ط¸â€¦ط·آ¹ط·آ§ط¸ظ¹ط¸â€ ط·آ© ط¸â€‍ط¸â€¦ط·آ§ ط¸ظ¹ط·آ±ط·آ§ط¸â€، ط·آ§ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ± ط·آ¨ط¸â€ ط·آ§ط·طŒط¸â€¹ ط·آ¹ط¸â€‍ط¸â€° ط·آ¯ط¸ث†ط·آ±ط¸â€،.", "This is a preview of what the selected user sees based on their role.")
-                : tx("ط¸â€،ط·آ°ط¸â€، ط·آ±ط·آ¤ط¸ظ¹ط·آ© ط·آ¥ط·آ¯ط·آ§ط·آ±ط¸ظ¹ط·آ© ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ±ط·إ’ ط¸â€‍ط·آ°ط¸â€‍ط¸ئ’ ط·ع¾ط·آ¸ط¸â€،ط·آ± ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ£ط¸ث†ط·آ³ط·آ¹.", "This is admin visibility inside the selected scope, so more data is visible.")}
-            </p>
-
-            {isSalesPreview ? (
-              <>
-                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·آ³ط¸ظ¹ط¸â€‍ط·آ² ط¸ظ¹ط·آ±ط¸â€° ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒط¸â€، ط¸ث†ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ط¸â€، ط¸ث†ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ط¸â€، ط¸ظ¾ط¸â€ڑط·آ·.", "Sales sees own customers, follow-ups, and commissions only.")}</p>
-                <p>أ¢â‚¬آ¢ {tx("ط¸â€‍ط·آ§ ط·ع¾ط·آ¸ط¸â€،ط·آ± ط¸â€‍ط¸â€، ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸ظ¾ط·آ±ط¸ظ¹ط¸â€ڑ ط·آ¨ط·آ§ط¸â€‍ط¸ئ’ط·آ§ط¸â€¦ط¸â€‍.", "Team-wide data is hidden from sales.")}</p>
-              </>
-            ) : null}
-
-            {isModeratorPreview ? (
-              <>
-                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¯ط¸ظ¹ط·آ±ط¸ظ¹ط·ع¾ط¸ث†ط·آ± ط¸ظ¹ط·آ±ط¸ئ’ط·آ² ط·آ¹ط¸â€‍ط¸â€° ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ§ط¸â€‍ط·آ¬ط·آ¯ط·آ¯ ط¸ث†ط·آ§ط¸â€‍ط·ع¾ط¸ث†ط·آ²ط¸ظ¹ط·آ¹.", "Moderator focuses on new customers and distribution.")}</p>
-                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·ع¾ط¸ظ¾ط·آ§ط·آµط¸ظ¹ط¸â€‍ ط·آ§ط¸â€‍ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ط·آ© ط·ع¾ط¸ئ’ط¸ث†ط¸â€  ط¸â€¦ط·آ­ط·آ¯ط¸ث†ط·آ¯ط·آ©.", "Financial details are limited.")}</p>
-              </>
-            ) : null}
-
-            {isFinancePreview ? (
-              <>
-                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ط·آ© ط·ع¾ط·آ±ط¸â€° ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾.", "Finance sees invoices, payments, and commissions.")}</p>
-                <p>أ¢â‚¬آ¢ {tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ³ط¸ظ¹ط¸â€‍ط·آ² ط·آ§ط¸â€‍ط¸ظ¹ط¸ث†ط¸â€¦ط¸ظ¹ط·آ© ط·ع¾ط¸ئ’ط¸ث†ط¸â€  ط¸â€¦ط·آ­ط·آ¯ط¸ث†ط·آ¯ط·آ©.", "Daily sales follow-up details are limited.")}</p>
-              </>
-            ) : null}
-
-            {!isUserPreview ? (
-              <>
-                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸â€¦ط¸â€  ط¸ظ¹ط·آ±ط¸â€° ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "Admin sees customers, follow-ups, invoices, and commissions inside the scope.")}</p>
-                <p>أ¢â‚¬آ¢ {tx("ط¸ظ¹ط¸â€¦ط¸ئ’ط¸â€ ط¸ئ’ ط·ع¾ط·ط›ط¸ظ¹ط¸ظ¹ط·آ± ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط¸â€¦ط¸â€  ط·آ§ط¸â€‍ط¸â€،ط¸ظ¹ط·آ¯ط·آ± ط¸ظ¾ط¸ظ¹ ط·آ£ط¸ظ¹ ط¸ث†ط¸â€ڑط·ع¾.", "You can change the scope from the header anytime.")}</p>
-              </>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-          <div className="mb-5">
-            <p className="text-sm text-emerald-300">
-              {tx("ط·آ¥ط·آ¬ط·آ±ط·آ§ط·طŒط·آ§ط·ع¾ ط·آ³ط·آ±ط¸ظ¹ط·آ¹ط·آ©", "Quick Actions")}
-            </p>
-            <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("ط·آ­ط·آ³ط·آ¨ ط·آ§ط¸â€‍ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ© ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط¸ظ¹ط·آ©", "Based on current visibility")}
-            </h2>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {!isSalesPreview ? (
-              <QuickAction
-                href="/imports"
-                title={tx("ط·آ§ط·آ³ط·ع¾ط¸ظ¹ط·آ±ط·آ§ط·آ¯ ط·آ§ط¸â€‍ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾", "Data Import")}
-                description={tx("ط·آ±ط¸ظ¾ط·آ¹ ط¸â€¦ط¸â€‍ط¸ظ¾ Excel ط¸ث†ط·آ¥ط·آ¯ط·آ®ط·آ§ط¸â€‍ ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ.", "Upload Excel and import customers.")}
-                icon={UploadCloud}
-              />
-            ) : null}
-
-            <QuickAction
-              href="/customers"
-              title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ", "Customers")}
-              description={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ­ط·آ³ط·آ¨ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "Follow customers based on the current scope.")}
-              icon={UsersRound}
-            />
-
-            {!isModeratorPreview && invoicesEnabled ? (
-              <QuickAction
-                href="/registrations"
-                  title={tx("ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ±", "Invoices")}
-                  description={tx("ط¸â€¦ط·آ±ط·آ§ط·آ¬ط·آ¹ط·آ© ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ±.", "Review invoices and payments.")}
-                  icon={Receipt}
-              />
-            ) : null}
-
-            {!isModeratorPreview && commissionsEnabled ? (
-              <QuickAction
-                href="/commissions"
-                  title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾", "Commissions")}
-                  description={tx("ط¸â€¦ط·آ±ط·آ§ط·آ¬ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ­ط¸â€ڑط·آ© ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©.", "Review due and paid commissions.")}
-                  icon={BadgeDollarSign}
-              />
-            ) : null}
-          </div>
-        </section>
-      </div>
-
-      <section className="safe-card mt-4 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-        <div className="mb-5">
-          <p className="text-sm text-emerald-300">
-            {tx("ط·آ¢ط·آ®ط·آ± ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ", "Recent customers in scope")}
-          </p>
+          <p className="text-sm text-emerald-300">{tx("مسار التشغيل", "Operating flow")}</p>
           <h2 className="mt-1 text-2xl font-black text-white">
-            {tx("ط¸â€ڑط·آ§ط·آ¦ط¸â€¦ط·آ© ط¸â€¦ط·آ®ط·ع¾ط·آµط·آ±ط·آ©", "Quick list")}
+            {tx("النظام الآن أبسط", "The system is simpler now")}
           </h2>
-        </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {scopedLeads.slice(0, 6).map((lead) => (
-            <article
-              key={lead.id}
-              className="rounded-3xl border border-white/10 bg-slate-900/70 p-4"
-            >
-              <p className="truncate font-bold text-white">
-                {lead.full_name ?? "-"}
-              </p>
-              <p className="mt-1 text-sm text-slate-400" dir="ltr">
-                {lead.phone ?? "-"}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
-                  {lead.status ?? "-"}
-                </span>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
-                  {lead.source ?? "-"}
-                </span>
-              </div>
-            </article>
-          ))}
+          <div className="mt-5 space-y-3 text-sm leading-7 text-slate-300">
+            <p>1. {tx("العميل يدخل من الاستيراد أو الإضافة اليدوية.", "Customer enters from import or manual entry.")}</p>
+            <p>2. {tx("يتم توزيعه على السيلز.", "Customer is assigned to sales.")}</p>
+            <p>3. {tx("السيلز يتابع ويسجل العميل في دورة.", "Sales follows up and registers the customer in a course.")}</p>
+            <p>4. {tx("المالية تراجع المدفوعات والعمولات.", "Finance reviews payments and commissions.")}</p>
+          </div>
+        </section>
 
-          {scopedLeads.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-slate-400 md:col-span-2 xl:col-span-3">
-              {tx("ط¸â€‍ط·آ§ ط·ع¾ط¸ث†ط·آ¬ط·آ¯ ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط¸â€،ط·آ°ط·آ§ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "No data in this scope.")}
-            </div>
-          ) : null}
-        </div>
-      </section>
+        <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+          <p className="text-sm text-emerald-300">{tx("إجراءات سريعة", "Quick actions")}</p>
+          <h2 className="mt-1 text-2xl font-black text-white">
+            {tx("ادخل للصفحة المناسبة مباشرة", "Go directly to the right page")}
+          </h2>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <QuickAction href="/customers" title={tx("العملاء", "Customers")} description={tx("كل العملاء والمتابعات من مكان واحد.", "All customers and follow-ups in one place.")} icon={UsersRound} />
+            <QuickAction href="/registrations" title={tx("التسجيلات والمدفوعات", "Registrations & Payments")} description={tx("تسجيل العميل ومراجعة الدفع.", "Register customers and review payments.")} icon={Receipt} />
+            <QuickAction href="/courses" title={tx("الدورات", "Courses")} description={tx("إدارة الدورات المرتبطة بالمراكز.", "Manage center-linked courses.")} icon={BookOpen} />
+            {canSeeMoney ? <QuickAction href="/commissions" title={tx("العمولات والتقارير", "Commissions & Reports")} description={tx("مراجعة العمولة والأداء.", "Review commission and performance.")} icon={BadgeDollarSign} /> : null}
+            {canImport ? <QuickAction href="/imports" title={tx("استيراد العملاء", "Customer Import")} description={tx("رفع ملفات العملاء وتنظيف البيانات.", "Upload customer files and clean data.")} icon={FileSpreadsheet} /> : null}
+            {canDistribute ? <QuickAction href="/distribution" title={tx("توزيع العملاء", "Customer Distribution")} description={tx("توزيع العملاء على الفريق.", "Assign customers to the team.")} icon={Route} /> : null}
+          </div>
+        </section>
+      </div>
     </AppShell>
   );
 }

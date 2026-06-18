@@ -8,6 +8,8 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
   LayoutDashboard,
   LogOut,
@@ -84,6 +86,8 @@ const ar = {
   systemView: "رؤية النظام",
   closeSidebar: "إغلاق القائمة",
   openSidebar: "فتح القائمة",
+  hideSidebar: "إخفاء القائمة",
+  showSidebar: "إظهار القائمة",
   logout: "تسجيل الخروج",
   legacyNote: "تم إخفاء الصفحات المكررة من القائمة بدون حذف بياناتها. التشغيل الأساسي الآن من العملاء والتسجيلات والمدفوعات.",
 };
@@ -97,7 +101,9 @@ const navGroups: NavGroup[] = [
   {
     labelAr: ar.overview,
     labelEn: "Overview",
-    items: [{ href: "/dashboard", labelAr: ar.dashboard, labelEn: "Dashboard", icon: LayoutDashboard, roles: allRoles }],
+    items: [
+      { href: "/dashboard", labelAr: ar.dashboard, labelEn: "Dashboard", icon: LayoutDashboard, roles: allRoles },
+    ],
   },
   {
     labelAr: ar.operations,
@@ -181,6 +187,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
   const { scope } = useScope();
   const { getBooleanSetting } = useSystemSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isArabic = language === "ar";
   const realRole = normalizeRole(role);
@@ -268,8 +275,13 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     </div>
   );
 
+  const sidebarSideClass = isArabic ? "right-0 border-l" : "left-0 border-r";
+  const mobileSidebarSideClass = isArabic ? "right-0 border-l" : "left-0 border-r";
+  const mainPaddingClass = sidebarCollapsed ? "" : isArabic ? "lg:pr-72" : "lg:pl-72";
+  const mobilePanelTransform = mobileOpen ? "translate-x-0" : isArabic ? "translate-x-full" : "-translate-x-full";
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
+    <div dir={isArabic ? "rtl" : "ltr"} className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
         <div className="flex min-h-20 items-center gap-3 px-4 lg:px-6">
           <button
@@ -279,6 +291,16 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
             onClick={() => setMobileOpen((value) => !value)}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
+          <button
+            className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:inline-flex"
+            type="button"
+            title={sidebarCollapsed ? (isArabic ? ar.showSidebar : "Show sidebar") : (isArabic ? ar.hideSidebar : "Hide sidebar")}
+            aria-label={sidebarCollapsed ? (isArabic ? ar.showSidebar : "Show sidebar") : (isArabic ? ar.hideSidebar : "Hide sidebar")}
+            onClick={() => setSidebarCollapsed((value) => !value)}
+          >
+            {sidebarCollapsed ? <Menu className="h-5 w-5" /> : isArabic ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
 
           <div className="min-w-0 flex-1">
@@ -312,25 +334,27 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 end-0 z-40 hidden w-72 border-s border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl lg:block">
-        {sidebar}
-      </aside>
+      {!sidebarCollapsed ? (
+        <aside className={`fixed inset-y-0 ${sidebarSideClass} z-40 hidden w-72 bg-slate-950/95 pt-24 backdrop-blur-2xl lg:block`}>
+          {sidebar}
+        </aside>
+      ) : null}
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
-            type="button"
             aria-label={isArabic ? ar.closeSidebar : "Close menu"}
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setMobileOpen(false)}
+            className="absolute inset-0 bg-black/50"
+            type="button"
+            onClick={closeMobile}
           />
-          <aside className="absolute inset-y-0 end-0 w-[min(22rem,85vw)] border-s border-white/10 bg-slate-950 pt-24 shadow-2xl">
+          <aside className={`absolute inset-y-0 ${mobileSidebarSideClass} w-80 max-w-[86vw] bg-slate-950/95 pt-24 shadow-2xl backdrop-blur-2xl transition-transform ${mobilePanelTransform}`}>
             {sidebar}
           </aside>
         </div>
       ) : null}
 
-      <main className="min-h-screen pt-28 lg:pe-72">
+      <main className={`min-h-screen pt-24 transition-[padding] duration-300 ${mainPaddingClass}`}>
         <div className="px-4 pb-8 lg:px-6">
           <ScopeBanner />
           <AdminEditButton role={role ?? null} />
