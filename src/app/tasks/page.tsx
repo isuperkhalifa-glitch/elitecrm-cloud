@@ -1,23 +1,5 @@
-import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
-import { requirePageAccess } from "@/lib/auth/server-guards";
-import { TasksClient } from "./tasks-client";
+import { redirect } from "next/navigation";
 
-export default async function TasksPage() {
-  const { supabase, user, profile } = await getCurrentUserProfile();
-  requirePageAccess(profile?.role, "tasks");
-
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("id,title,description,related_type,related_id,owner_id,status,priority,due_date,created_at")
-    .order("created_at", { ascending: false });
-
-  return (
-    <TasksClient
-      initialTasks={tasks ?? []}
-      currentUserId={user.id}
-      userEmail={user.email ?? null}
-      fullName={profile?.full_name ?? null}
-      role={profile?.role ?? null}
-    />
-  );
+export default function LegacyPage() {
+  redirect("/customers");
 }

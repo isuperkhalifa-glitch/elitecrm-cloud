@@ -151,10 +151,10 @@ export function DashboardClient({
   
   const dealsEnabled = getBooleanSetting("features.deals.enabled", false);const invoicesEnabled = getBooleanSetting("features.invoices.enabled", true);
   const commissionsEnabled = getBooleanSetting("features.commissions.enabled", true);
-  const pageTitle = usePageText("pages.dashboard.title", "لوحة التحكم", "Dashboard");
+  const pageTitle = usePageText("pages.dashboard.title", "ظ„ظˆط­ط© ط§ظ„طھط­ظƒظ…", "Dashboard");
   const pageDescription = usePageText(
     "pages.dashboard.description",
-    "تابع العملاء والمتابعات والفواتير والعمولات حسب نطاق العرض.",
+    "طھط§ط¨ط¹ ط§ظ„ط¹ظ…ظ„ط§ط، ظˆط§ظ„ظ…طھط§ط¨ط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ ط­ط³ط¨ ظ†ط·ط§ظ‚ ط§ظ„ط¹ط±ط¶.",
     "Track customers, follow-ups, invoices, and commissions by scope."
   );
 
@@ -341,53 +341,53 @@ export function DashboardClient({
             <h1 className="mt-1 text-3xl font-black text-white">
               {scope.mode === "all"
                 ? pageTitle
-                : `${pageTitle} — ${scope.targetName ?? ""}`}
+                : `${pageTitle} â€” ${scope.targetName ?? ""}`}
             </h1>
             <p className="mt-2 text-sm text-slate-400">
               {isUserPreview
-                ? tx("أنت تشاهد تقريبًا ما يظهر للمستخدم المختار.", "You are previewing what the selected user sees.")
-                : tx("أنت تشاهد البيانات بصلاحيات الأدمن داخل النطاق المحدد.", "You are viewing the selected scope with admin visibility.")}
+                ? tx("ط£ظ†طھ طھط´ط§ظ‡ط¯ طھظ‚ط±ظٹط¨ظ‹ط§ ظ…ط§ ظٹط¸ظ‡ط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط±.", "You are previewing what the selected user sees.")
+                : tx("ط£ظ†طھ طھط´ط§ظ‡ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ ط¨طµظ„ط§ط­ظٹط§طھ ط§ظ„ط£ط¯ظ…ظ† ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚ ط§ظ„ظ…ط­ط¯ط¯.", "You are viewing the selected scope with admin visibility.")}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">
               {scope.mode === "all"
-                ? tx("الكل", "All")
+                ? tx("ط§ظ„ظƒظ„", "All")
                 : scope.mode === "user"
-                  ? tx("مستخدم", "User")
-                  : tx("شركة", "Company")}
+                  ? tx("ظ…ط³طھط®ط¯ظ…", "User")
+                  : tx("ط´ط±ظƒط©", "Company")}
             </span>
 
             <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm font-bold text-sky-300">
-              {isUserPreview ? tx("معاينة مستخدم", "User preview") : tx("رؤية أدمن", "Admin view")}
+              {isUserPreview ? tx("ظ…ط¹ط§ظٹظ†ط© ظ…ط³طھط®ط¯ظ…", "User preview") : tx("ط±ط¤ظٹط© ط£ط¯ظ…ظ†", "Admin view")}
             </span>
           </div>
         </div>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={tx("العملاء", "Customers")} value={scopedLeads.length} icon={UsersRound} />
-        <StatCard title={tx("متابعات اليوم", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
-        <StatCard title={tx("متابعات متأخرة", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
-        <StatCard title={tx("المدفوعات", "Paid revenue")} value={money(paidRevenue)} icon={Banknote} tone="green" />
+        <StatCard title={tx("ط§ظ„ط¹ظ…ظ„ط§ط،", "Customers")} value={scopedLeads.length} icon={UsersRound} />
+        <StatCard title={tx("ظ…طھط§ط¨ط¹ط§طھ ط§ظ„ظٹظˆظ…", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
+        <StatCard title={tx("ظ…طھط§ط¨ط¹ط§طھ ظ…طھط£ط®ط±ط©", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
+        <StatCard title={tx("ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ", "Paid revenue")} value={money(paidRevenue)} icon={Banknote} tone="green" />
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dealsEnabled ? <StatCard title={tx("الصفقات", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
-        {invoicesEnabled ? <StatCard title={tx("الفواتير غير المدفوعة", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("عمولات مستحقة", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("عمولات مدفوعة", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
+        {dealsEnabled ? <StatCard title={tx("ط§ظ„طµظپظ‚ط§طھ", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
+        {invoicesEnabled ? <StatCard title={tx("ط§ظ„ظپظˆط§طھظٹط± ط؛ظٹط± ط§ظ„ظ…ط¯ظپظˆط¹ط©", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("ط¹ظ…ظˆظ„ط§طھ ظ…ط³طھط­ظ‚ط©", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("ط¹ظ…ظˆظ„ط§طھ ظ…ط¯ظپظˆط¹ط©", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5">
             <p className="text-sm text-emerald-300">
-              {tx("ماذا يظهر؟", "Visibility")}
+              {tx("ظ…ط§ط°ط§ ظٹط¸ظ‡ط±طں", "Visibility")}
             </p>
             <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("صلاحية العرض الحالية", "Current View Permission")}
+              {tx("طµظ„ط§ط­ظٹط© ط§ظ„ط¹ط±ط¶ ط§ظ„ط­ط§ظ„ظٹط©", "Current View Permission")}
             </h2>
           </div>
 
@@ -395,35 +395,35 @@ export function DashboardClient({
             <p className="flex gap-2">
               <ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-emerald-300" />
               {isUserPreview
-                ? tx("هذه معاينة لما يراه المستخدم المختار بناءً على دوره.", "This is a preview of what the selected user sees based on their role.")
-                : tx("هذه رؤية إدارية داخل النطاق المختار، لذلك تظهر بيانات أوسع.", "This is admin visibility inside the selected scope, so more data is visible.")}
+                ? tx("ظ‡ط°ظ‡ ظ…ط¹ط§ظٹظ†ط© ظ„ظ…ط§ ظٹط±ط§ظ‡ ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط± ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط¯ظˆط±ظ‡.", "This is a preview of what the selected user sees based on their role.")
+                : tx("ظ‡ط°ظ‡ ط±ط¤ظٹط© ط¥ط¯ط§ط±ظٹط© ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚ ط§ظ„ظ…ط®طھط§ط±طŒ ظ„ط°ظ„ظƒ طھط¸ظ‡ط± ط¨ظٹط§ظ†ط§طھ ط£ظˆط³ط¹.", "This is admin visibility inside the selected scope, so more data is visible.")}
             </p>
 
             {isSalesPreview ? (
               <>
-                <p>• {tx("السيلز يرى عملاءه ومتابعاته وعمولاته فقط.", "Sales sees own customers, follow-ups, and commissions only.")}</p>
-                <p>• {tx("لا تظهر له بيانات الفريق بالكامل.", "Team-wide data is hidden from sales.")}</p>
+                <p>â€¢ {tx("ط§ظ„ط³ظٹظ„ط² ظٹط±ظ‰ ط¹ظ…ظ„ط§ط،ظ‡ ظˆظ…طھط§ط¨ط¹ط§طھظ‡ ظˆط¹ظ…ظˆظ„ط§طھظ‡ ظپظ‚ط·.", "Sales sees own customers, follow-ups, and commissions only.")}</p>
+                <p>â€¢ {tx("ظ„ط§ طھط¸ظ‡ط± ظ„ظ‡ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظپط±ظٹظ‚ ط¨ط§ظ„ظƒط§ظ…ظ„.", "Team-wide data is hidden from sales.")}</p>
               </>
             ) : null}
 
             {isModeratorPreview ? (
               <>
-                <p>• {tx("الموديريتور يركز على العملاء الجدد والتوزيع.", "Moderator focuses on new customers and distribution.")}</p>
-                <p>• {tx("التفاصيل المالية تكون محدودة.", "Financial details are limited.")}</p>
+                <p>â€¢ {tx("ط§ظ„ظ…ظˆط¯ظٹط±ظٹطھظˆط± ظٹط±ظƒط² ط¹ظ„ظ‰ ط§ظ„ط¹ظ…ظ„ط§ط، ط§ظ„ط¬ط¯ط¯ ظˆط§ظ„طھظˆط²ظٹط¹.", "Moderator focuses on new customers and distribution.")}</p>
+                <p>â€¢ {tx("ط§ظ„طھظپط§طµظٹظ„ ط§ظ„ظ…ط§ظ„ظٹط© طھظƒظˆظ† ظ…ط­ط¯ظˆط¯ط©.", "Financial details are limited.")}</p>
               </>
             ) : null}
 
             {isFinancePreview ? (
               <>
-                <p>• {tx("المالية ترى الفواتير والمدفوعات والعمولات.", "Finance sees invoices, payments, and commissions.")}</p>
-                <p>• {tx("متابعة السيلز اليومية تكون محدودة.", "Daily sales follow-up details are limited.")}</p>
+                <p>â€¢ {tx("ط§ظ„ظ…ط§ظ„ظٹط© طھط±ظ‰ ط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ.", "Finance sees invoices, payments, and commissions.")}</p>
+                <p>â€¢ {tx("ظ…طھط§ط¨ط¹ط© ط§ظ„ط³ظٹظ„ط² ط§ظ„ظٹظˆظ…ظٹط© طھظƒظˆظ† ظ…ط­ط¯ظˆط¯ط©.", "Daily sales follow-up details are limited.")}</p>
               </>
             ) : null}
 
             {!isUserPreview ? (
               <>
-                <p>• {tx("الأدمن يرى العملاء والمتابعات والفواتير والعمولات داخل النطاق.", "Admin sees customers, follow-ups, invoices, and commissions inside the scope.")}</p>
-                <p>• {tx("يمكنك تغيير النطاق من الهيدر في أي وقت.", "You can change the scope from the header anytime.")}</p>
+                <p>â€¢ {tx("ط§ظ„ط£ط¯ظ…ظ† ظٹط±ظ‰ ط§ظ„ط¹ظ…ظ„ط§ط، ظˆط§ظ„ظ…طھط§ط¨ط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚.", "Admin sees customers, follow-ups, invoices, and commissions inside the scope.")}</p>
+                <p>â€¢ {tx("ظٹظ…ظƒظ†ظƒ طھط؛ظٹظٹط± ط§ظ„ظ†ط·ط§ظ‚ ظ…ظ† ط§ظ„ظ‡ظٹط¯ط± ظپظٹ ط£ظٹ ظˆظ‚طھ.", "You can change the scope from the header anytime.")}</p>
               </>
             ) : null}
           </div>
@@ -432,10 +432,10 @@ export function DashboardClient({
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5">
             <p className="text-sm text-emerald-300">
-              {tx("إجراءات سريعة", "Quick Actions")}
+              {tx("ط¥ط¬ط±ط§ط،ط§طھ ط³ط±ظٹط¹ط©", "Quick Actions")}
             </p>
             <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("حسب الصلاحية الحالية", "Based on current visibility")}
+              {tx("ط­ط³ط¨ ط§ظ„طµظ„ط§ط­ظٹط© ط§ظ„ط­ط§ظ„ظٹط©", "Based on current visibility")}
             </h2>
           </div>
 
@@ -443,24 +443,24 @@ export function DashboardClient({
             {!isSalesPreview ? (
               <QuickAction
                 href="/imports"
-                title={tx("استيراد البيانات", "Data Import")}
-                description={tx("رفع ملف Excel وإدخال العملاء.", "Upload Excel and import customers.")}
+                title={tx("ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ", "Data Import")}
+                description={tx("ط±ظپط¹ ظ…ظ„ظپ Excel ظˆط¥ط¯ط®ط§ظ„ ط§ظ„ط¹ظ…ظ„ط§ط،.", "Upload Excel and import customers.")}
                 icon={UploadCloud}
               />
             ) : null}
 
             <QuickAction
-              href="/leads"
-              title={tx("العملاء", "Customers")}
-              description={tx("متابعة العملاء حسب النطاق.", "Follow customers based on the current scope.")}
+              href="/customers"
+              title={tx("ط§ظ„ط¹ظ…ظ„ط§ط،", "Customers")}
+              description={tx("ظ…طھط§ط¨ط¹ط© ط§ظ„ط¹ظ…ظ„ط§ط، ط­ط³ط¨ ط§ظ„ظ†ط·ط§ظ‚.", "Follow customers based on the current scope.")}
               icon={UsersRound}
             />
 
             {!isModeratorPreview && invoicesEnabled ? (
               <QuickAction
-                href="/invoices"
-                  title={tx("الفواتير", "Invoices")}
-                  description={tx("مراجعة المدفوعات والفواتير.", "Review invoices and payments.")}
+                href="/registrations"
+                  title={tx("ط§ظ„ظپظˆط§طھظٹط±", "Invoices")}
+                  description={tx("ظ…ط±ط§ط¬ط¹ط© ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط±.", "Review invoices and payments.")}
                   icon={Receipt}
               />
             ) : null}
@@ -468,8 +468,8 @@ export function DashboardClient({
             {!isModeratorPreview && commissionsEnabled ? (
               <QuickAction
                 href="/commissions"
-                  title={tx("العمولات", "Commissions")}
-                  description={tx("مراجعة العمولات المستحقة والمدفوعة.", "Review due and paid commissions.")}
+                  title={tx("ط§ظ„ط¹ظ…ظˆظ„ط§طھ", "Commissions")}
+                  description={tx("ظ…ط±ط§ط¬ط¹ط© ط§ظ„ط¹ظ…ظˆظ„ط§طھ ط§ظ„ظ…ط³طھط­ظ‚ط© ظˆط§ظ„ظ…ط¯ظپظˆط¹ط©.", "Review due and paid commissions.")}
                   icon={BadgeDollarSign}
               />
             ) : null}
@@ -480,10 +480,10 @@ export function DashboardClient({
       <section className="safe-card mt-4 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="mb-5">
           <p className="text-sm text-emerald-300">
-            {tx("آخر العملاء داخل النطاق", "Recent customers in scope")}
+            {tx("ط¢ط®ط± ط§ظ„ط¹ظ…ظ„ط§ط، ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚", "Recent customers in scope")}
           </p>
           <h2 className="mt-1 text-2xl font-black text-white">
-            {tx("قائمة مختصرة", "Quick list")}
+            {tx("ظ‚ط§ط¦ظ…ط© ظ…ط®طھطµط±ط©", "Quick list")}
           </h2>
         </div>
 
@@ -512,7 +512,7 @@ export function DashboardClient({
 
           {scopedLeads.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-slate-400 md:col-span-2 xl:col-span-3">
-              {tx("لا توجد بيانات داخل هذا النطاق.", "No data in this scope.")}
+              {tx("ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ط¯ط§ط®ظ„ ظ‡ط°ط§ ط§ظ„ظ†ط·ط§ظ‚.", "No data in this scope.")}
             </div>
           ) : null}
         </div>
