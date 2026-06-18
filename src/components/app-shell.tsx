@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AdminEditButton } from "@/components/admin-edit-button";
+import { GlobalScopeSwitcher } from "@/components/global-scope-switcher";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useI18n } from "@/components/language-provider";
 import { NotificationBell } from "@/components/notification-bell";
@@ -290,6 +291,9 @@ const visibleGroups = navGroups
             <h1 className="truncate text-lg font-black md:text-xl">{pageTitle(titleKey)}</h1>
           </div>
 
+          <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+            <GlobalScopeSwitcher role={role ?? null} />
+          </div>
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
             <LanguageToggle />
@@ -303,6 +307,10 @@ const visibleGroups = navGroups
               {isArabic ? ar.logout : "Sign out"}
             </button>
           </div>
+        </div>
+
+        <div className="border-t border-white/10 px-4 py-3 lg:hidden">
+          <GlobalScopeSwitcher role={role ?? null} />
         </div>
       </header>
 
