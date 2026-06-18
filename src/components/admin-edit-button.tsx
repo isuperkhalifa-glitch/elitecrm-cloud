@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 type Props = {
-  role: string | null;
+  role?: string | null;
 };
 
 const labels = {

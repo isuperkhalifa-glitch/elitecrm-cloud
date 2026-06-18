@@ -55,37 +55,37 @@ type NavGroup = {
 };
 
 const ar = {
-  overview: "\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629",
-  dashboard: "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645",
-  operations: "\u0627\u0644\u062a\u0634\u063a\u064a\u0644",
-  customers: "\u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  registrations: "\u0627\u0644\u062a\u0633\u062c\u064a\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a",
-  courses: "\u0627\u0644\u062f\u0648\u0631\u0627\u062a",
-  trainingCenters: "\u0645\u0631\u0627\u0643\u0632 \u0627\u0644\u062a\u062f\u0631\u064a\u0628",
-  intake: "\u0627\u0644\u0625\u062f\u062e\u0627\u0644 \u0648\u0627\u0644\u062a\u0648\u0632\u064a\u0639",
-  imports: "\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  distribution: "\u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  reports: "\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631",
-  commissions: "\u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a \u0648\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631",
-  system: "\u0627\u0644\u0646\u0638\u0627\u0645",
-  users: "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a",
-  settings: "\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a",
-  customize: "\u062a\u062e\u0635\u064a\u0635 \u0627\u0644\u0646\u0638\u0627\u0645",
-  developer: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
-  admin: "\u0627\u0644\u0645\u062f\u064a\u0631 \u0627\u0644\u0639\u0627\u0645",
-  manager: "\u062a\u064a\u0645 \u0644\u064a\u062f\u0631 \u0633\u064a\u0644\u0632",
-  moderator: "\u0627\u0644\u0645\u0648\u062f\u064a\u0631\u064a\u062a\u0648\u0631",
-  marketer: "\u0627\u0644\u0645\u0633\u0648\u0642",
-  sales: "\u0633\u064a\u0644\u0632",
-  finance: "\u0645\u0627\u0644\u064a\u0629 / \u062d\u0633\u0627\u0628\u0627\u062a",
-  dataAnalyst: "\u0645\u062d\u0644\u0644 \u0628\u064a\u0627\u0646\u0627\u062a",
-  workspace: "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644",
-  userPreview: "\u0645\u0639\u0627\u064a\u0646\u0629 \u0645\u0633\u062a\u062e\u062f\u0645",
-  systemView: "\u0631\u0624\u064a\u0629 \u0627\u0644\u0646\u0638\u0627\u0645",
-  closeSidebar: "\u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  openSidebar: "\u0641\u062a\u062d \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  logout: "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
-  legacyNote: "\u062a\u0645 \u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0645\u0643\u0631\u0631\u0629 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0628\u062f\u0648\u0646 \u062d\u0630\u0641 \u0628\u064a\u0627\u0646\u0627\u062a\u0647\u0627. \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0623\u0633\u0627\u0633\u064a \u0627\u0644\u0622\u0646 \u0645\u0646 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u062a\u0633\u062c\u064a\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a.",
+  overview: "الرئيسية",
+  dashboard: "لوحة التحكم",
+  operations: "التشغيل",
+  customers: "العملاء",
+  registrations: "التسجيلات والمدفوعات",
+  courses: "الدورات",
+  trainingCenters: "مراكز التدريب",
+  intake: "الإدخال والتوزيع",
+  imports: "استيراد العملاء",
+  distribution: "توزيع العملاء",
+  reports: "التقارير",
+  commissions: "العمولات والتقارير",
+  system: "النظام",
+  users: "المستخدمون والصلاحيات",
+  settings: "الإعدادات",
+  customize: "تخصيص النظام",
+  developer: "مطور النظام",
+  admin: "المدير العام",
+  manager: "تيم ليدر سيلز",
+  moderator: "الموديريتور",
+  marketer: "المسوق",
+  sales: "سيلز",
+  finance: "مالية / حسابات",
+  dataAnalyst: "محلل بيانات",
+  workspace: "مساحة العمل",
+  userPreview: "معاينة مستخدم",
+  systemView: "رؤية النظام",
+  closeSidebar: "إغلاق القائمة",
+  openSidebar: "فتح القائمة",
+  logout: "تسجيل الخروج",
+  legacyNote: "تم إخفاء الصفحات المكررة من القائمة بدون حذف بياناتها. التشغيل الأساسي الآن من العملاء والتسجيلات والمدفوعات.",
 };
 
 const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
@@ -318,8 +318,13 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button className="absolute inset-0 bg-black/40" type="button" onClick={closeMobile} aria-label={isArabic ? ar.closeSidebar : "Close menu"} />
-          <aside className="absolute inset-y-0 end-0 w-80 max-w-[88vw] border-s border-white/10 bg-slate-950 pt-24 shadow-2xl">
+          <button
+            type="button"
+            aria-label={isArabic ? ar.closeSidebar : "Close menu"}
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="absolute inset-y-0 end-0 w-[min(22rem,85vw)] border-s border-white/10 bg-slate-950 pt-24 shadow-2xl">
             {sidebar}
           </aside>
         </div>

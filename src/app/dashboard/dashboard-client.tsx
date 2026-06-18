@@ -149,12 +149,13 @@ export function DashboardClient({
 
   const { getBooleanSetting } = useSystemSettings();
   
-  const dealsEnabled = getBooleanSetting("features.deals.enabled", false);const invoicesEnabled = getBooleanSetting("features.invoices.enabled", true);
+  const dealsEnabled = false;
+  const invoicesEnabled = false;
   const commissionsEnabled = getBooleanSetting("features.commissions.enabled", true);
-  const pageTitle = usePageText("pages.dashboard.title", "ظ„ظˆط­ط© ط§ظ„طھط­ظƒظ…", "Dashboard");
+  const pageTitle = usePageText("pages.dashboard.title", "ط¸â€‍ط¸ث†ط·آ­ط·آ© ط·آ§ط¸â€‍ط·ع¾ط·آ­ط¸ئ’ط¸â€¦", "Dashboard");
   const pageDescription = usePageText(
     "pages.dashboard.description",
-    "طھط§ط¨ط¹ ط§ظ„ط¹ظ…ظ„ط§ط، ظˆط§ظ„ظ…طھط§ط¨ط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ ط­ط³ط¨ ظ†ط·ط§ظ‚ ط§ظ„ط¹ط±ط¶.",
+    "ط·ع¾ط·آ§ط·آ¨ط·آ¹ ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ­ط·آ³ط·آ¨ ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط·آ¹ط·آ±ط·آ¶.",
     "Track customers, follow-ups, invoices, and commissions by scope."
   );
 
@@ -341,53 +342,53 @@ export function DashboardClient({
             <h1 className="mt-1 text-3xl font-black text-white">
               {scope.mode === "all"
                 ? pageTitle
-                : `${pageTitle} â€” ${scope.targetName ?? ""}`}
+                : `${pageTitle} أ¢â‚¬â€‌ ${scope.targetName ?? ""}`}
             </h1>
             <p className="mt-2 text-sm text-slate-400">
               {isUserPreview
-                ? tx("ط£ظ†طھ طھط´ط§ظ‡ط¯ طھظ‚ط±ظٹط¨ظ‹ط§ ظ…ط§ ظٹط¸ظ‡ط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط±.", "You are previewing what the selected user sees.")
-                : tx("ط£ظ†طھ طھط´ط§ظ‡ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ ط¨طµظ„ط§ط­ظٹط§طھ ط§ظ„ط£ط¯ظ…ظ† ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚ ط§ظ„ظ…ط­ط¯ط¯.", "You are viewing the selected scope with admin visibility.")}
+                ? tx("ط·آ£ط¸â€ ط·ع¾ ط·ع¾ط·آ´ط·آ§ط¸â€،ط·آ¯ ط·ع¾ط¸â€ڑط·آ±ط¸ظ¹ط·آ¨ط¸â€¹ط·آ§ ط¸â€¦ط·آ§ ط¸ظ¹ط·آ¸ط¸â€،ط·آ± ط¸â€‍ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ±.", "You are previewing what the selected user sees.")
+                : tx("ط·آ£ط¸â€ ط·ع¾ ط·ع¾ط·آ´ط·آ§ط¸â€،ط·آ¯ ط·آ§ط¸â€‍ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ¨ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸â€¦ط¸â€  ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط¸â€¦ط·آ­ط·آ¯ط·آ¯.", "You are viewing the selected scope with admin visibility.")}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">
               {scope.mode === "all"
-                ? tx("ط§ظ„ظƒظ„", "All")
+                ? tx("ط·آ§ط¸â€‍ط¸ئ’ط¸â€‍", "All")
                 : scope.mode === "user"
-                  ? tx("ظ…ط³طھط®ط¯ظ…", "User")
-                  : tx("ط´ط±ظƒط©", "Company")}
+                  ? tx("ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦", "User")
+                  : tx("ط·آ´ط·آ±ط¸ئ’ط·آ©", "Company")}
             </span>
 
             <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm font-bold text-sky-300">
-              {isUserPreview ? tx("ظ…ط¹ط§ظٹظ†ط© ظ…ط³طھط®ط¯ظ…", "User preview") : tx("ط±ط¤ظٹط© ط£ط¯ظ…ظ†", "Admin view")}
+              {isUserPreview ? tx("ط¸â€¦ط·آ¹ط·آ§ط¸ظ¹ط¸â€ ط·آ© ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦", "User preview") : tx("ط·آ±ط·آ¤ط¸ظ¹ط·آ© ط·آ£ط·آ¯ط¸â€¦ط¸â€ ", "Admin view")}
             </span>
           </div>
         </div>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={tx("ط§ظ„ط¹ظ…ظ„ط§ط،", "Customers")} value={scopedLeads.length} icon={UsersRound} />
-        <StatCard title={tx("ظ…طھط§ط¨ط¹ط§طھ ط§ظ„ظٹظˆظ…", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
-        <StatCard title={tx("ظ…طھط§ط¨ط¹ط§طھ ظ…طھط£ط®ط±ط©", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
-        <StatCard title={tx("ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ", "Paid revenue")} value={money(paidRevenue)} icon={Banknote} tone="green" />
+        <StatCard title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ", "Customers")} value={scopedLeads.length} icon={UsersRound} />
+        <StatCard title={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸ظ¹ط¸ث†ط¸â€¦", "Today follow-ups")} value={todayTasks.length} icon={CalendarClock} tone="blue" />
+        <StatCard title={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸â€¦ط·ع¾ط·آ£ط·آ®ط·آ±ط·آ©", "Overdue follow-ups")} value={overdueTasks.length} icon={CalendarClock} tone="red" />
+        <StatCard title={tx("ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾", "Paid revenue")} value={money(paidRevenue)} icon={Banknote} tone="green" />
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dealsEnabled ? <StatCard title={tx("ط§ظ„طµظپظ‚ط§طھ", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
-        {invoicesEnabled ? <StatCard title={tx("ط§ظ„ظپظˆط§طھظٹط± ط؛ظٹط± ط§ظ„ظ…ط¯ظپظˆط¹ط©", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("ط¹ظ…ظˆظ„ط§طھ ظ…ط³طھط­ظ‚ط©", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
-        {commissionsEnabled ? <StatCard title={tx("ط¹ظ…ظˆظ„ط§طھ ظ…ط¯ظپظˆط¹ط©", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
+        {dealsEnabled ? <StatCard title={tx("ط·آ§ط¸â€‍ط·آµط¸ظ¾ط¸â€ڑط·آ§ط·ع¾", "Deals")} value={scopedDeals.length} icon={Route} /> : null}
+        {invoicesEnabled ? <StatCard title={tx("ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط·ط›ط¸ظ¹ط·آ± ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©", "Unpaid invoices")} value={money(unpaidRevenue)} icon={Receipt} tone="yellow" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط¸â€¦ط·آ³ط·ع¾ط·آ­ط¸â€ڑط·آ©", "Due commissions")} value={money(dueCommissionAmount)} icon={BadgeDollarSign} tone="blue" /> : null}
+        {commissionsEnabled ? <StatCard title={tx("ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©", "Paid commissions")} value={money(paidCommissionAmount)} icon={UserCheck} tone="green" /> : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5">
             <p className="text-sm text-emerald-300">
-              {tx("ظ…ط§ط°ط§ ظٹط¸ظ‡ط±طں", "Visibility")}
+              {tx("ط¸â€¦ط·آ§ط·آ°ط·آ§ ط¸ظ¹ط·آ¸ط¸â€،ط·آ±ط·ع؛", "Visibility")}
             </p>
             <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("طµظ„ط§ط­ظٹط© ط§ظ„ط¹ط±ط¶ ط§ظ„ط­ط§ظ„ظٹط©", "Current View Permission")}
+              {tx("ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط·آ±ط·آ¶ ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط¸ظ¹ط·آ©", "Current View Permission")}
             </h2>
           </div>
 
@@ -395,35 +396,35 @@ export function DashboardClient({
             <p className="flex gap-2">
               <ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-emerald-300" />
               {isUserPreview
-                ? tx("ظ‡ط°ظ‡ ظ…ط¹ط§ظٹظ†ط© ظ„ظ…ط§ ظٹط±ط§ظ‡ ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ظ…ط®طھط§ط± ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط¯ظˆط±ظ‡.", "This is a preview of what the selected user sees based on their role.")
-                : tx("ظ‡ط°ظ‡ ط±ط¤ظٹط© ط¥ط¯ط§ط±ظٹط© ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚ ط§ظ„ظ…ط®طھط§ط±طŒ ظ„ط°ظ„ظƒ طھط¸ظ‡ط± ط¨ظٹط§ظ†ط§طھ ط£ظˆط³ط¹.", "This is admin visibility inside the selected scope, so more data is visible.")}
+                ? tx("ط¸â€،ط·آ°ط¸â€، ط¸â€¦ط·آ¹ط·آ§ط¸ظ¹ط¸â€ ط·آ© ط¸â€‍ط¸â€¦ط·آ§ ط¸ظ¹ط·آ±ط·آ§ط¸â€، ط·آ§ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ± ط·آ¨ط¸â€ ط·آ§ط·طŒط¸â€¹ ط·آ¹ط¸â€‍ط¸â€° ط·آ¯ط¸ث†ط·آ±ط¸â€،.", "This is a preview of what the selected user sees based on their role.")
+                : tx("ط¸â€،ط·آ°ط¸â€، ط·آ±ط·آ¤ط¸ظ¹ط·آ© ط·آ¥ط·آ¯ط·آ§ط·آ±ط¸ظ¹ط·آ© ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط·آ§ط¸â€‍ط¸â€¦ط·آ®ط·ع¾ط·آ§ط·آ±ط·إ’ ط¸â€‍ط·آ°ط¸â€‍ط¸ئ’ ط·ع¾ط·آ¸ط¸â€،ط·آ± ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ£ط¸ث†ط·آ³ط·آ¹.", "This is admin visibility inside the selected scope, so more data is visible.")}
             </p>
 
             {isSalesPreview ? (
               <>
-                <p>â€¢ {tx("ط§ظ„ط³ظٹظ„ط² ظٹط±ظ‰ ط¹ظ…ظ„ط§ط،ظ‡ ظˆظ…طھط§ط¨ط¹ط§طھظ‡ ظˆط¹ظ…ظˆظ„ط§طھظ‡ ظپظ‚ط·.", "Sales sees own customers, follow-ups, and commissions only.")}</p>
-                <p>â€¢ {tx("ظ„ط§ طھط¸ظ‡ط± ظ„ظ‡ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظپط±ظٹظ‚ ط¨ط§ظ„ظƒط§ظ…ظ„.", "Team-wide data is hidden from sales.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·آ³ط¸ظ¹ط¸â€‍ط·آ² ط¸ظ¹ط·آ±ط¸â€° ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒط¸â€، ط¸ث†ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ط¸â€، ط¸ث†ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ط¸â€، ط¸ظ¾ط¸â€ڑط·آ·.", "Sales sees own customers, follow-ups, and commissions only.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط¸â€‍ط·آ§ ط·ع¾ط·آ¸ط¸â€،ط·آ± ط¸â€‍ط¸â€، ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸ظ¾ط·آ±ط¸ظ¹ط¸â€ڑ ط·آ¨ط·آ§ط¸â€‍ط¸ئ’ط·آ§ط¸â€¦ط¸â€‍.", "Team-wide data is hidden from sales.")}</p>
               </>
             ) : null}
 
             {isModeratorPreview ? (
               <>
-                <p>â€¢ {tx("ط§ظ„ظ…ظˆط¯ظٹط±ظٹطھظˆط± ظٹط±ظƒط² ط¹ظ„ظ‰ ط§ظ„ط¹ظ…ظ„ط§ط، ط§ظ„ط¬ط¯ط¯ ظˆط§ظ„طھظˆط²ظٹط¹.", "Moderator focuses on new customers and distribution.")}</p>
-                <p>â€¢ {tx("ط§ظ„طھظپط§طµظٹظ„ ط§ظ„ظ…ط§ظ„ظٹط© طھظƒظˆظ† ظ…ط­ط¯ظˆط¯ط©.", "Financial details are limited.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¯ط¸ظ¹ط·آ±ط¸ظ¹ط·ع¾ط¸ث†ط·آ± ط¸ظ¹ط·آ±ط¸ئ’ط·آ² ط·آ¹ط¸â€‍ط¸â€° ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ§ط¸â€‍ط·آ¬ط·آ¯ط·آ¯ ط¸ث†ط·آ§ط¸â€‍ط·ع¾ط¸ث†ط·آ²ط¸ظ¹ط·آ¹.", "Moderator focuses on new customers and distribution.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·ع¾ط¸ظ¾ط·آ§ط·آµط¸ظ¹ط¸â€‍ ط·آ§ط¸â€‍ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ط·آ© ط·ع¾ط¸ئ’ط¸ث†ط¸â€  ط¸â€¦ط·آ­ط·آ¯ط¸ث†ط·آ¯ط·آ©.", "Financial details are limited.")}</p>
               </>
             ) : null}
 
             {isFinancePreview ? (
               <>
-                <p>â€¢ {tx("ط§ظ„ظ…ط§ظ„ظٹط© طھط±ظ‰ ط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ.", "Finance sees invoices, payments, and commissions.")}</p>
-                <p>â€¢ {tx("ظ…طھط§ط¨ط¹ط© ط§ظ„ط³ظٹظ„ط² ط§ظ„ظٹظˆظ…ظٹط© طھظƒظˆظ† ظ…ط­ط¯ظˆط¯ط©.", "Daily sales follow-up details are limited.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ط·آ© ط·ع¾ط·آ±ط¸â€° ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾.", "Finance sees invoices, payments, and commissions.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ³ط¸ظ¹ط¸â€‍ط·آ² ط·آ§ط¸â€‍ط¸ظ¹ط¸ث†ط¸â€¦ط¸ظ¹ط·آ© ط·ع¾ط¸ئ’ط¸ث†ط¸â€  ط¸â€¦ط·آ­ط·آ¯ط¸ث†ط·آ¯ط·آ©.", "Daily sales follow-up details are limited.")}</p>
               </>
             ) : null}
 
             {!isUserPreview ? (
               <>
-                <p>â€¢ {tx("ط§ظ„ط£ط¯ظ…ظ† ظٹط±ظ‰ ط§ظ„ط¹ظ…ظ„ط§ط، ظˆط§ظ„ظ…طھط§ط¨ط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط± ظˆط§ظ„ط¹ظ…ظˆظ„ط§طھ ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚.", "Admin sees customers, follow-ups, invoices, and commissions inside the scope.")}</p>
-                <p>â€¢ {tx("ظٹظ…ظƒظ†ظƒ طھط؛ظٹظٹط± ط§ظ„ظ†ط·ط§ظ‚ ظ…ظ† ط§ظ„ظ‡ظٹط¯ط± ظپظٹ ط£ظٹ ظˆظ‚طھ.", "You can change the scope from the header anytime.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸â€¦ط¸â€  ط¸ظ¹ط·آ±ط¸â€° ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ± ط¸ث†ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "Admin sees customers, follow-ups, invoices, and commissions inside the scope.")}</p>
+                <p>أ¢â‚¬آ¢ {tx("ط¸ظ¹ط¸â€¦ط¸ئ’ط¸â€ ط¸ئ’ ط·ع¾ط·ط›ط¸ظ¹ط¸ظ¹ط·آ± ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ ط¸â€¦ط¸â€  ط·آ§ط¸â€‍ط¸â€،ط¸ظ¹ط·آ¯ط·آ± ط¸ظ¾ط¸ظ¹ ط·آ£ط¸ظ¹ ط¸ث†ط¸â€ڑط·ع¾.", "You can change the scope from the header anytime.")}</p>
               </>
             ) : null}
           </div>
@@ -432,10 +433,10 @@ export function DashboardClient({
         <section className="safe-card rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
           <div className="mb-5">
             <p className="text-sm text-emerald-300">
-              {tx("ط¥ط¬ط±ط§ط،ط§طھ ط³ط±ظٹط¹ط©", "Quick Actions")}
+              {tx("ط·آ¥ط·آ¬ط·آ±ط·آ§ط·طŒط·آ§ط·ع¾ ط·آ³ط·آ±ط¸ظ¹ط·آ¹ط·آ©", "Quick Actions")}
             </p>
             <h2 className="mt-1 text-2xl font-black text-white">
-              {tx("ط­ط³ط¨ ط§ظ„طµظ„ط§ط­ظٹط© ط§ظ„ط­ط§ظ„ظٹط©", "Based on current visibility")}
+              {tx("ط·آ­ط·آ³ط·آ¨ ط·آ§ط¸â€‍ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ© ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط¸ظ¹ط·آ©", "Based on current visibility")}
             </h2>
           </div>
 
@@ -443,24 +444,24 @@ export function DashboardClient({
             {!isSalesPreview ? (
               <QuickAction
                 href="/imports"
-                title={tx("ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ", "Data Import")}
-                description={tx("ط±ظپط¹ ظ…ظ„ظپ Excel ظˆط¥ط¯ط®ط§ظ„ ط§ظ„ط¹ظ…ظ„ط§ط،.", "Upload Excel and import customers.")}
+                title={tx("ط·آ§ط·آ³ط·ع¾ط¸ظ¹ط·آ±ط·آ§ط·آ¯ ط·آ§ط¸â€‍ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾", "Data Import")}
+                description={tx("ط·آ±ط¸ظ¾ط·آ¹ ط¸â€¦ط¸â€‍ط¸ظ¾ Excel ط¸ث†ط·آ¥ط·آ¯ط·آ®ط·آ§ط¸â€‍ ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ.", "Upload Excel and import customers.")}
                 icon={UploadCloud}
               />
             ) : null}
 
             <QuickAction
               href="/customers"
-              title={tx("ط§ظ„ط¹ظ…ظ„ط§ط،", "Customers")}
-              description={tx("ظ…طھط§ط¨ط¹ط© ط§ظ„ط¹ظ…ظ„ط§ط، ط­ط³ط¨ ط§ظ„ظ†ط·ط§ظ‚.", "Follow customers based on the current scope.")}
+              title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ", "Customers")}
+              description={tx("ط¸â€¦ط·ع¾ط·آ§ط·آ¨ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ­ط·آ³ط·آ¨ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "Follow customers based on the current scope.")}
               icon={UsersRound}
             />
 
             {!isModeratorPreview && invoicesEnabled ? (
               <QuickAction
                 href="/registrations"
-                  title={tx("ط§ظ„ظپظˆط§طھظٹط±", "Invoices")}
-                  description={tx("ظ…ط±ط§ط¬ط¹ط© ط§ظ„ظ…ط¯ظپظˆط¹ط§طھ ظˆط§ظ„ظپظˆط§طھظٹط±.", "Review invoices and payments.")}
+                  title={tx("ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ±", "Invoices")}
+                  description={tx("ط¸â€¦ط·آ±ط·آ§ط·آ¬ط·آ¹ط·آ© ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ§ط·ع¾ ط¸ث†ط·آ§ط¸â€‍ط¸ظ¾ط¸ث†ط·آ§ط·ع¾ط¸ظ¹ط·آ±.", "Review invoices and payments.")}
                   icon={Receipt}
               />
             ) : null}
@@ -468,8 +469,8 @@ export function DashboardClient({
             {!isModeratorPreview && commissionsEnabled ? (
               <QuickAction
                 href="/commissions"
-                  title={tx("ط§ظ„ط¹ظ…ظˆظ„ط§طھ", "Commissions")}
-                  description={tx("ظ…ط±ط§ط¬ط¹ط© ط§ظ„ط¹ظ…ظˆظ„ط§طھ ط§ظ„ظ…ط³طھط­ظ‚ط© ظˆط§ظ„ظ…ط¯ظپظˆط¹ط©.", "Review due and paid commissions.")}
+                  title={tx("ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾", "Commissions")}
+                  description={tx("ط¸â€¦ط·آ±ط·آ§ط·آ¬ط·آ¹ط·آ© ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸ث†ط¸â€‍ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ­ط¸â€ڑط·آ© ط¸ث†ط·آ§ط¸â€‍ط¸â€¦ط·آ¯ط¸ظ¾ط¸ث†ط·آ¹ط·آ©.", "Review due and paid commissions.")}
                   icon={BadgeDollarSign}
               />
             ) : null}
@@ -480,10 +481,10 @@ export function DashboardClient({
       <section className="safe-card mt-4 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
         <div className="mb-5">
           <p className="text-sm text-emerald-300">
-            {tx("ط¢ط®ط± ط§ظ„ط¹ظ…ظ„ط§ط، ط¯ط§ط®ظ„ ط§ظ„ظ†ط·ط§ظ‚", "Recent customers in scope")}
+            {tx("ط·آ¢ط·آ®ط·آ± ط·آ§ط¸â€‍ط·آ¹ط¸â€¦ط¸â€‍ط·آ§ط·طŒ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ", "Recent customers in scope")}
           </p>
           <h2 className="mt-1 text-2xl font-black text-white">
-            {tx("ظ‚ط§ط¦ظ…ط© ظ…ط®طھطµط±ط©", "Quick list")}
+            {tx("ط¸â€ڑط·آ§ط·آ¦ط¸â€¦ط·آ© ط¸â€¦ط·آ®ط·ع¾ط·آµط·آ±ط·آ©", "Quick list")}
           </h2>
         </div>
 
@@ -512,7 +513,7 @@ export function DashboardClient({
 
           {scopedLeads.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-slate-400 md:col-span-2 xl:col-span-3">
-              {tx("ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ط¯ط§ط®ظ„ ظ‡ط°ط§ ط§ظ„ظ†ط·ط§ظ‚.", "No data in this scope.")}
+              {tx("ط¸â€‍ط·آ§ ط·ع¾ط¸ث†ط·آ¬ط·آ¯ ط·آ¨ط¸ظ¹ط·آ§ط¸â€ ط·آ§ط·ع¾ ط·آ¯ط·آ§ط·آ®ط¸â€‍ ط¸â€،ط·آ°ط·آ§ ط·آ§ط¸â€‍ط¸â€ ط·آ·ط·آ§ط¸â€ڑ.", "No data in this scope.")}
             </div>
           ) : null}
         </div>
