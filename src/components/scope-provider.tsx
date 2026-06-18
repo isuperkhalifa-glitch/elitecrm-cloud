@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   createContext,
@@ -36,35 +36,28 @@ const defaultScope: GlobalScope = {
 
 const ScopeContext = createContext<ScopeContextValue | null>(null);
 
-function saveScopeCookie(scope: GlobalScope) {
-  const value = encodeURIComponent(JSON.stringify(scope));
-  document.cookie = `elitecrm-scope=${value}; path=/; max-age=2592000; SameSite=Lax`;
+function clearScopeStorage() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem("elitecrm-global-scope");
+  document.cookie = "elitecrm-scope=; path=/; max-age=0; SameSite=Lax";
 }
 
 export function ScopeProvider({ children }: { children: ReactNode }) {
   const [scope, setScopeState] = useState<GlobalScope>(defaultScope);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("elitecrm-global-scope");
-
-    if (!saved) return;
-
-    try {
-      const parsed = JSON.parse(saved) as GlobalScope;
-      setScopeState({ ...defaultScope, ...parsed });
-    } catch {
-      setScopeState(defaultScope);
-    }
+    clearScopeStorage();
+    setScopeState(defaultScope);
   }, []);
 
-  function setScope(nextScope: GlobalScope) {
-    setScopeState(nextScope);
-    window.localStorage.setItem("elitecrm-global-scope", JSON.stringify(nextScope));
-    saveScopeCookie(nextScope);
+  function setScope() {
+    clearScopeStorage();
+    setScopeState(defaultScope);
   }
 
   function resetScope() {
-    setScope(defaultScope);
+    clearScopeStorage();
+    setScopeState(defaultScope);
   }
 
   const value = useMemo(
@@ -81,10 +74,6 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
 
 export function useScope() {
   const context = useContext(ScopeContext);
-
-  if (!context) {
-    throw new Error("Missing ScopeProvider");
-  }
-
+  if (!context) throw new Error("Missing ScopeProvider");
   return context;
 }
