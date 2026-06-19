@@ -1328,3 +1328,43 @@ html[data-theme="light"] .text-slate-400 {
 html[data-theme="light"] .text-slate-500 {
   color: #64748b !important;
 }
+
+
+/* EliteCRM V8 - Legacy ERP inspired operating workspace */
+.v8-shell {
+  --v8-navy: #29455f;
+  --v8-navy-soft: #365873;
+  --v8-blue-text: #617b96;
+  background: #f4f5f7;
+  color: #334155;
+}
+
+.v8-shell .safe-card,
+.v8-shell .elite-motion-card {
+  animation: none;
+  box-shadow: none;
+}
+
+.v8-shell .safe-card:hover,
+.v8-shell .elite-motion-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.v8-shell input,
+.v8-shell select,
+.v8-shell textarea {
+  color: #334155;
+}
+
+.v8-shell table th,
+.v8-shell table td {
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .v8-shell table th,
+  .v8-shell table td {
+    white-space: nowrap;
+  }
+}
