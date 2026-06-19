@@ -1,0 +1,187 @@
+:root,
+html[data-theme="light"] {
+  --v8-page: #f3f5f7;
+  --v8-header: #ffffff;
+  --v8-panel: #ffffff;
+  --v8-panel-muted: #f8fafc;
+  --v8-panel-soft: #eef3f7;
+  --v8-text: #40566d;
+  --v8-text-soft: #718399;
+  --v8-heading: #29455f;
+  --v8-border: #d7dee6;
+  --v8-sidebar: #29455f;
+  --v8-sidebar-active: #365873;
+  --v8-accent: #18b99a;
+  --v8-shadow: 0 8px 24px rgba(41, 69, 95, 0.08);
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --v8-page: #0d1722;
+  --v8-header: #132232;
+  --v8-panel: #17293b;
+  --v8-panel-muted: #1c3145;
+  --v8-panel-soft: #233b50;
+  --v8-text: #d7e2eb;
+  --v8-text-soft: #91a5b7;
+  --v8-heading: #f1f7fb;
+  --v8-border: #30485d;
+  --v8-sidebar: #20384d;
+  --v8-sidebar-active: #2d516d;
+  --v8-accent: #24c7a5;
+  --v8-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--v8-page);
+  color: var(--v8-text);
+}
+
+.v8-shell {
+  background: var(--v8-page) !important;
+  color: var(--v8-text) !important;
+}
+
+.v8-shell > header {
+  background: var(--v8-header) !important;
+  border-color: var(--v8-border) !important;
+  box-shadow: 0 1px 0 rgba(41, 69, 95, 0.04);
+}
+
+.v8-shell > header button,
+.v8-shell > header h1 {
+  color: var(--v8-heading) !important;
+}
+
+.v8-theme-toggle {
+  border-color: var(--v8-border) !important;
+  background: var(--v8-panel-muted) !important;
+  color: var(--v8-heading) !important;
+}
+
+.v8-theme-toggle:hover {
+  background: var(--v8-panel-soft) !important;
+}
+
+.v8-card {
+  border: 1px solid var(--v8-border);
+  background: var(--v8-panel);
+  color: var(--v8-text);
+  box-shadow: var(--v8-shadow);
+}
+
+.v8-toolbar {
+  border-color: var(--v8-border);
+  background: var(--v8-panel-muted);
+}
+
+.v8-button {
+  border: 1px solid var(--v8-border);
+  background: var(--v8-panel);
+  color: var(--v8-heading);
+}
+
+.v8-button:hover {
+  background: var(--v8-panel-soft);
+}
+
+.v8-button-active {
+  border-color: var(--v8-accent);
+  background: color-mix(in srgb, var(--v8-accent) 14%, var(--v8-panel));
+  color: var(--v8-heading);
+}
+
+.v8-calendar-grid {
+  border-color: var(--v8-border);
+  background: var(--v8-panel);
+}
+
+.v8-calendar-cell,
+.v8-calendar-head {
+  border-color: var(--v8-border);
+}
+
+.v8-calendar-head {
+  background: var(--v8-panel-muted);
+  color: var(--v8-text-soft);
+}
+
+.v8-calendar-cell {
+  background: var(--v8-panel);
+  color: var(--v8-text);
+}
+
+.v8-calendar-cell:hover {
+  background: var(--v8-panel-muted);
+}
+
+.v8-calendar-cell-selected {
+  background: color-mix(in srgb, var(--v8-accent) 10%, var(--v8-panel));
+  box-shadow: inset 0 0 0 2px var(--v8-accent);
+}
+
+.v8-calendar-cell-today {
+  background: color-mix(in srgb, #f2c94c 16%, var(--v8-panel));
+}
+
+.v8-muted {
+  color: var(--v8-text-soft) !important;
+}
+
+.v8-heading {
+  color: var(--v8-heading) !important;
+}
+
+html[data-theme="dark"] .v8-shell .bg-white {
+  background-color: var(--v8-panel) !important;
+}
+
+html[data-theme="dark"] .v8-shell .bg-slate-50,
+html[data-theme="dark"] .v8-shell .bg-slate-50\/40,
+html[data-theme="dark"] .v8-shell .bg-slate-100,
+html[data-theme="dark"] .v8-shell .bg-slate-200 {
+  background-color: var(--v8-panel-muted) !important;
+}
+
+html[data-theme="dark"] .v8-shell .text-slate-900,
+html[data-theme="dark"] .v8-shell .text-slate-800,
+html[data-theme="dark"] .v8-shell .text-slate-700,
+html[data-theme="dark"] .v8-shell .text-slate-600 {
+  color: var(--v8-text) !important;
+}
+
+html[data-theme="dark"] .v8-shell .text-slate-500,
+html[data-theme="dark"] .v8-shell .text-slate-400 {
+  color: var(--v8-text-soft) !important;
+}
+
+html[data-theme="dark"] .v8-shell .border-slate-100,
+html[data-theme="dark"] .v8-shell .border-slate-200,
+html[data-theme="dark"] .v8-shell .border-slate-300 {
+  border-color: var(--v8-border) !important;
+}
+
+html[data-theme="dark"] .v8-shell input,
+html[data-theme="dark"] .v8-shell select,
+html[data-theme="dark"] .v8-shell textarea {
+  border-color: var(--v8-border) !important;
+  background: var(--v8-panel-muted) !important;
+  color: var(--v8-text) !important;
+}
+
+html[data-theme="dark"] .v8-shell option {
+  background: var(--v8-panel);
+  color: var(--v8-text);
+}
+
+html[data-theme="dark"] .v8-shell [class*="text-[#29455f]"] {
+  color: var(--v8-heading) !important;
+}
+
+@media (max-width: 900px) {
+  .v8-calendar-desktop-label {
+    display: none;
+  }
+}
