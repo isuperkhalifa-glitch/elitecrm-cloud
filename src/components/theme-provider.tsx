@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   createContext,
@@ -25,28 +25,32 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem(themeStorageKey);
-    const initialTheme =
-      savedTheme === "dark" || savedTheme === "light" ? savedTheme : "dark";
-
-    applyTheme(initialTheme);
+    const initialTheme: Theme = savedTheme === "dark" ? "dark" : "light";
     setTheme(initialTheme);
-    setMounted(true);
+    applyTheme(initialTheme);
+
+    function syncTheme(event: StorageEvent) {
+      if (event.key !== themeStorageKey) return;
+      const nextTheme: Theme = event.newValue === "dark" ? "dark" : "light";
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
+    }
+
+    window.addEventListener("storage", syncTheme);
+    return () => window.removeEventListener("storage", syncTheme);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    applyTheme(theme);
-    window.localStorage.setItem(themeStorageKey, theme);
-  }, [mounted, theme]);
-
   function toggleTheme() {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
+    setTheme((current) => {
+      const nextTheme: Theme = current === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+      window.localStorage.setItem(themeStorageKey, nextTheme);
+      return nextTheme;
+    });
   }
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme]);
@@ -56,10 +60,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-
-  if (!context) {
-    throw new Error("Missing ThemeProvider");
-  }
-
+  if (!context) throw new Error("Missing ThemeProvider");
   return context;
 }

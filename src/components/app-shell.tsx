@@ -2,32 +2,37 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  BadgeDollarSign,
   BarChart3,
+  Bell,
   BookOpen,
   Building2,
+  CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Code2,
   FileSpreadsheet,
+  GraduationCap,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   Receipt,
   Settings,
+  ShieldCheck,
   UserCog,
   UsersRound,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { AdminEditButton } from "@/components/admin-edit-button";
-import { GlobalScopeSwitcher } from "@/components/global-scope-switcher";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useI18n } from "@/components/language-provider";
 import { NotificationBell } from "@/components/notification-bell";
-import { useSystemSettings } from "@/components/system-settings-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useScope } from "@/components/scope-provider";
 import { createClient } from "@/lib/supabase/client";
 
 type AppShellProps = {
@@ -38,142 +43,152 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "data_analyst";
+type Role =
+  | "developer"
+  | "admin"
+  | "manager"
+  | "moderator"
+  | "marketer"
+  | "sales"
+  | "finance"
+  | "data_analyst";
 
 type NavItem = {
   href: string;
-  labelAr: string;
-  labelEn: string;
+  ar: string;
+  en: string;
   icon: LucideIcon;
   roles: Role[];
-  featureKey?: string;
 };
 
 type NavGroup = {
-  labelAr: string;
-  labelEn: string;
+  key: string;
+  ar: string;
+  en: string;
+  icon: LucideIcon;
+  roles: Role[];
   items: NavItem[];
 };
 
-const ar = {
-  overview: "\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629",
-  dashboard: "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645",
-  operations: "\u0627\u0644\u062a\u0634\u063a\u064a\u0644",
-  customers: "\u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  registrations: "\u0627\u0644\u062a\u0633\u062c\u064a\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a",
-  courses: "\u0627\u0644\u062f\u0648\u0631\u0627\u062a",
-  trainingCenters: "\u0645\u0631\u0627\u0643\u0632 \u0627\u0644\u062a\u062f\u0631\u064a\u0628",
-  intake: "\u0627\u0644\u0625\u062f\u062e\u0627\u0644 \u0648\u0627\u0644\u062a\u0648\u0632\u064a\u0639",
-  imports: "\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  distribution: "\u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0639\u0645\u0644\u0627\u0621",
-  reports: "\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631",
-  commissions: "\u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a \u0648\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631",
-  system: "\u0627\u0644\u0646\u0638\u0627\u0645",
-  users: "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a",
-  settings: "\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a",
-  customize: "\u062a\u062e\u0635\u064a\u0635 \u0627\u0644\u0646\u0638\u0627\u0645",
-  developer: "\u0645\u0637\u0648\u0631 \u0627\u0644\u0646\u0638\u0627\u0645",
-  admin: "\u0627\u0644\u0645\u062f\u064a\u0631 \u0627\u0644\u0639\u0627\u0645",
-  manager: "\u062a\u064a\u0645 \u0644\u064a\u062f\u0631 \u0633\u064a\u0644\u0632",
-  moderator: "\u0627\u0644\u0645\u0648\u062f\u064a\u0631\u064a\u062a\u0648\u0631",
-  marketer: "\u0627\u0644\u0645\u0633\u0648\u0642",
-  sales: "\u0633\u064a\u0644\u0632",
-  finance: "\u0645\u0627\u0644\u064a\u0629 / \u062d\u0633\u0627\u0628\u0627\u062a",
-  dataAnalyst: "\u0645\u062d\u0644\u0644 \u0628\u064a\u0627\u0646\u0627\u062a",
-  workspace: "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644",
-  userPreview: "\u0645\u0639\u0627\u064a\u0646\u0629 \u0645\u0633\u062a\u062e\u062f\u0645",
-  systemView: "\u0631\u0624\u064a\u0629 \u0627\u0644\u0646\u0638\u0627\u0645",
-  closeSidebar: "\u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  openSidebar: "\u0641\u062a\u062d \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  hideSidebar: "\u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  showSidebar: "\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0642\u0627\u0626\u0645\u0629",
-  logout: "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
-  legacyNote: "\u062a\u0645 \u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0645\u0643\u0631\u0631\u0629 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0628\u062f\u0648\u0646 \u062d\u0630\u0641 \u0628\u064a\u0627\u0646\u0627\u062a\u0647\u0627. \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0623\u0633\u0627\u0633\u064a \u0627\u0644\u0622\u0646 \u0645\u0646 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u062a\u0633\u062c\u064a\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0627\u062a.",
-  menu: "\u0627\u0644\u0642\u0627\u0626\u0645\u0629",
+type Company = {
+  id: string;
+  name: string;
 };
 
-const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
+const allRoles: Role[] = [
+  "developer",
+  "admin",
+  "manager",
+  "moderator",
+  "marketer",
+  "sales",
+  "finance",
+  "data_analyst",
+];
+
 const adminRoles: Role[] = ["developer", "admin"];
-const operationsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"];
-const intakeRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer"];
+const salesOpsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales"];
+const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
 
 const navGroups: NavGroup[] = [
   {
-    labelAr: ar.overview,
-    labelEn: "Overview",
-    items: [{ href: "/dashboard", labelAr: ar.dashboard, labelEn: "Dashboard", icon: LayoutDashboard, roles: allRoles }],
-  },
-  {
-    labelAr: ar.operations,
-    labelEn: "Operations",
+    key: "customers",
+    ar: "العملاء",
+    en: "Customers",
+    icon: UsersRound,
+    roles: allRoles,
     items: [
-      { href: "/customers", labelAr: ar.customers, labelEn: "Customers", icon: UsersRound, roles: allRoles },
-      { href: "/registrations", labelAr: ar.registrations, labelEn: "Registrations & Payments", icon: Receipt, roles: operationsRoles },
-      { href: "/courses", labelAr: ar.courses, labelEn: "Courses", icon: BookOpen, roles: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"] },
-      { href: "/training-centers", labelAr: ar.trainingCenters, labelEn: "Training Centers", icon: Building2, roles: ["developer", "admin", "manager", "data_analyst"] },
+      { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
+      { href: "/distribution", ar: "توزيع العملاء", en: "Distribution", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/imports", ar: "استيراد العملاء", en: "Import customers", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
     ],
   },
   {
-    labelAr: ar.intake,
-    labelEn: "Intake & Assignment",
+    key: "sales",
+    ar: "المبيعات",
+    en: "Sales",
+    icon: Receipt,
+    roles: salesOpsRoles,
     items: [
-      { href: "/imports", labelAr: ar.imports, labelEn: "Imports", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
-      { href: "/distribution", labelAr: ar.distribution, labelEn: "Distribution", icon: UsersRound, roles: intakeRoles },
+      { href: "/registrations", ar: "التسجيلات والمدفوعات", en: "Registrations & payments", icon: Receipt, roles: [...salesOpsRoles, "finance", "data_analyst"] },
+      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
     ],
   },
   {
-    labelAr: ar.reports,
-    labelEn: "Reports",
+    key: "academy",
+    ar: "الأكاديمية",
+    en: "Academy",
+    icon: GraduationCap,
+    roles: allRoles,
     items: [
-      { href: "/commissions", labelAr: ar.commissions, labelEn: "Commissions & Reports", icon: BadgeDollarSign, featureKey: "features.commissions.enabled", roles: ["developer", "admin", "manager", "finance", "sales", "data_analyst"] },
+      { href: "/training-centers", ar: "مراكز التدريب", en: "Training centers", icon: Building2, roles: ["developer", "admin", "manager", "data_analyst"] },
+      { href: "/courses", ar: "الدورات", en: "Courses", icon: BookOpen, roles: allRoles },
     ],
   },
   {
-    labelAr: ar.system,
-    labelEn: "System",
+    key: "reports",
+    ar: "التقارير",
+    en: "Reports",
+    icon: BarChart3,
+    roles: reportingRoles,
     items: [
-      { href: "/users", labelAr: ar.users, labelEn: "Users & Roles", icon: UserCog, roles: adminRoles },
-      { href: "/settings", labelAr: ar.settings, labelEn: "Settings", icon: Settings, roles: adminRoles },
-      { href: "/customize", labelAr: ar.customize, labelEn: "Customizer", icon: BarChart3, roles: adminRoles },
+      { href: "/reports", ar: "تقارير الأداء", en: "Performance reports", icon: BarChart3, roles: reportingRoles },
+      { href: "/commissions", ar: "تقارير العمولات", en: "Commission reports", icon: Receipt, roles: reportingRoles },
+    ],
+  },
+  {
+    key: "system",
+    ar: "النظام",
+    en: "System",
+    icon: Settings,
+    roles: adminRoles,
+    items: [
+      { href: "/users", ar: "المستخدمون والصلاحيات", en: "Users & roles", icon: UserCog, roles: adminRoles },
+      { href: "/settings", ar: "الإعدادات", en: "Settings", icon: Settings, roles: adminRoles },
+      { href: "/customize", ar: "تخصيص النظام", en: "Customize", icon: ShieldCheck, roles: adminRoles },
+      { href: "/developer", ar: "مركز المطور", en: "Developer center", icon: Code2, roles: ["developer"] },
     ],
   },
 ];
 
 const pageTitles: Record<string, { ar: string; en: string }> = {
-  dashboard: { ar: ar.dashboard, en: "Dashboard" },
-  customers: { ar: ar.customers, en: "Customers" },
-  registrations: { ar: ar.registrations, en: "Registrations & Payments" },
-  courses: { ar: ar.courses, en: "Courses" },
-  trainingCenters: { ar: ar.trainingCenters, en: "Training Centers" },
-  imports: { ar: ar.imports, en: "Imports" },
-  distribution: { ar: ar.distribution, en: "Distribution" },
-  commissions: { ar: ar.commissions, en: "Commissions & Reports" },
-  users: { ar: ar.users, en: "Users & Roles" },
-  settings: { ar: ar.settings, en: "Settings" },
-  customize: { ar: ar.customize, en: "Customizer" },
+  dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
+  calendar: { ar: "التقويم والمتابعات", en: "Calendar & follow-ups" },
+  customers: { ar: "العملاء", en: "Customers" },
+  registrations: { ar: "التسجيلات والمدفوعات", en: "Registrations & payments" },
+  courses: { ar: "الدورات", en: "Courses" },
+  trainingCenters: { ar: "مراكز التدريب", en: "Training centers" },
+  imports: { ar: "استيراد العملاء", en: "Import customers" },
+  distribution: { ar: "توزيع العملاء", en: "Distribution" },
+  commissions: { ar: "العمولات", en: "Commissions" },
+  reports: { ar: "تقارير الأداء", en: "Performance reports" },
+  users: { ar: "المستخدمون والصلاحيات", en: "Users & roles" },
+  settings: { ar: "الإعدادات", en: "Settings" },
+  customize: { ar: "تخصيص النظام", en: "Customize" },
+  developer: { ar: "مركز المطور", en: "Developer center" },
 };
 
-function normalizeRole(role?: string | null): Role {
-  if (role === "developer") return "developer";
-  if (role === "admin") return "admin";
-  if (role === "manager") return "manager";
-  if (role === "moderator") return "moderator";
-  if (role === "marketer") return "marketer";
-  if (role === "finance") return "finance";
-  if (role === "data_analyst") return "data_analyst";
+function normalizeRole(value?: string | null): Role {
+  if (value === "developer") return "developer";
+  if (value === "admin") return "admin";
+  if (value === "manager") return "manager";
+  if (value === "moderator") return "moderator";
+  if (value === "marketer") return "marketer";
+  if (value === "finance") return "finance";
+  if (value === "data_analyst") return "data_analyst";
   return "sales";
 }
 
-function roleName(role: Role, isArabic: boolean) {
+function roleLabel(role: Role, isArabic: boolean) {
   const labels: Record<Role, { ar: string; en: string }> = {
-    developer: { ar: ar.developer, en: "Developer" },
-    admin: { ar: ar.admin, en: "General Manager" },
-    manager: { ar: ar.manager, en: "Sales Team Leader" },
-    moderator: { ar: ar.moderator, en: "Moderator" },
-    marketer: { ar: ar.marketer, en: "Marketer" },
-    sales: { ar: ar.sales, en: "Sales" },
-    finance: { ar: ar.finance, en: "Finance" },
-    data_analyst: { ar: ar.dataAnalyst, en: "Data Analyst" },
+    developer: { ar: "مطور النظام", en: "Developer" },
+    admin: { ar: "المدير العام", en: "General manager" },
+    manager: { ar: "تيم ليدر سيلز", en: "Sales team leader" },
+    moderator: { ar: "الموديريتور", en: "Moderator" },
+    marketer: { ar: "المسوق", en: "Marketer" },
+    sales: { ar: "سيلز", en: "Sales" },
+    finance: { ar: "مالية / حسابات", en: "Finance" },
+    data_analyst: { ar: "محلل بيانات", en: "Data analyst" },
   };
   return isArabic ? labels[role].ar : labels[role].en;
 }
@@ -181,154 +196,303 @@ function roleName(role: Role, isArabic: boolean) {
 export function AppShell({ titleKey, userEmail, fullName, role, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { language, t } = useI18n();
-  const { getBooleanSetting } = useSystemSettings();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopOpen, setDesktopOpen] = useState(true);
-
+  const { language } = useI18n();
+  const { scope, setScope, resetScope } = useScope();
   const isArabic = language === "ar";
-  const realRole = normalizeRole(role);
-  const previewRole = realRole;
-  const isPreviewMode = false;
-const visibleGroups = navGroups
+  const currentRole = normalizeRole(role);
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    customers: true,
+    sales: true,
+    academy: true,
+    reports: false,
+    system: false,
+  });
+
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCompanies() {
+      const { data } = await supabase.from("companies").select("id,name").order("name");
+      if (mounted) setCompanies((data ?? []) as Company[]);
+    }
+    loadCompanies();
+    const savedYear = window.localStorage.getItem("elitecrm-v8-year");
+    if (savedYear) setYear(savedYear);
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
+
+  const visibleGroups = navGroups
+    .filter((group) => group.roles.includes(currentRole))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.roles.includes(previewRole) && (!item.featureKey || getBooleanSetting(item.featureKey, true))),
+      items: group.items.filter((item) => item.roles.includes(currentRole)),
     }))
     .filter((group) => group.items.length > 0);
 
-  function pageTitle(key: string) {
-    const entry = pageTitles[key];
-    if (entry) return isArabic ? entry.ar : entry.en;
-    return t(key);
-  }
+  const sideClass = isArabic ? "right-0 border-l" : "left-0 border-r";
+  const contentPadding = sidebarOpen
+    ? isArabic
+      ? "lg:pr-[230px]"
+      : "lg:pl-[230px]"
+    : "";
+  const hiddenTransform = isArabic ? "translate-x-full" : "-translate-x-full";
 
   async function signOut() {
-    const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
   }
 
-  function closeMobile() {
-    setMobileOpen(false);
+  function toggleGroup(key: string) {
+    setOpenGroups((current) => ({ ...current, [key]: !current[key] }));
   }
 
-  const sidebarSide = isArabic ? "right-0 border-l" : "left-0 border-r";
-  const desktopHiddenTransform = isArabic ? "translate-x-full" : "-translate-x-full";
-  const desktopPadding = desktopOpen ? (isArabic ? "lg:pr-72" : "lg:pl-72") : "";
+  function changeCompany(companyId: string) {
+    if (!companyId) {
+      resetScope();
+      window.setTimeout(() => router.refresh(), 0);
+      return;
+    }
+    const company = companies.find((item) => item.id === companyId);
+    setScope({
+      mode: "company",
+      targetId: companyId,
+      targetName: company?.name ?? "",
+      targetRole: "company",
+      previewMode: "admin",
+    });
+    window.setTimeout(() => router.refresh(), 0);
+  }
+
+  function changeYear(nextYear: string) {
+    setYear(nextYear);
+    window.localStorage.setItem("elitecrm-v8-year", nextYear);
+  }
+
+  const pageTitle = pageTitles[titleKey] ?? { ar: titleKey, en: titleKey };
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 pb-6">
-      <div className="rounded-[1.7rem] border border-emerald-400/20 bg-emerald-400/10 p-4">
-        <p className="text-xs text-emerald-300">{isArabic ? ar.workspace : "Workspace"}</p>
-        <h2 className="mt-1 truncate text-lg font-black">{fullName ?? userEmail ?? "-"}</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-200">{roleName(realRole, isArabic)}</span>
-          {isPreviewMode ? <span className="rounded-full bg-sky-400/10 px-3 py-1 text-xs text-sky-300">{roleName(previewRole, isArabic)}</span> : null}
+    <div className="flex h-full flex-col bg-[#29455f] text-white">
+      <div className="border-b border-white/10 bg-white p-4">
+        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <div className="text-center">
+            <div className="text-xl font-black tracking-[0.2em] text-[#29455f]">ELITE</div>
+            <div className="text-[9px] font-bold tracking-[0.35em] text-emerald-600">CRM</div>
+          </div>
         </div>
       </div>
 
-      <nav className="space-y-5">
-        {visibleGroups.map((group) => (
-          <div key={group.labelEn}>
-            <p className="mb-2 px-3 text-xs font-bold text-slate-500">{isArabic ? group.labelAr : group.labelEn}</p>
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.href || pathname.startsWith(item.href + "/");
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMobile}
-                    className={
-                      "elite-nav-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition " +
-                      (active ? "bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20" : "text-slate-300 hover:bg-white/10 hover:text-white")
-                    }
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    <span>{isArabic ? item.labelAr : item.labelEn}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
+      <div className="border-b border-white/10 px-4 py-4">
+        <p className="truncate text-sm font-bold">{fullName ?? userEmail ?? "-"}</p>
+        <p className="mt-1 text-xs text-slate-300">{roleLabel(currentRole, isArabic)}</p>
 
-      <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 text-xs leading-6 text-slate-400">
-        {isArabic ? ar.legacyNote : "Duplicate legacy pages are hidden from navigation without deleting their data."}
+        <div className="mt-3 grid grid-cols-[1fr_78px] gap-2">
+          <select
+            value={scope.mode === "company" ? scope.targetId : ""}
+            onChange={(event) => changeCompany(event.target.value)}
+            className="min-w-0 rounded border border-white/20 bg-[#35536d] px-2 py-2 text-xs text-white outline-none"
+          >
+            <option value="">{isArabic ? "كل المراكز" : "All centers"}</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={year}
+            onChange={(event) => changeYear(event.target.value)}
+            className="rounded border border-white/20 bg-[#35536d] px-2 py-2 text-xs text-white outline-none"
+          >
+            {[0, 1, 2].map((offset) => {
+              const value = String(new Date().getFullYear() - offset);
+              return <option key={value}>{value}</option>;
+            })}
+          </select>
+        </div>
       </div>
+
+      <nav className="flex-1 overflow-y-auto py-3">
+        <Link
+          href="/dashboard"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
+            pathname === "/dashboard"
+              ? "border-emerald-400 bg-[#365873]"
+              : "border-transparent hover:bg-white/10"
+          }`}
+        >
+          <LayoutDashboard className="h-5 w-5" />
+          <span>{isArabic ? "الرئيسية" : "Homepage"}</span>
+        </Link>
+
+        <Link
+          href="/calendar"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
+            pathname.startsWith("/calendar")
+              ? "border-emerald-400 bg-[#365873]"
+              : "border-transparent hover:bg-white/10"
+          }`}
+        >
+          <CalendarDays className="h-5 w-5" />
+          <span>{isArabic ? "التقويم" : "Calendar"}</span>
+        </Link>
+
+        {visibleGroups.map((group) => {
+          const Icon = group.icon;
+          const expanded = openGroups[group.key] ?? false;
+          const groupActive = group.items.some(
+            (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+          );
+
+          return (
+            <div key={group.key}>
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.key)}
+                className={`flex w-full items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
+                  groupActive ? "border-emerald-400 bg-[#365873]" : "border-transparent hover:bg-white/10"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="flex-1 text-start">{isArabic ? group.ar : group.en}</span>
+                <ChevronDown className={`h-4 w-4 transition ${expanded ? "rotate-180" : ""}`} />
+              </button>
+
+              {expanded ? (
+                <div className="bg-black/10 py-1">
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                    return (
+                      <Link
+                        href={item.href}
+                        key={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center gap-3 px-8 py-2.5 text-xs transition ${
+                          active ? "bg-emerald-400/20 text-emerald-200" : "text-slate-200 hover:bg-white/10"
+                        }`}
+                      >
+                        <ItemIcon className="h-4 w-4" />
+                        <span>{isArabic ? item.ar : item.en}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </nav>
     </div>
   );
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
-        <div className="flex min-h-20 items-center gap-3 px-4 lg:px-6">
+    <div dir={isArabic ? "rtl" : "ltr"} className="v8-shell min-h-screen bg-[#f4f5f7] text-slate-700">
+      <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-slate-200 bg-white">
+        <div className="flex h-full items-center gap-3 px-4">
           <button
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:hidden"
             type="button"
-            aria-label={mobileOpen ? (isArabic ? ar.closeSidebar : "Close menu") : (isArabic ? ar.openSidebar : "Open menu")}
-            onClick={() => setMobileOpen((value) => !value)}
+            onClick={() => setSidebarOpen((value) => !value)}
+            className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:inline-flex"
+            aria-label={isArabic ? "إظهار أو إخفاء القائمة" : "Toggle sidebar"}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <Menu className="h-6 w-6" />
           </button>
 
           <button
-            className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/10 lg:inline-flex"
             type="button"
-            aria-label={desktopOpen ? (isArabic ? ar.hideSidebar : "Hide sidebar") : (isArabic ? ar.showSidebar : "Show sidebar")}
-            title={desktopOpen ? (isArabic ? ar.hideSidebar : "Hide sidebar") : (isArabic ? ar.showSidebar : "Show sidebar")}
-            onClick={() => setDesktopOpen((value) => !value)}
+            onClick={() => setMobileOpen((value) => !value)}
+            className="rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:hidden"
+            aria-label={isArabic ? "فتح القائمة" : "Open menu"}
           >
-            {desktopOpen ? (isArabic ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />) : (isArabic ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />)}
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-emerald-300">{isPreviewMode ? (isArabic ? ar.userPreview : "User preview") : isArabic ? ar.systemView : "System view"}</p>
-            <h1 className="truncate text-lg font-black md:text-xl">{pageTitle(titleKey)}</h1>
+            <p className="text-[11px] font-semibold text-emerald-600">
+              {isArabic ? "نظام إدارة المبيعات والتدريب" : "Sales and training management"}
+            </p>
+            <h1 className="truncate text-lg font-bold text-[#29455f]">
+              {isArabic ? pageTitle.ar : pageTitle.en}
+            </h1>
           </div>
 
-          <div className="hidden min-w-0 flex-1 justify-center lg:flex">
-            <GlobalScopeSwitcher role={role ?? null} />
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button type="button" className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 md:inline-flex">
+              <Mail className="h-5 w-5" />
+            </button>
+            <NotificationBell />
             <ThemeToggle />
             <LanguageToggle />
-            <NotificationBell />
-            <button
-              onClick={signOut}
-              type="button"
-              className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200 transition hover:bg-white/10 xl:flex"
-            >
-              <LogOut className="h-4 w-4" />
-              {isArabic ? ar.logout : "Sign out"}
-            </button>
-          </div>
-        </div>
 
-        <div className="border-t border-white/10 px-4 py-3 lg:hidden">
-          <GlobalScopeSwitcher role={role ?? null} />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setAccountOpen((value) => !value)}
+                className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-[#29455f] hover:bg-slate-100"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200">
+                  <UserCog className="h-4 w-4" />
+                </div>
+                <span className="hidden max-w-32 truncate md:block">{fullName ?? userEmail ?? "-"}</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+
+              {accountOpen ? (
+                <div className={`absolute top-full mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl ${isArabic ? "left-0" : "right-0"}`}>
+                  <div className="border-b border-slate-100 px-3 py-2">
+                    <p className="truncate text-sm font-bold">{fullName ?? userEmail ?? "-"}</p>
+                    <p className="mt-1 text-xs text-slate-500">{roleLabel(currentRole, isArabic)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {isArabic ? "تسجيل الخروج" : "Sign out"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       </header>
 
-      <aside className={`fixed inset-y-0 z-40 hidden w-72 border-white/10 bg-slate-950/95 pt-24 backdrop-blur-2xl transition-transform duration-300 lg:block ${sidebarSide} ${desktopOpen ? "translate-x-0" : desktopHiddenTransform}`}>
+      <aside
+        className={`fixed inset-y-0 z-40 hidden w-[230px] pt-16 transition-transform duration-300 lg:block ${sideClass} ${
+          sidebarOpen ? "translate-x-0" : hiddenTransform
+        }`}
+      >
         {sidebar}
       </aside>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button className="absolute inset-0 bg-black/50" type="button" aria-label="close" onClick={closeMobile} />
-          <aside className={`absolute inset-y-0 w-80 border-white/10 bg-slate-950 pt-24 shadow-2xl ${sidebarSide}`}>
-            {sidebar}
-          </aside>
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+            aria-label={isArabic ? "إغلاق القائمة" : "Close menu"}
+          />
+          <aside className={`absolute inset-y-0 w-[270px] pt-16 ${sideClass}`}>{sidebar}</aside>
         </div>
       ) : null}
 
-      <main className={`pt-28 transition-[padding] duration-300 ${desktopPadding}`}>
-        <div className="px-4 pb-8 lg:px-6">
+      <main className={`min-h-screen pt-16 transition-[padding] duration-300 ${contentPadding}`}>
+        <div className="p-3 md:p-5">
           <AdminEditButton role={role ?? null} />
           {children}
         </div>
