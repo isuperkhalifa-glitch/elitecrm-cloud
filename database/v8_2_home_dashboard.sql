@@ -16,12 +16,49 @@ create table if not exists public.call_logs (
 alter table public.call_logs add column if not exists actor_id uuid references public.profiles(id) on delete set null;
 alter table public.call_logs add column if not exists actor_name text;
 alter table public.call_logs add column if not exists outcome text;
-alter table public.call_logs add column if not exists course_id uuid references public.courses(id) on delete set null;
 alter table public.call_logs add column if not exists next_follow_up_at timestamptz;
 alter table public.call_logs add column if not exists duration_minutes integer;
 alter table public.call_logs add column if not exists sales_id uuid references public.profiles(id) on delete set null;
 alter table public.call_logs add column if not exists call_status text;
 alter table public.call_logs add column if not exists duration_seconds integer default 0;
+
+alter table public.call_logs drop constraint if exists call_logs_course_id_fkey;
+
+do $$
+declare
+  current_type text;
+begin
+  select data_type
+  into current_type
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'call_logs'
+    and column_name = 'course_id';
+
+  if current_type is null then
+    alter table public.call_logs add column course_id text;
+  elsif current_type <> 'text' then
+    alter table public.call_logs
+      alter column course_id type text
+      using course_id::text;
+  end if;
+end;
+$$;
+
+update public.call_logs as logs
+set course_id = null
+where logs.course_id is not null
+  and not exists (
+    select 1
+    from public.courses as courses
+    where courses.id = logs.course_id
+  );
+
+alter table public.call_logs
+  add constraint call_logs_course_id_fkey
+  foreign key (course_id)
+  references public.courses(id)
+  on delete set null;
 
 update public.call_logs
 set actor_id = coalesce(actor_id, sales_id),
