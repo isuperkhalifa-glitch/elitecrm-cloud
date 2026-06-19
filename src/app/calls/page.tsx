@@ -1,0 +1,68 @@
+import { AppShell } from "@/components/app-shell";
+import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { CallsWorkspaceClient } from "./calls-workspace-client";
+
+const allowedRoles = new Set(["developer", "admin", "manager", "moderator", "sales"]);
+
+export default async function CallsPage() {
+  const { user, profile } = await getCurrentUserProfile();
+  const role = profile?.role ?? "sales";
+
+  if (!allowedRoles.has(role)) {
+    return (
+      <AppShell
+        titleKey="calls"
+        userEmail={user.email ?? null}
+        fullName={profile?.full_name ?? null}
+        role={role}
+      >
+        <div className="v8-card rounded-md p-8 text-center text-red-600">
+          هذه الصفحة غير متاحة لصلاحيتك الحالية.
+        </div>
+      </AppShell>
+    );
+  }
+
+  const admin = createAdminClient();
+  let leadsQuery = admin
+    .from("leads")
+    .select("id,customer_code,full_name,phone,country_code,phone_number,owner_id,status,customer_status,lead_type,source,program,course_id,priority,next_follow_up_at,last_contact_at,last_note,created_at")
+    .order("next_follow_up_at", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (role === "sales") {
+    leadsQuery = leadsQuery.eq("owner_id", user.id);
+  }
+
+  const [{ data: leads }, { data: courses }, { data: profiles }] = await Promise.all([
+    leadsQuery,
+    admin
+      .from("courses")
+      .select("id,name,name_ar,name_en,status")
+      .order("sort_order", { ascending: true }),
+    admin
+      .from("profiles")
+      .select("id,full_name,email,role,is_active")
+      .eq("is_active", true)
+      .order("full_name", { ascending: true }),
+  ]);
+
+  return (
+    <AppShell
+      titleKey="calls"
+      userEmail={user.email ?? null}
+      fullName={profile?.full_name ?? null}
+      role={role}
+    >
+      <CallsWorkspaceClient
+        initialLeads={(leads ?? []) as any}
+        courses={(courses ?? []) as any}
+        profiles={(profiles ?? []) as any}
+        currentUserId={user.id}
+        role={role}
+      />
+    </AppShell>
+  );
+}
