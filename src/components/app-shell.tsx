@@ -5,13 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
-  Bell,
   BookOpen,
   Building2,
   CalendarDays,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Code2,
   FileSpreadsheet,
   GraduationCap,
@@ -19,6 +16,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  PhoneCall,
   Receipt,
   Settings,
   ShieldCheck,
@@ -70,10 +68,7 @@ type NavGroup = {
   items: NavItem[];
 };
 
-type Company = {
-  id: string;
-  name: string;
-};
+type Company = { id: string; name: string };
 
 const allRoles: Role[] = [
   "developer",
@@ -85,7 +80,6 @@ const allRoles: Role[] = [
   "finance",
   "data_analyst",
 ];
-
 const adminRoles: Role[] = ["developer", "admin"];
 const salesOpsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales"];
 const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
@@ -99,8 +93,20 @@ const navGroups: NavGroup[] = [
     roles: allRoles,
     items: [
       { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
-      { href: "/distribution", ar: "توزيع العملاء", en: "Distribution", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
-      { href: "/imports", ar: "استيراد العملاء", en: "Import customers", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
+      {
+        href: "/distribution",
+        ar: "توزيع العملاء",
+        en: "Distribution",
+        icon: FileSpreadsheet,
+        roles: ["developer", "admin", "manager", "moderator"],
+      },
+      {
+        href: "/imports",
+        ar: "استيراد العملاء",
+        en: "Import customers",
+        icon: FileSpreadsheet,
+        roles: ["developer", "admin", "moderator", "marketer"],
+      },
     ],
   },
   {
@@ -110,8 +116,21 @@ const navGroups: NavGroup[] = [
     icon: Receipt,
     roles: salesOpsRoles,
     items: [
-      { href: "/registrations", ar: "التسجيلات والمدفوعات", en: "Registrations & payments", icon: Receipt, roles: [...salesOpsRoles, "finance", "data_analyst"] },
-      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
+      { href: "/calls", ar: "تشغيل المكالمات", en: "Call workspace", icon: PhoneCall, roles: salesOpsRoles },
+      {
+        href: "/registrations",
+        ar: "التسجيلات والمدفوعات",
+        en: "Registrations & payments",
+        icon: Receipt,
+        roles: [...salesOpsRoles, "finance", "data_analyst"],
+      },
+      {
+        href: "/commissions",
+        ar: "العمولات",
+        en: "Commissions",
+        icon: BarChart3,
+        roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"],
+      },
     ],
   },
   {
@@ -121,7 +140,13 @@ const navGroups: NavGroup[] = [
     icon: GraduationCap,
     roles: allRoles,
     items: [
-      { href: "/training-centers", ar: "مراكز التدريب", en: "Training centers", icon: Building2, roles: ["developer", "admin", "manager", "data_analyst"] },
+      {
+        href: "/training-centers",
+        ar: "مراكز التدريب",
+        en: "Training centers",
+        icon: Building2,
+        roles: ["developer", "admin", "manager", "data_analyst"],
+      },
       { href: "/courses", ar: "الدورات", en: "Courses", icon: BookOpen, roles: allRoles },
     ],
   },
@@ -154,6 +179,7 @@ const navGroups: NavGroup[] = [
 const pageTitles: Record<string, { ar: string; en: string }> = {
   dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
   calendar: { ar: "التقويم والمتابعات", en: "Calendar & follow-ups" },
+  calls: { ar: "تشغيل المكالمات", en: "Call workspace" },
   customers: { ar: "العملاء", en: "Customers" },
   registrations: { ar: "التسجيلات والمدفوعات", en: "Registrations & payments" },
   courses: { ar: "الدورات", en: "Courses" },
@@ -232,19 +258,13 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
 
   const visibleGroups = navGroups
     .filter((group) => group.roles.includes(currentRole))
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => item.roles.includes(currentRole)),
-    }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.roles.includes(currentRole)) }))
     .filter((group) => group.items.length > 0);
 
   const sideClass = isArabic ? "right-0 border-l" : "left-0 border-r";
-  const contentPadding = sidebarOpen
-    ? isArabic
-      ? "lg:pr-[230px]"
-      : "lg:pl-[230px]"
-    : "";
+  const contentPadding = sidebarOpen ? (isArabic ? "lg:pr-[230px]" : "lg:pl-[230px]") : "";
   const hiddenTransform = isArabic ? "translate-x-full" : "-translate-x-full";
+  const pageTitle = pageTitles[titleKey] ?? { ar: titleKey, en: titleKey };
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -278,8 +298,6 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     window.localStorage.setItem("elitecrm-v8-year", nextYear);
   }
 
-  const pageTitle = pageTitles[titleKey] ?? { ar: titleKey, en: titleKey };
-
   const sidebar = (
     <div className="flex h-full flex-col bg-[#29455f] text-white">
       <div className="border-b border-white/10 bg-white p-4">
@@ -294,7 +312,6 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
       <div className="border-b border-white/10 px-4 py-4">
         <p className="truncate text-sm font-bold">{fullName ?? userEmail ?? "-"}</p>
         <p className="mt-1 text-xs text-slate-300">{roleLabel(currentRole, isArabic)}</p>
-
         <div className="mt-3 grid grid-cols-[1fr_78px] gap-2">
           <select
             value={scope.mode === "company" ? scope.targetId : ""}
@@ -303,12 +320,9 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
           >
             <option value="">{isArabic ? "كل المراكز" : "All centers"}</option>
             {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
+              <option key={company.id} value={company.id}>{company.name}</option>
             ))}
           </select>
-
           <select
             value={year}
             onChange={(event) => changeYear(event.target.value)}
@@ -323,39 +337,13 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3">
-        <Link
-          href="/dashboard"
-          onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
-            pathname === "/dashboard"
-              ? "border-emerald-400 bg-[#365873]"
-              : "border-transparent hover:bg-white/10"
-          }`}
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          <span>{isArabic ? "الرئيسية" : "Homepage"}</span>
-        </Link>
-
-        <Link
-          href="/calendar"
-          onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
-            pathname.startsWith("/calendar")
-              ? "border-emerald-400 bg-[#365873]"
-              : "border-transparent hover:bg-white/10"
-          }`}
-        >
-          <CalendarDays className="h-5 w-5" />
-          <span>{isArabic ? "التقويم" : "Calendar"}</span>
-        </Link>
+        <TopLink href="/dashboard" active={pathname === "/dashboard"} icon={LayoutDashboard} label={isArabic ? "الرئيسية" : "Homepage"} close={() => setMobileOpen(false)} />
+        <TopLink href="/calendar" active={pathname.startsWith("/calendar")} icon={CalendarDays} label={isArabic ? "التقويم" : "Calendar"} close={() => setMobileOpen(false)} />
 
         {visibleGroups.map((group) => {
           const Icon = group.icon;
           const expanded = openGroups[group.key] ?? false;
-          const groupActive = group.items.some(
-            (item) => pathname === item.href || pathname.startsWith(item.href + "/")
-          );
-
+          const groupActive = group.items.some((item) => pathname === item.href || pathname.startsWith(item.href + "/"));
           return (
             <div key={group.key}>
               <button
@@ -369,7 +357,6 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
                 <span className="flex-1 text-start">{isArabic ? group.ar : group.en}</span>
                 <ChevronDown className={`h-4 w-4 transition ${expanded ? "rotate-180" : ""}`} />
               </button>
-
               {expanded ? (
                 <div className="bg-black/10 py-1">
                   {group.items.map((item) => {
@@ -402,65 +389,38 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     <div dir={isArabic ? "rtl" : "ltr"} className="v8-shell min-h-screen bg-[#f4f5f7] text-slate-700">
       <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-slate-200 bg-white">
         <div className="flex h-full items-center gap-3 px-4">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen((value) => !value)}
-            className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:inline-flex"
-            aria-label={isArabic ? "إظهار أو إخفاء القائمة" : "Toggle sidebar"}
-          >
+          <button type="button" onClick={() => setSidebarOpen((value) => !value)} className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:inline-flex" aria-label={isArabic ? "إظهار أو إخفاء القائمة" : "Toggle sidebar"}>
             <Menu className="h-6 w-6" />
           </button>
-
-          <button
-            type="button"
-            onClick={() => setMobileOpen((value) => !value)}
-            className="rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:hidden"
-            aria-label={isArabic ? "فتح القائمة" : "Open menu"}
-          >
+          <button type="button" onClick={() => setMobileOpen((value) => !value)} className="rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:hidden" aria-label={isArabic ? "فتح القائمة" : "Open menu"}>
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-emerald-600">
-              {isArabic ? "نظام إدارة المبيعات والتدريب" : "Sales and training management"}
-            </p>
-            <h1 className="truncate text-lg font-bold text-[#29455f]">
-              {isArabic ? pageTitle.ar : pageTitle.en}
-            </h1>
+            <p className="text-[11px] font-semibold text-emerald-600">{isArabic ? "نظام إدارة المبيعات والتدريب" : "Sales and training management"}</p>
+            <h1 className="truncate text-lg font-bold text-[#29455f]">{isArabic ? pageTitle.ar : pageTitle.en}</h1>
           </div>
 
           <div className="flex items-center gap-1">
-            <button type="button" className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 md:inline-flex">
+            <button type="button" className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 md:inline-flex" aria-label={isArabic ? "الرسائل" : "Messages"}>
               <Mail className="h-5 w-5" />
             </button>
             <NotificationBell />
             <ThemeToggle />
             <LanguageToggle />
-
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => setAccountOpen((value) => !value)}
-                className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-[#29455f] hover:bg-slate-100"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200">
-                  <UserCog className="h-4 w-4" />
-                </div>
+              <button type="button" onClick={() => setAccountOpen((value) => !value)} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-[#29455f] hover:bg-slate-100">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200"><UserCog className="h-4 w-4" /></div>
                 <span className="hidden max-w-32 truncate md:block">{fullName ?? userEmail ?? "-"}</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
-
               {accountOpen ? (
                 <div className={`absolute top-full mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl ${isArabic ? "left-0" : "right-0"}`}>
                   <div className="border-b border-slate-100 px-3 py-2">
                     <p className="truncate text-sm font-bold">{fullName ?? userEmail ?? "-"}</p>
                     <p className="mt-1 text-xs text-slate-500">{roleLabel(currentRole, isArabic)}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={signOut}
-                    className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
+                  <button type="button" onClick={signOut} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50">
                     <LogOut className="h-4 w-4" />
                     {isArabic ? "تسجيل الخروج" : "Sign out"}
                   </button>
@@ -471,22 +431,13 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
         </div>
       </header>
 
-      <aside
-        className={`fixed inset-y-0 z-40 hidden w-[230px] pt-16 transition-transform duration-300 lg:block ${sideClass} ${
-          sidebarOpen ? "translate-x-0" : hiddenTransform
-        }`}
-      >
+      <aside className={`fixed inset-y-0 z-40 hidden w-[230px] pt-16 transition-transform duration-300 lg:block ${sideClass} ${sidebarOpen ? "translate-x-0" : hiddenTransform}`}>
         {sidebar}
       </aside>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setMobileOpen(false)}
-            aria-label={isArabic ? "إغلاق القائمة" : "Close menu"}
-          />
+          <button type="button" className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-label={isArabic ? "إغلاق القائمة" : "Close menu"} />
           <aside className={`absolute inset-y-0 w-[270px] pt-16 ${sideClass}`}>{sidebar}</aside>
         </div>
       ) : null}
@@ -498,5 +449,14 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
         </div>
       </main>
     </div>
+  );
+}
+
+function TopLink({ href, active, icon: Icon, label, close }: { href: string; active: boolean; icon: LucideIcon; label: string; close: () => void }) {
+  return (
+    <Link href={href} onClick={close} className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${active ? "border-emerald-400 bg-[#365873]" : "border-transparent hover:bg-white/10"}`}>
+      <Icon className="h-5 w-5" />
+      <span>{label}</span>
+    </Link>
   );
 }
