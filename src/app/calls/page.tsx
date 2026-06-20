@@ -5,9 +5,78 @@ import { CallsWorkspaceClient } from "./calls-workspace-client";
 
 const allowedRoles = new Set(["developer", "admin", "manager", "moderator", "sales"]);
 
-export default async function CallsPage() {
+const enhancedFields = [
+  "id",
+  "customer_code",
+  "full_name",
+  "phone",
+  "country_code",
+  "phone_number",
+  "owner_id",
+  "status",
+  "customer_status",
+  "lead_type",
+  "source",
+  "program",
+  "course_id",
+  "priority",
+  "next_follow_up_at",
+  "last_contact_at",
+  "last_call_at",
+  "last_note",
+  "created_at",
+  "assigned_by",
+  "intake_by",
+  "queue_type",
+  "redirected_date",
+  "call_sender_id",
+  "call_receiver_id",
+  "connection_type",
+  "caller_mobile",
+  "second_number",
+  "system_source",
+  "received_at",
+  "call_deadline_at",
+  "call_done_at",
+  "call_done_description",
+  "education_level",
+  "city",
+].join(",");
+
+const fallbackFields = [
+  "id",
+  "customer_code",
+  "full_name",
+  "phone",
+  "country_code",
+  "phone_number",
+  "owner_id",
+  "status",
+  "customer_status",
+  "lead_type",
+  "source",
+  "program",
+  "course_id",
+  "priority",
+  "next_follow_up_at",
+  "last_contact_at",
+  "last_call_at",
+  "last_note",
+  "created_at",
+  "assigned_by",
+  "intake_by",
+  "queue_type",
+  "redirected_date",
+].join(",");
+
+export default async function CallsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
   const { user, profile } = await getCurrentUserProfile();
   const role = profile?.role ?? "sales";
+  const params = await searchParams;
 
   if (!allowedRoles.has(role)) {
     return (
@@ -25,19 +94,31 @@ export default async function CallsPage() {
   }
 
   const admin = createAdminClient();
-  let leadsQuery = admin
-    .from("leads")
-    .select("id,customer_code,full_name,phone,country_code,phone_number,owner_id,status,customer_status,lead_type,source,program,course_id,priority,next_follow_up_at,last_contact_at,last_note,created_at")
-    .order("next_follow_up_at", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(1000);
 
-  if (role === "sales") {
-    leadsQuery = leadsQuery.eq("owner_id", user.id);
+  function createLeadQuery(fields: string) {
+    let query = admin
+      .from("leads")
+      .select(fields)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+
+    if (role === "sales") {
+      query = query.eq("owner_id", user.id);
+    }
+
+    return query;
   }
 
-  const [{ data: leads }, { data: courses }, { data: profiles }] = await Promise.all([
-    leadsQuery,
+  let { data: leads, error: leadsError } = await createLeadQuery(enhancedFields);
+  let enhancedSchemaReady = true;
+
+  if (leadsError) {
+    enhancedSchemaReady = false;
+    const fallback = await createLeadQuery(fallbackFields);
+    leads = fallback.data;
+  }
+
+  const [{ data: courses }, { data: profiles }] = await Promise.all([
     admin
       .from("courses")
       .select("id,name,name_ar,name_en,status")
@@ -57,11 +138,13 @@ export default async function CallsPage() {
       role={role}
     >
       <CallsWorkspaceClient
-        initialLeads={(leads ?? []) as any}
-        courses={(courses ?? []) as any}
-        profiles={(profiles ?? []) as any}
+        initialLeads={(leads ?? []) as never[]}
+        courses={(courses ?? []) as never[]}
+        profiles={(profiles ?? []) as never[]}
         currentUserId={user.id}
         role={role}
+        initialFilter={params.filter ?? "all"}
+        enhancedSchemaReady={enhancedSchemaReady}
       />
     </AppShell>
   );
