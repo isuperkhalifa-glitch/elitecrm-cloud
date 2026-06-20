@@ -2,72 +2,9 @@ import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CallsCenterClient } from "./calls-center-client";
+import { enhancedFields, fallbackFields, normalizeLegacyCall } from "./calls-data";
 
 const allowedRoles = new Set(["developer", "admin", "manager", "moderator", "sales"]);
-
-const enhancedFields = [
-  "id",
-  "customer_code",
-  "full_name",
-  "phone",
-  "country_code",
-  "phone_number",
-  "owner_id",
-  "status",
-  "customer_status",
-  "lead_type",
-  "source",
-  "program",
-  "course_id",
-  "priority",
-  "next_follow_up_at",
-  "last_contact_at",
-  "last_call_at",
-  "last_note",
-  "created_at",
-  "assigned_by",
-  "intake_by",
-  "queue_type",
-  "redirected_date",
-  "call_sender_id",
-  "call_receiver_id",
-  "connection_type",
-  "caller_mobile",
-  "second_number",
-  "system_source",
-  "received_at",
-  "call_deadline_at",
-  "call_done_at",
-  "call_done_description",
-  "education_level",
-  "city",
-].join(",");
-
-const fallbackFields = [
-  "id",
-  "customer_code",
-  "full_name",
-  "phone",
-  "country_code",
-  "phone_number",
-  "owner_id",
-  "status",
-  "customer_status",
-  "lead_type",
-  "source",
-  "program",
-  "course_id",
-  "priority",
-  "next_follow_up_at",
-  "last_contact_at",
-  "last_call_at",
-  "last_note",
-  "created_at",
-  "assigned_by",
-  "intake_by",
-  "queue_type",
-  "redirected_date",
-].join(",");
 
 export default async function CallsPage({
   searchParams,
@@ -102,20 +39,17 @@ export default async function CallsPage({
       .order("created_at", { ascending: false })
       .limit(5000);
 
-    if (role === "sales") {
-      query = query.eq("owner_id", user.id);
-    }
-
+    if (role === "sales") query = query.eq("owner_id", user.id);
     return query;
   }
 
-  let { data: leads, error: leadsError } = await createLeadQuery(enhancedFields);
-  let enhancedSchemaReady = true;
+  const enhancedResult = await createLeadQuery(enhancedFields);
+  let leads = (enhancedResult.data ?? []) as unknown as Record<string, unknown>[];
 
-  if (leadsError) {
-    enhancedSchemaReady = false;
+  if (enhancedResult.error) {
     const fallback = await createLeadQuery(fallbackFields);
-    leads = fallback.data;
+    const fallbackRows = (fallback.data ?? []) as unknown as Record<string, unknown>[];
+    leads = fallbackRows.map(normalizeLegacyCall);
   }
 
   const [{ data: courses }, { data: profiles }] = await Promise.all([
@@ -138,13 +72,13 @@ export default async function CallsPage({
       role={role}
     >
       <CallsCenterClient
-        initialLeads={(leads ?? []) as never[]}
+        initialLeads={leads as never[]}
         courses={(courses ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
         currentUserId={user.id}
         role={role}
         initialFilter={params.filter ?? "all"}
-        enhancedSchemaReady={enhancedSchemaReady}
+        enhancedSchemaReady
       />
     </AppShell>
   );
