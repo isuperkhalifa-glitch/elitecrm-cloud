@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { requirePageAccess } from "@/lib/auth/server-guards";
+import { getEffectiveYear } from "@/lib/filters/effective-year";
 import { ReportsClient } from "./reports-client";
 import type { ReportTab } from "./reports-types";
 
@@ -11,6 +12,7 @@ export default async function ReportsPage({
 }) {
   const resolved = searchParams ? await searchParams : {};
   const { user, profile } = await getCurrentUserProfile();
+  const selectedYear = await getEffectiveYear();
   requirePageAccess(profile?.role, "reports");
 
   const initialTab: ReportTab =
@@ -23,7 +25,7 @@ export default async function ReportsPage({
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
     >
-      <ReportsClient initialTab={initialTab} />
+      <ReportsClient initialTab={initialTab} selectedYear={selectedYear} />
     </AppShell>
   );
 }
