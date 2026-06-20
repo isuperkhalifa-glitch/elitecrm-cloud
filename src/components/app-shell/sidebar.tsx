@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, ChevronDown, LayoutDashboard } from "lucide-react";
-import { navGroups, roleLabel, routePath, type Role } from "./navigation";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { CalendarDays, ChevronDown, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { navGroups, roleLabel, routePath, type NavItem, type Role } from "./navigation";
 
 type Company = { id: string; name: string };
 
@@ -39,13 +41,48 @@ export function AppSidebar({
   onYearChange,
   onClose,
 }: Props) {
+  const searchParams = useSearchParams();
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({ calls: pathname.startsWith("/calls") });
+
+  useEffect(() => {
+    if (pathname.startsWith("/calls")) {
+      setOpenItems((current) => ({ ...current, calls: true }));
+    }
+  }, [pathname]);
+
   const visibleGroups = navGroups
     .filter((group) => group.roles.includes(currentRole))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.roles.includes(currentRole)),
+      items: group.items
+        .filter((item) => item.roles.includes(currentRole))
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => child.roles.includes(currentRole)),
+        })),
     }))
     .filter((group) => group.items.length > 0);
+
+  function itemIsActive(item: NavItem) {
+    if (item.children?.length) return item.children.some(itemIsActive);
+    const path = routePath(item.href);
+    if (!path) return false;
+    if (pathname !== path && !pathname.startsWith(path + "/")) return false;
+
+    const query = item.href?.split("?")[1] ?? "";
+    if (!query) return pathname === path || pathname.startsWith(path + "/");
+
+    const itemParams = new URLSearchParams(query);
+    for (const [key, value] of itemParams.entries()) {
+      const currentValue = searchParams.get(key);
+      if (currentValue === null) {
+        if ((key === "filter" && value === "all") || (key === "tab" && value === "incoming")) continue;
+        return false;
+      }
+      if (currentValue !== value) return false;
+    }
+    return true;
+  }
 
   return (
     <div className="flex h-full flex-col bg-[#29455f] text-white">
@@ -104,10 +141,7 @@ export function AppSidebar({
         {visibleGroups.map((group) => {
           const Icon = group.icon;
           const expanded = openGroups[group.key] ?? false;
-          const groupActive = group.items.some((item) => {
-            const path = routePath(item.href);
-            return pathname === path || pathname.startsWith(path + "/");
-          });
+          const groupActive = group.items.some(itemIsActive);
 
           return (
             <div key={group.key}>
@@ -115,9 +149,7 @@ export function AppSidebar({
                 type="button"
                 onClick={() => onToggleGroup(group.key)}
                 className={`flex w-full items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
-                  groupActive
-                    ? "border-emerald-400 bg-[#365873]"
-                    : "border-transparent hover:bg-white/10"
+                  groupActive ? "border-emerald-400 bg-[#365873]" : "border-transparent hover:bg-white/10"
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -129,17 +161,56 @@ export function AppSidebar({
                 <div className="bg-black/10 py-1">
                   {group.items.map((item) => {
                     const ItemIcon = item.icon;
-                    const path = routePath(item.href);
-                    const active = pathname === path || pathname.startsWith(path + "/");
+                    const active = itemIsActive(item);
+                    const itemKey = item.key ?? item.href ?? `${group.key}-${item.ar}`;
+
+                    if (item.children?.length) {
+                      const itemOpen = openItems[itemKey] ?? active;
+                      return (
+                        <div key={itemKey}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenItems((current) => ({ ...current, [itemKey]: !itemOpen }))}
+                            className={`flex w-full items-center gap-3 px-8 py-2.5 text-xs transition ${
+                              active ? "bg-emerald-400/20 text-emerald-200" : "text-slate-200 hover:bg-white/10"
+                            }`}
+                          >
+                            <ItemIcon className="h-4 w-4" />
+                            <span className="flex-1 text-start">{isArabic ? item.ar : item.en}</span>
+                            <ChevronDown className={`h-3.5 w-3.5 transition ${itemOpen ? "rotate-180" : ""}`} />
+                          </button>
+
+                          {itemOpen ? (
+                            <div className="bg-black/10 py-1">
+                              {item.children.map((child) => {
+                                const childActive = itemIsActive(child);
+                                return (
+                                  <Link
+                                    href={child.href ?? "#"}
+                                    key={child.href}
+                                    onClick={onClose}
+                                    className={`flex items-center gap-3 py-2 pe-4 ps-12 text-[11px] transition ${
+                                      childActive ? "bg-emerald-400/25 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
+                                    }`}
+                                  >
+                                    <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                                    <span>{isArabic ? child.ar : child.en}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    }
+
                     return (
                       <Link
-                        href={item.href}
-                        key={item.href}
+                        href={item.href ?? "#"}
+                        key={itemKey}
                         onClick={onClose}
                         className={`flex items-center gap-3 px-8 py-2.5 text-xs transition ${
-                          active
-                            ? "bg-emerald-400/20 text-emerald-200"
-                            : "text-slate-200 hover:bg-white/10"
+                          active ? "bg-emerald-400/20 text-emerald-200" : "text-slate-200 hover:bg-white/10"
                         }`}
                       >
                         <ItemIcon className="h-4 w-4" />
@@ -166,7 +237,7 @@ function TopLink({
 }: {
   href: string;
   active: boolean;
-  icon: typeof LayoutDashboard;
+  icon: LucideIcon;
   label: string;
   close: () => void;
 }) {
@@ -175,9 +246,7 @@ function TopLink({
       href={href}
       onClick={close}
       className={`flex items-center gap-3 border-e-4 px-4 py-3 text-sm font-semibold transition ${
-        active
-          ? "border-emerald-400 bg-[#365873]"
-          : "border-transparent hover:bg-white/10"
+        active ? "border-emerald-400 bg-[#365873]" : "border-transparent hover:bg-white/10"
       }`}
     >
       <Icon className="h-5 w-5" />
