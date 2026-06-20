@@ -43,13 +43,12 @@ export default async function CallsPage({
     return query;
   }
 
-  let { data: leads, error } = await createLeadQuery(enhancedFields);
+  const enhancedResult = await createLeadQuery(enhancedFields);
+  let leads = (enhancedResult.data ?? []) as Record<string, unknown>[];
 
-  if (error) {
+  if (enhancedResult.error) {
     const fallback = await createLeadQuery(fallbackFields);
-    leads = (fallback.data ?? []).map((row) =>
-      normalizeLegacyCall(row as Record<string, unknown>)
-    );
+    leads = ((fallback.data ?? []) as Record<string, unknown>[]).map(normalizeLegacyCall);
   }
 
   const [{ data: courses }, { data: profiles }] = await Promise.all([
@@ -72,7 +71,7 @@ export default async function CallsPage({
       role={role}
     >
       <CallsCenterClient
-        initialLeads={(leads ?? []) as never[]}
+        initialLeads={leads as never[]}
         courses={(courses ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
         currentUserId={user.id}
