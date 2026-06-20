@@ -16,59 +16,19 @@ export const leadTypeValues = ["fresh", "retargeted", "redirected"] as const;
 export type LeadTypeValue = (typeof leadTypeValues)[number];
 
 export const leadStatusMeta: Record<LeadStatusValue, { ar: string; en: string; className: string }> = {
-  interested: {
-    ar: "مهتم",
-    en: "Interested",
-    className: "bg-emerald-400/10 text-emerald-300",
-  },
-  not_interested: {
-    ar: "غير مهتم",
-    en: "Not interested",
-    className: "bg-red-500/10 text-red-300",
-  },
-  need_offer: {
-    ar: "يحتاج عرض",
-    en: "Need offer",
-    className: "bg-sky-400/10 text-sky-300",
-  },
-  missed: {
-    ar: "لم يتم الرد",
-    en: "Missed",
-    className: "bg-slate-400/10 text-slate-300",
-  },
-  wrong_number: {
-    ar: "رقم خطأ",
-    en: "Wrong number",
-    className: "bg-orange-400/10 text-orange-300",
-  },
-  paid: {
-    ar: "سدد",
-    en: "Paid",
-    className: "bg-emerald-500/10 text-emerald-300",
-  },
-  busy: {
-    ar: "مشغول",
-    en: "Busy",
-    className: "bg-yellow-400/10 text-yellow-300",
-  },
+  interested: { ar: "مهتم", en: "Interested", className: "bg-emerald-400/10 text-emerald-300" },
+  not_interested: { ar: "غير مهتم", en: "Not interested", className: "bg-red-500/10 text-red-300" },
+  need_offer: { ar: "يحتاج عرض", en: "Need offer", className: "bg-sky-400/10 text-sky-300" },
+  missed: { ar: "لم يتم الرد", en: "Missed", className: "bg-slate-400/10 text-slate-300" },
+  wrong_number: { ar: "رقم خطأ", en: "Wrong number", className: "bg-orange-400/10 text-orange-300" },
+  paid: { ar: "سدد", en: "Paid", className: "bg-emerald-500/10 text-emerald-300" },
+  busy: { ar: "مشغول", en: "Busy", className: "bg-yellow-400/10 text-yellow-300" },
 };
 
 export const leadTypeMeta: Record<LeadTypeValue, { ar: string; en: string; className: string }> = {
-  fresh: {
-    ar: "جديد",
-    en: "Fresh",
-    className: "bg-emerald-400/10 text-emerald-300",
-  },
-  retargeted: {
-    ar: "إعادة استهداف",
-    en: "Retargeted",
-    className: "bg-sky-400/10 text-sky-300",
-  },
-  redirected: {
-    ar: "محول",
-    en: "Redirected",
-    className: "bg-yellow-400/10 text-yellow-300",
-  },
+  fresh: { ar: "جديد", en: "Fresh", className: "bg-emerald-400/10 text-emerald-300" },
+  retargeted: { ar: "إعادة استهداف", en: "Retargeted", className: "bg-sky-400/10 text-sky-300" },
+  redirected: { ar: "محول", en: "Redirected", className: "bg-yellow-400/10 text-yellow-300" },
 };
 
 export const countryCodes = [
@@ -102,6 +62,34 @@ export const courseOptions = [
   { id: "english-club", ar: "English Club", en: "English Club" },
 ];
 
+const legacyLeadStatusMap: Record<string, LeadStatusValue> = {
+  new: "interested",
+  assigned: "interested",
+  contacted: "interested",
+  qualified: "interested",
+  converted: "paid",
+  registered: "interested",
+  follow_up: "busy",
+  no_answer: "missed",
+  no_reply: "missed",
+  waitingorconnecting: "busy",
+  noreplyorclosed: "missed",
+  notinterested: "not_interested",
+  wrongnumber: "wrong_number",
+  needoffer: "need_offer",
+  lost: "not_interested",
+  canceled: "not_interested",
+  saded: "paid",
+  "سدد": "paid",
+};
+
+export function parseLeadStatus(value: string | null | undefined): LeadStatusValue | null {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (leadStatusValues.includes(normalized as LeadStatusValue)) return normalized as LeadStatusValue;
+  return legacyLeadStatusMap[normalized] ?? null;
+}
+
 export function getLeadStatusLabel(value: string | null | undefined, language: Language = "ar") {
   const normalized = normalizeLeadStatus(value);
   return leadStatusMeta[normalized]?.[language] ?? value ?? "-";
@@ -121,43 +109,12 @@ export function getLeadTypeClass(value: string | null | undefined) {
 }
 
 export function normalizeLeadStatus(value: string | null | undefined): LeadStatusValue {
-  const normalized = String(value ?? "").trim().toLowerCase();
-
-  const legacyMap: Record<string, LeadStatusValue> = {
-    new: "interested",
-    assigned: "interested",
-    contacted: "interested",
-    qualified: "interested",
-    converted: "paid",
-    registered: "interested",
-    follow_up: "busy",
-    no_answer: "missed",
-    no_reply: "missed",
-    waitingorconnecting: "busy",
-    noreplyorclosed: "missed",
-    notinterested: "not_interested",
-    wrongnumber: "wrong_number",
-    needoffer: "need_offer",
-    lost: "not_interested",
-    canceled: "not_interested",
-    saded: "paid",
-    "سدد": "paid",
-  };
-
-  if (leadStatusValues.includes(normalized as LeadStatusValue)) {
-    return normalized as LeadStatusValue;
-  }
-
-  return legacyMap[normalized] ?? "interested";
+  return parseLeadStatus(value) ?? "interested";
 }
 
 export function normalizeLeadType(value: string | null | undefined): LeadTypeValue {
   const normalized = String(value ?? "").trim().toLowerCase();
-
-  if (leadTypeValues.includes(normalized as LeadTypeValue)) {
-    return normalized as LeadTypeValue;
-  }
-
+  if (leadTypeValues.includes(normalized as LeadTypeValue)) return normalized as LeadTypeValue;
   return "fresh";
 }
 
@@ -165,7 +122,6 @@ export function normalizePhoneInput(countryCode: string, phoneNumber: string) {
   const cleanCountryCode = String(countryCode || "+966").trim().replace(/[^\d+]/g, "") || "+966";
   const cleanPhoneNumber = String(phoneNumber || "").replace(/\D/g, "").replace(/^0+/, "");
   const compactCountry = cleanCountryCode.replace(/^\+/, "");
-
   return {
     country_code: cleanCountryCode,
     phone_number: cleanPhoneNumber,
@@ -175,22 +131,13 @@ export function normalizePhoneInput(countryCode: string, phoneNumber: string) {
 
 export function splitPhone(phone: string | null | undefined) {
   const raw = String(phone ?? "").replace(/[^\d+]/g, "").replace(/^00/, "+");
-
-  if (!raw) {
-    return { country_code: "+966", phone_number: "" };
-  }
-
+  if (!raw) return { country_code: "+966", phone_number: "" };
   const withPlus = raw.startsWith("+") ? raw : `+${raw}`;
-
   const matched = countryCodes
     .map((country) => country.code)
     .sort((a, b) => b.length - a.length)
     .find((code) => withPlus.startsWith(code));
-
-  if (!matched) {
-    return { country_code: "+966", phone_number: raw.replace(/^0+/, "") };
-  }
-
+  if (!matched) return { country_code: "+966", phone_number: raw.replace(/^0+/, "") };
   return {
     country_code: matched,
     phone_number: withPlus.slice(matched.length).replace(/^0+/, ""),
@@ -206,17 +153,10 @@ export function getCourseName(courseId: string | null | undefined, language: Lan
 export function guessCourseId(value: string | null | undefined) {
   const text = String(value ?? "").trim().toLowerCase();
   if (!text) return null;
-
-  const direct = courseOptions.find((course) => {
-    return (
-      course.id.toLowerCase() === text ||
-      course.ar.toLowerCase() === text ||
-      course.en.toLowerCase() === text
-    );
-  });
-
+  const direct = courseOptions.find((course) =>
+    course.id.toLowerCase() === text || course.ar.toLowerCase() === text || course.en.toLowerCase() === text
+  );
   if (direct) return direct.id;
-
   if (text.includes("power") && text.includes("offline")) return "power-bi-offline";
   if (text.includes("power")) return "power-bi";
   if (text.includes("pmp") && text.includes("offline")) return "pmp-offline";
@@ -232,6 +172,5 @@ export function guessCourseId(value: string | null | undefined) {
   if (text.includes("ai")) return "ai";
   if (text.includes("kpi")) return "kpi";
   if (text === "cs") return "cs";
-
   return null;
 }
