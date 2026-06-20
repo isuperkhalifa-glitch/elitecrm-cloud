@@ -68,6 +68,12 @@ export type CustomerOperationsProps = {
   page: number;
   pageSize: number;
   initialFilters: CustomerFilters;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  fixedFilters: Partial<CustomerFilters>;
+  lockedFields: Array<keyof CustomerFilters>;
 };
 
 export const statusOptions = [
@@ -119,4 +125,11 @@ export function emptyCustomerFilters(): CustomerFilters {
     createdFrom: "",
     createdTo: "",
   };
+}
+
+export function withFixedCustomerFilters(
+  filters: CustomerFilters,
+  fixedFilters: Partial<CustomerFilters>
+): CustomerFilters {
+  return { ...filters, ...fixedFilters };
 }
