@@ -24,14 +24,39 @@ export default async function RequestsPage({
     requestsQuery = requestsQuery.or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
   }
 
-  const [{ data: requests }, { data: profiles }] = await Promise.all([
-    requestsQuery,
-    admin
-      .from("profiles")
-      .select("id,full_name,email,role,is_active")
-      .eq("is_active", true)
-      .order("full_name"),
-  ]);
+  const requestResult = await requestsQuery;
+  let requests = requestResult.data ?? [];
+
+  if (requestResult.error) {
+    let fallbackQuery = admin
+      .from("tasks")
+      .select("id,title,description,priority,status,due_date,owner_id,event_type,created_at,updated_at")
+      .order("created_at", { ascending: false })
+      .limit(5000);
+
+    if (!["developer", "admin", "manager"].includes(role)) {
+      fallbackQuery = fallbackQuery.eq("owner_id", user.id);
+    }
+
+    const fallback = await fallbackQuery;
+    requests = (fallback.data ?? []).map((task) => ({
+      ...task,
+      request_code: `TASK-${String(task.id).slice(0, 8).toUpperCase()}`,
+      request_type: task.event_type ?? "other",
+      sender_id: null,
+      receiver_id: task.owner_id ?? null,
+      result_type: null,
+      started_at: null,
+      done_at: ["done", "completed", "closed", "finished"].includes(task.status ?? "") ? task.updated_at ?? null : null,
+      done_description: null,
+    })) as never[];
+  }
+
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id,full_name,email,role,is_active")
+    .eq("is_active", true)
+    .order("full_name");
 
   return (
     <AppShell
@@ -41,7 +66,7 @@ export default async function RequestsPage({
       role={role}
     >
       <RequestsClient
-        initialRequests={(requests ?? []) as never[]}
+        initialRequests={requests as never[]}
         profiles={(profiles ?? []) as never[]}
         currentUserId={user.id}
         currentUserName={profile?.full_name ?? user.email ?? ""}
