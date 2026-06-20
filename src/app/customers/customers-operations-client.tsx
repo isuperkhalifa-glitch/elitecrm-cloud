@@ -8,6 +8,7 @@ import { CustomerOperationsFilters } from "./customer-operations-filters";
 import { CustomerOperationsTable } from "./customer-operations-table";
 import {
   emptyCustomerFilters,
+  withFixedCustomerFilters,
   type CustomerFilters,
   type CustomerLead,
   type CustomerOperationsProps,
@@ -32,6 +33,12 @@ export function CustomersOperationsClient({
   page,
   pageSize,
   initialFilters,
+  titleAr,
+  titleEn,
+  descriptionAr,
+  descriptionEn,
+  fixedFilters,
+  lockedFields,
 }: CustomerOperationsProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -67,6 +74,10 @@ export function CustomersOperationsClient({
   const profileMap = useMemo(
     () => new Map(activeProfiles.map((profile) => [profile.id, profile])),
     [activeProfiles]
+  );
+  const lockedFieldSet = useMemo(
+    () => new Set<keyof CustomerFilters>(lockedFields),
+    [lockedFields]
   );
 
   const canTransfer = ["developer", "admin", "manager", "moderator"].includes(role ?? "");
@@ -137,6 +148,11 @@ export function CustomersOperationsClient({
   function updateQuery(nextFilters: CustomerFilters, nextPage = 1, nextPageSize = pageSize) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(nextFilters)) {
+      const typedKey = key as keyof CustomerFilters;
+      if (lockedFieldSet.has(typedKey)) {
+        params.delete(key);
+        continue;
+      }
       if (value) params.set(key, value);
       else params.delete(key);
     }
@@ -146,38 +162,52 @@ export function CustomersOperationsClient({
   }
 
   function setFilter(field: keyof CustomerFilters, value: string, applyNow = false) {
-    const next = { ...filters, [field]: value };
+    if (lockedFieldSet.has(field)) return;
+    const next = withFixedCustomerFilters({ ...filters, [field]: value }, fixedFilters);
     setFilters(next);
     if (applyNow) updateQuery(next, 1, pageSize);
   }
 
   function quickFollowup(value: string) {
-    const next = {
-      ...filters,
-      followup: value,
-      startDate: value === "custom" ? filters.startDate : "",
-      endDate: value === "custom" ? filters.endDate : "",
-    };
+    if (lockedFieldSet.has("followup")) return;
+    const next = withFixedCustomerFilters(
+      {
+        ...filters,
+        followup: value,
+        startDate: value === "custom" ? filters.startDate : "",
+        endDate: value === "custom" ? filters.endDate : "",
+      },
+      fixedFilters
+    );
     setFilters(next);
     updateQuery(next, 1, pageSize);
   }
 
   function toggleSelected(id: string) {
-    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
   }
 
   function togglePageSelection() {
-    setSelectedIds((current) => allPageSelected
-      ? current.filter((id) => !pageIds.includes(id))
-      : Array.from(new Set([...current, ...pageIds]))
+    setSelectedIds((current) =>
+      allPageSelected
+        ? current.filter((id) => !pageIds.includes(id))
+        : Array.from(new Set([...current, ...pageIds]))
     );
   }
 
   async function transferSelected() {
     setError("");
     setMessage("");
-    if (!selectedIds.length) return setError(tx("اختر عميلًا واحدًا على الأقل.", "Select at least one customer."));
-    if (!targetUserId) return setError(tx("اختر موظف المبيعات المستلم.", "Choose the receiving sales user."));
+    if (!selectedIds.length) {
+      setError(tx("اختر عميلًا واحدًا على الأقل.", "Select at least one customer."));
+      return;
+    }
+    if (!targetUserId) {
+      setError(tx("اختر موظف المبيعات المستلم.", "Choose the receiving sales user."));
+      return;
+    }
 
     setSaving(true);
     try {
@@ -187,7 +217,10 @@ export function CustomersOperationsClient({
         body: JSON.stringify({ action: "assign", lead_ids: selectedIds, target_user_id: targetUserId }),
       });
       const result = await response.json();
-      if (!response.ok) return setError(result.message ?? tx("تعذر تحويل العملاء.", "Unable to transfer customers."));
+      if (!response.ok) {
+        setError(result.message ?? tx("تعذر تحويل العملاء.", "Unable to transfer customers."));
+        return;
+      }
 
       const updated = (result.data ?? []) as CustomerLead[];
       const updateMap = new Map(updated.map((lead) => [lead.id, lead]));
@@ -195,16 +228,27 @@ export function CustomersOperationsClient({
       setSelectedIds([]);
       setMessage(result.message ?? tx("تم تحويل العملاء بنجاح.", "Customers transferred successfully."));
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : tx("حدث خطأ غير متوقع.", "Unexpected error."));
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : tx("حدث خطأ غير متوقع.", "Unexpected error.")
+      );
     } finally {
       setSaving(false);
     }
   }
 
+  function resetFilters() {
+    const reset = withFixedCustomerFilters(emptyCustomerFilters(), fixedFilters);
+    setFilters(reset);
+    setSelectedIds([]);
+    updateQuery(reset, 1, pageSize);
+  }
+
   return (
     <div className="space-y-5">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label={tx("إجمالي العملاء", "Total customers")} value={stats.total} />
+        <Metric label={tx("إجمالي الصفحة", "Page total")} value={stats.total} />
         <Metric label={tx("المعروض", "Visible")} value={stats.visible} />
         <Metric label={tx("غير موزعين", "Unassigned")} value={stats.unassigned} />
         <Metric label={tx("متابعات اليوم", "Due today")} value={stats.dueToday} />
@@ -222,10 +266,13 @@ export function CustomersOperationsClient({
         pageSize={pageSize}
         isArabic={isArabic}
         tx={tx}
+        title={tx(titleAr, titleEn)}
+        description={tx(descriptionAr, descriptionEn)}
+        lockedFields={lockedFields}
         onSetFilter={setFilter}
         onQuickFollowup={quickFollowup}
         onApply={() => updateQuery(filters, 1, pageSize)}
-        onReset={() => { const empty = emptyCustomerFilters(); setFilters(empty); setSelectedIds([]); updateQuery(empty, 1, pageSize); }}
+        onReset={resetFilters}
         onPageSize={(size) => updateQuery(filters, 1, size)}
         statusLabel={statusLabel}
         connectionLabel={connectionLabel}
@@ -235,13 +282,28 @@ export function CustomersOperationsClient({
         <section className="v8-card rounded-md p-4">
           <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
             <label>
-              <span className="v8-heading mb-1.5 block text-xs font-semibold">{tx("تحويل العملاء المحددين إلى", "Transfer selected customers to")}</span>
-              <select value={targetUserId} onChange={(event) => setTargetUserId(event.target.value)} className="v8-input w-full rounded border px-3 py-2.5 text-sm">
+              <span className="v8-heading mb-1.5 block text-xs font-semibold">
+                {tx("تحويل العملاء المحددين إلى", "Transfer selected customers to")}
+              </span>
+              <select
+                value={targetUserId}
+                onChange={(event) => setTargetUserId(event.target.value)}
+                className="v8-input w-full rounded border px-3 py-2.5 text-sm"
+              >
                 <option value="">{tx("اختر موظف المبيعات", "Choose sales user")}</option>
-                {salesProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name ?? profile.email ?? profile.id}</option>)}
+                {salesProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.full_name ?? profile.email ?? profile.id}
+                  </option>
+                ))}
               </select>
             </label>
-            <button type="button" disabled={saving || !selectedIds.length} onClick={transferSelected} className="inline-flex items-center justify-center gap-2 rounded bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+            <button
+              type="button"
+              disabled={saving || !selectedIds.length}
+              onClick={transferSelected}
+              className="inline-flex items-center justify-center gap-2 rounded bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {tx(`تحويل ${selectedIds.length} عميل`, `Transfer ${selectedIds.length} customers`)}
             </button>
@@ -274,9 +336,32 @@ export function CustomersOperationsClient({
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-  return <div className="v8-card rounded-md p-4"><div className="flex items-center justify-between"><UsersRound className="h-5 w-5 text-emerald-600" /><strong className="v8-heading text-2xl">{value}</strong></div><p className="v8-muted mt-3 text-xs">{label}</p></div>;
+  return (
+    <div className="v8-card rounded-md p-4">
+      <div className="flex items-center justify-between">
+        <UsersRound className="h-5 w-5 text-emerald-600" />
+        <strong className="v8-heading text-2xl">{value}</strong>
+      </div>
+      <p className="v8-muted mt-3 text-xs">{label}</p>
+    </div>
+  );
 }
 
 function Notice({ children, error = false }: { children: ReactNode; error?: boolean }) {
-  return <div className={`mt-3 flex items-start gap-2 rounded border p-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ? <XCircle className="mt-0.5 h-4 w-4 shrink-0" /> : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}{children}</div>;
+  return (
+    <div
+      className={`mt-3 flex items-start gap-2 rounded border p-3 text-sm ${
+        error
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+      }`}
+    >
+      {error ? (
+        <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      ) : (
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+      )}
+      {children}
+    </div>
+  );
 }
