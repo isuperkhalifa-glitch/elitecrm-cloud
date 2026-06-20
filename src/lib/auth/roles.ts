@@ -7,6 +7,7 @@ export type PageKey =
   | "courses"
   | "training-centers"
   | "distribution"
+  | "data-quality"
   | "imports"
   | "commissions"
   | "users"
@@ -29,6 +30,7 @@ export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
 export const intakeRoles: Role[] = ["developer", "admin", "moderator", "marketer"];
 export const financeRoles: Role[] = ["developer", "admin", "finance"];
 export const reportingRoles: Role[] = ["developer", "admin", "manager", "data_analyst"];
+export const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
@@ -37,6 +39,7 @@ export const pageAccess: Record<PageKey, Role[]> = {
   courses: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
   "training-centers": ["developer", "admin", "manager", "data_analyst"],
   distribution: operationsRoles,
+  "data-quality": dataQualityRoles,
   imports: intakeRoles,
   commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
   users: adminRoles,
