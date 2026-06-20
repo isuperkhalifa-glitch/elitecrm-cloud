@@ -1,7 +1,7 @@
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { requirePageAccess } from "@/lib/auth/server-guards";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { DistributionClient } from "./distribution-client";
+import { DistributionWorkspace as DistributionClient } from "./distribution-workspace";
 
 export default async function DistributionPage() {
   const { user, profile } = await getCurrentUserProfile();
