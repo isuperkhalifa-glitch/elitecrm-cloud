@@ -10,10 +10,12 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function defaultRange() {
-  const to = new Date();
-  const from = new Date();
-  from.setDate(from.getDate() - 29);
+function defaultRange(year: number) {
+  const current = new Date();
+  const from = new Date(Date.UTC(year, 0, 1));
+  const to = year === current.getFullYear()
+    ? current
+    : new Date(Date.UTC(year, 11, 31));
   return { from: isoDate(from), to: isoDate(to) };
 }
 
@@ -27,11 +29,16 @@ function emptyPayload(): ReportsPayload {
   };
 }
 
-export function ReportsClient({ initialTab = "sources" }: { initialTab?: ReportTab }) {
+type Props = {
+  initialTab?: ReportTab;
+  selectedYear: number;
+};
+
+export function ReportsClient({ initialTab = "sources", selectedYear }: Props) {
   const { language } = useI18n();
   const isArabic = language === "ar";
   const tx = (ar: string, en: string) => (isArabic ? ar : en);
-  const range = useMemo(defaultRange, []);
+  const range = useMemo(() => defaultRange(selectedYear), [selectedYear]);
 
   const [tab, setTab] = useState<ReportTab>(initialTab);
   const [from, setFrom] = useState(range.from);
@@ -89,6 +96,9 @@ export function ReportsClient({ initialTab = "sources" }: { initialTab?: ReportT
     URL.revokeObjectURL(url);
   }
 
+  const minDate = `${selectedYear}-01-01`;
+  const maxDate = `${selectedYear}-12-31`;
+
   return (
     <div className="space-y-5">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -102,12 +112,14 @@ export function ReportsClient({ initialTab = "sources" }: { initialTab?: ReportT
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h2 className="v8-heading text-xl font-semibold">{tx("مركز التقارير والتحليلات", "Reports and analytics center")}</h2>
-            <p className="v8-muted mt-1 text-sm">{tx("تقارير مصادر العملاء والتوزيع والمهام المكتملة في شاشة موحدة.", "Customer sources, distribution, and completed tasks in one workspace.")}</p>
+            <p className="v8-muted mt-1 text-sm">
+              {tx(`تقارير سنة ${selectedYear} لمصادر العملاء والتوزيع والمهام المكتملة.`, `${selectedYear} customer source, distribution, and completed-task reports.`)}
+            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <Field label={tx("من", "From")}><input type="date" value={from} onChange={(event) => setFrom(event.target.value)} className="v8-input w-full rounded border px-3 py-2 text-sm" /></Field>
-            <Field label={tx("إلى", "To")}><input type="date" value={to} onChange={(event) => setTo(event.target.value)} className="v8-input w-full rounded border px-3 py-2 text-sm" /></Field>
+            <Field label={tx("من", "From")}><input type="date" min={minDate} max={maxDate} value={from} onChange={(event) => setFrom(event.target.value)} className="v8-input w-full rounded border px-3 py-2 text-sm" /></Field>
+            <Field label={tx("إلى", "To")}><input type="date" min={minDate} max={maxDate} value={to} onChange={(event) => setTo(event.target.value)} className="v8-input w-full rounded border px-3 py-2 text-sm" /></Field>
             <Field label={tx("نوع البيانات", "Data type")}>
               <select value={dataType} onChange={(event) => setDataType(event.target.value as "all" | "new")} className="v8-input w-full rounded border px-3 py-2 text-sm">
                 <option value="all">{tx("كل البيانات", "All data")}</option>
