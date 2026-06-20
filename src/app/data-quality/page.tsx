@@ -9,18 +9,33 @@ export default async function DataQualityPage() {
   requirePageAccess(profile?.role, "data-quality");
 
   const admin = createAdminClient();
-  const [{ data: leads }, { data: profiles }] = await Promise.all([
-    admin
+  const leadsResult = await admin
+    .from("leads")
+    .select("id,customer_code,full_name,phone,country_code,phone_number,source,status,customer_status,owner_id,created_at")
+    .order("created_at", { ascending: false })
+    .limit(10000);
+
+  let leads = leadsResult.data ?? [];
+  if (leadsResult.error) {
+    const fallback = await admin
       .from("leads")
-      .select("id,customer_code,full_name,phone,country_code,phone_number,source,status,customer_status,owner_id,created_at")
+      .select("id,full_name,phone,source,status,owner_id,created_at")
       .order("created_at", { ascending: false })
-      .limit(10000),
-    admin
-      .from("profiles")
-      .select("id,full_name,email")
-      .eq("is_active", true)
-      .order("full_name", { ascending: true }),
-  ]);
+      .limit(10000);
+    leads = (fallback.data ?? []).map((lead) => ({
+      ...lead,
+      customer_code: null,
+      country_code: null,
+      phone_number: null,
+      customer_status: lead.status ?? null,
+    })) as never[];
+  }
+
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id,full_name,email")
+    .eq("is_active", true)
+    .order("full_name", { ascending: true });
 
   return (
     <AppShell
@@ -30,7 +45,7 @@ export default async function DataQualityPage() {
       role={profile?.role ?? null}
     >
       <DataQualityClient
-        leads={(leads ?? []) as never[]}
+        leads={leads as never[]}
         profiles={(profiles ?? []) as never[]}
       />
     </AppShell>
