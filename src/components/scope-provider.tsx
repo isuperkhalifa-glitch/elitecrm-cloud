@@ -73,7 +73,13 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     const saved = window.localStorage.getItem("elitecrm-global-scope");
     const parsed = safeParseScope(saved);
     setScopeState(parsed);
-    if (parsed.mode !== "all") saveScopeCookie(parsed);
+
+    if (parsed.mode === "all" || !parsed.targetId) {
+      window.localStorage.removeItem("elitecrm-global-scope");
+      clearScopeCookie();
+    } else {
+      saveScopeCookie(parsed);
+    }
   }, []);
 
   function setScope(nextScope: GlobalScope) {
@@ -86,6 +92,8 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
       targetName: nextScope.targetName ?? "",
       targetRole: nextScope.targetRole ?? "",
     };
+
+    if (normalized.mode !== "all" && !normalized.targetId) return;
 
     setScopeState(normalized);
 
