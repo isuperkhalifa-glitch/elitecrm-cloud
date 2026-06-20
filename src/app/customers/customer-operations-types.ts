@@ -68,12 +68,12 @@ export type CustomerOperationsProps = {
   page: number;
   pageSize: number;
   initialFilters: CustomerFilters;
-  titleAr: string;
-  titleEn: string;
-  descriptionAr: string;
-  descriptionEn: string;
-  fixedFilters: Partial<CustomerFilters>;
-  lockedFields: Array<keyof CustomerFilters>;
+  titleAr?: string;
+  titleEn?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  fixedFilters?: Partial<CustomerFilters>;
+  lockedFields?: Array<keyof CustomerFilters>;
 };
 
 export const statusOptions = [
