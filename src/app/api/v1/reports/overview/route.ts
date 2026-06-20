@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { getEffectiveScope } from "@/lib/auth/effective-scope";
+import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   completedStatuses,
@@ -21,18 +22,21 @@ const allowedRoles = new Set(["developer", "admin", "manager", "finance", "data_
 export async function GET(request: Request) {
   try {
     const { user, profile } = await getCurrentUserProfile();
-    const realRole = profile?.role ?? "sales";
-    if (!allowedRoles.has(realRole)) {
+    const scope = await getEffectiveScope(profile?.role);
+    if (!allowedRoles.has(scope.effectiveRole)) {
       return NextResponse.json({ status: "error", message: "لا تملك صلاحية عرض التقارير." }, { status: 403 });
     }
 
-    const scope = await getEffectiveScope(profile?.role);
+    const selectedYear = await getEffectiveYear();
+    const selectedRange = yearDateRange(selectedYear);
+    const yearStart = new Date(selectedRange.from);
+    const yearEnd = new Date(new Date(selectedRange.to).getTime() - 1);
     const url = new URL(request.url);
-    const now = new Date();
-    const defaultFrom = new Date(now);
-    defaultFrom.setDate(defaultFrom.getDate() - 29);
-    const from = startOfDay(validDate(url.searchParams.get("from"), defaultFrom));
-    const to = endOfDay(validDate(url.searchParams.get("to"), now));
+    let from = startOfDay(validDate(url.searchParams.get("from"), yearStart));
+    let to = endOfDay(validDate(url.searchParams.get("to"), yearEnd));
+    if (from < yearStart) from = yearStart;
+    if (to > yearEnd) to = yearEnd;
+    if (from > to) from = yearStart;
     const connection = url.searchParams.get("connection") ?? "";
     const dataType = url.searchParams.get("dataType") === "new" ? "new" : "all";
 
@@ -47,6 +51,8 @@ export async function GET(request: Request) {
     const enhancedLeads = await admin
       .from("leads")
       .select("id,source,owner_id,company_id,created_at,assigned_at,lead_type,connection_type,queue_type,redirected_date,status,customer_status")
+      .gte("created_at", selectedRange.from)
+      .lt("created_at", selectedRange.to)
       .limit(20000);
 
     let rawLeads = (enhancedLeads.data ?? []) as unknown as Row[];
@@ -54,6 +60,8 @@ export async function GET(request: Request) {
       const fallback = await admin
         .from("leads")
         .select("id,source,owner_id,company_id,created_at,assigned_at,lead_type,queue_type,redirected_date,status,customer_status")
+        .gte("created_at", selectedRange.from)
+        .lt("created_at", selectedRange.to)
         .limit(20000);
       rawLeads = (fallback.data ?? []) as unknown as Row[];
     }
@@ -61,6 +69,8 @@ export async function GET(request: Request) {
     const enhancedTasks = await admin
       .from("tasks")
       .select("id,status,owner_id,receiver_id,related_id,done_at,completed_at,created_at,due_date")
+      .gte("created_at", selectedRange.from)
+      .lt("created_at", selectedRange.to)
       .limit(20000);
 
     let rawTasks = (enhancedTasks.data ?? []) as unknown as Row[];
@@ -68,6 +78,8 @@ export async function GET(request: Request) {
       const fallback = await admin
         .from("tasks")
         .select("id,status,owner_id,related_id,completed_at,created_at,due_date")
+        .gte("created_at", selectedRange.from)
+        .lt("created_at", selectedRange.to)
         .limit(20000);
       rawTasks = (fallback.data ?? []) as unknown as Row[];
     }
@@ -104,14 +116,7 @@ export async function GET(request: Request) {
     const distributionMap = new Map<string, { id: string; name: string; fresh: number; retargeted: number; redirected: number; total: number }>();
     for (const row of distributionRows) {
       const ownerId = text(row.owner_id);
-      const current = distributionMap.get(ownerId) ?? {
-        id: ownerId,
-        name: profileName(profileMap, ownerId),
-        fresh: 0,
-        retargeted: 0,
-        redirected: 0,
-        total: 0,
-      };
+      const current = distributionMap.get(ownerId) ?? { id: ownerId, name: profileName(profileMap, ownerId), fresh: 0, retargeted: 0, redirected: 0, total: 0 };
       const type = inferLeadType(row);
       if (type === "retargeted") current.retargeted += 1;
       else if (type === "redirected") current.redirected += 1;
@@ -127,11 +132,7 @@ export async function GET(request: Request) {
     const taskMap = new Map<string, { id: string; name: string; count: number }>();
     for (const row of completedTaskRows) {
       const ownerId = text(row.receiver_id) || text(row.owner_id) || "unassigned";
-      const current = taskMap.get(ownerId) ?? {
-        id: ownerId,
-        name: ownerId === "unassigned" ? "غير محدد" : profileName(profileMap, ownerId),
-        count: 0,
-      };
+      const current = taskMap.get(ownerId) ?? { id: ownerId, name: ownerId === "unassigned" ? "غير محدد" : profileName(profileMap, ownerId), count: 0 };
       current.count += 1;
       taskMap.set(ownerId, current);
     }
@@ -142,12 +143,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status: "success",
-      summary: {
-        customers: leadRows.length,
-        sources: sources.length,
-        distributed: distributionRows.length,
-        completedTasks: completedTaskRows.length,
-      },
+      year: selectedYear,
+      summary: { customers: leadRows.length, sources: sources.length, distributed: distributionRows.length, completedTasks: completedTaskRows.length },
       sources,
       distribution,
       completedTasks,
