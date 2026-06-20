@@ -1,29 +1,30 @@
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { requirePageAccess } from "@/lib/auth/server-guards";
-import { DistributionClient } from "./distribution-client";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { DistributionWorkspace as DistributionClient } from "./distribution-workspace";
 
 export default async function DistributionPage() {
-  const { supabase, user, profile } = await getCurrentUserProfile();
+  const { user, profile } = await getCurrentUserProfile();
   requirePageAccess(profile?.role, "distribution");
 
+  const admin = createAdminClient();
   const [{ data: leads }, { data: profiles }] = await Promise.all([
-    supabase
+    admin
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(1000),
-
-    supabase
+      .limit(5000),
+    admin
       .from("profiles")
-      .select("id,full_name,role,is_active")
+      .select("id,full_name,email,role,is_active")
       .eq("is_active", true)
       .order("full_name", { ascending: true }),
   ]);
 
   return (
     <DistributionClient
-      initialLeads={(leads ?? []) as any}
-      profiles={(profiles ?? []) as any}
+      initialLeads={(leads ?? []) as never[]}
+      profiles={(profiles ?? []) as never[]}
       currentUserId={user.id}
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
