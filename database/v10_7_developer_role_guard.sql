@@ -1,0 +1,2 @@
+-- Superseded by database/v10_7_developer_role_guard_v2.sql
+-- Do not run this file.
