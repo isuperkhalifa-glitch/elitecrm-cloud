@@ -83,13 +83,13 @@ const callChildren: NavItem[] = [
 ];
 
 const customerViewChildren: NavItem[] = [
-  { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers?connection=distributed", ar: "العملاء الموزعون", en: "Distributed customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers?connection=ivr", ar: "عملاء الرد الآلي", en: "IVR customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers?connection=manual", ar: "الإدخال اليدوي", en: "Manual customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers?connection=redirected", ar: "العملاء المحوّلون", en: "Redirected customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers?stage=interested_without_deal", ar: "مهتمون بدون تسجيل", en: "Interested without registration", icon: UsersRound, roles: allRoles },
-  { href: "/customers?stage=missed_in_sales", ar: "متابعات متأخرة", en: "Overdue follow-ups", icon: UsersRound, roles: allRoles },
+  { href: "/customers/all", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers/assigned", ar: "العملاء الموزعون", en: "Distributed customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers/ivr", ar: "عملاء الرد الآلي", en: "IVR customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers/manual", ar: "الإدخال اليدوي", en: "Manual customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers/redirected", ar: "العملاء المحوّلون", en: "Redirected customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers/interested", ar: "مهتمون بدون تسجيل", en: "Interested without registration", icon: UsersRound, roles: allRoles },
+  { href: "/customers/overdue", ar: "متابعات متأخرة", en: "Overdue follow-ups", icon: UsersRound, roles: allRoles },
 ];
 
 const reportChildren: NavItem[] = [
@@ -195,6 +195,13 @@ export const pageTitles: Record<string, { ar: string; en: string }> = {
   requests: { ar: "مركز الطلبات الداخلية", en: "Internal requests center" },
   calls: { ar: "مركز المكالمات", en: "Calls center" },
   customers: { ar: "مركز العملاء", en: "Customer center" },
+  customersAll: { ar: "كل العملاء", en: "All customers" },
+  customersDistributed: { ar: "العملاء الموزعون", en: "Distributed customers" },
+  customersIvr: { ar: "عملاء الرد الآلي", en: "IVR customers" },
+  customersManual: { ar: "عملاء الإدخال اليدوي", en: "Manual customers" },
+  customersRedirected: { ar: "العملاء المحوّلون", en: "Redirected customers" },
+  customersInterested: { ar: "مهتمون بدون تسجيل", en: "Interested without registration" },
+  customersOverdue: { ar: "المتابعات المتأخرة", en: "Overdue follow-ups" },
   registrations: { ar: "الطلاب والتسجيلات", en: "Students & registrations" },
   courses: { ar: "الدورات", en: "Courses" },
   trainingCenters: { ar: "مراكز التدريب", en: "Training centers" },
