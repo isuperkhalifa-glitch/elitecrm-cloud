@@ -25,7 +25,7 @@ export default async function ReportsPage({
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
     >
-      <ReportsClient initialTab={initialTab} selectedYear={selectedYear} />
+      <ReportsClient key={selectedYear} initialTab={initialTab} selectedYear={selectedYear} />
     </AppShell>
   );
 }
