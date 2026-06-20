@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getEffectiveScope } from "@/lib/auth/effective-scope";
+import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RequestsClient } from "./requests-client";
 
@@ -9,67 +11,52 @@ export default async function RequestsPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { user, profile } = await getCurrentUserProfile();
-  const role = profile?.role ?? "sales";
+  const scope = await getEffectiveScope(profile?.role);
+  const role = scope.effectiveRole;
   const params = await searchParams;
+  const year = await getEffectiveYear();
+  const range = yearDateRange(year);
   const admin = createAdminClient();
+  const actingUserId = scope.scopedUserId ?? user.id;
 
   let requestsQuery = admin
     .from("tasks")
     .select("id,request_code,title,description,request_type,priority,status,due_date,sender_id,receiver_id,owner_id,event_type,result_type,started_at,done_at,done_description,created_at,updated_at")
     .not("request_code", "is", null)
+    .gte("created_at", range.from)
+    .lt("created_at", range.to)
     .order("created_at", { ascending: false })
     .limit(5000);
 
-  if (!["developer", "admin", "manager"].includes(role)) {
-    requestsQuery = requestsQuery.or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+  if (scope.scopedUserId || !["developer", "admin", "manager"].includes(role)) {
+    requestsQuery = requestsQuery.or(
+      `sender_id.eq.${actingUserId},receiver_id.eq.${actingUserId},owner_id.eq.${actingUserId}`
+    );
   }
 
-  const requestResult = await requestsQuery;
-  let requests = requestResult.data ?? [];
+  const [{ data: requests }, { data: profiles }] = await Promise.all([
+    requestsQuery,
+    admin
+      .from("profiles")
+      .select("id,full_name,email,role,is_active")
+      .eq("is_active", true)
+      .order("full_name"),
+  ]);
 
-  if (requestResult.error) {
-    let fallbackQuery = admin
-      .from("tasks")
-      .select("id,title,description,priority,status,due_date,owner_id,event_type,created_at,updated_at")
-      .order("created_at", { ascending: false })
-      .limit(5000);
-
-    if (!["developer", "admin", "manager"].includes(role)) {
-      fallbackQuery = fallbackQuery.eq("owner_id", user.id);
-    }
-
-    const fallback = await fallbackQuery;
-    requests = (fallback.data ?? []).map((task) => ({
-      ...task,
-      request_code: `TASK-${String(task.id).slice(0, 8).toUpperCase()}`,
-      request_type: task.event_type ?? "other",
-      sender_id: null,
-      receiver_id: task.owner_id ?? null,
-      result_type: null,
-      started_at: null,
-      done_at: ["done", "completed", "closed", "finished"].includes(task.status ?? "") ? task.updated_at ?? null : null,
-      done_description: null,
-    })) as never[];
-  }
-
-  const { data: profiles } = await admin
-    .from("profiles")
-    .select("id,full_name,email,role,is_active")
-    .eq("is_active", true)
-    .order("full_name");
+  const actingProfile = (profiles ?? []).find((item) => item.id === actingUserId);
 
   return (
     <AppShell
       titleKey="requests"
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
-      role={role}
+      role={profile?.role ?? null}
     >
       <RequestsClient
-        initialRequests={requests as never[]}
+        initialRequests={(requests ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
-        currentUserId={user.id}
-        currentUserName={profile?.full_name ?? user.email ?? ""}
+        currentUserId={actingUserId}
+        currentUserName={actingProfile?.full_name ?? actingProfile?.email ?? profile?.full_name ?? user.email ?? ""}
         role={role}
         initialTab={params.tab ?? "incoming"}
       />

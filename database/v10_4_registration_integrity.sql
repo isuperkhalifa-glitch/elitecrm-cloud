@@ -1,0 +1,2 @@
+-- Superseded by database/v10_4_registration_integrity_v2.sql
+-- Do not run this file.
