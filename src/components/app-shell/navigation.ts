@@ -70,6 +70,7 @@ const requestCreateRoles: Role[] = [
 const adminRoles: Role[] = ["developer", "admin"];
 const salesOpsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales"];
 const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
+const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
 
 const callChildren: NavItem[] = [
   { href: "/calls?filter=all", ar: "كل المكالمات", en: "All calls", icon: PhoneCall, roles: salesOpsRoles },
@@ -103,7 +104,8 @@ export const navGroups: NavGroup[] = [
     roles: allRoles,
     items: [
       { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
-      { href: "/distribution", ar: "توزيع العملاء", en: "Distribution", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/distribution", ar: "مركز التوزيع", en: "Distribution center", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/data-quality", ar: "جودة البيانات", en: "Data quality", icon: ShieldCheck, roles: dataQualityRoles },
       { href: "/imports", ar: "استيراد العملاء", en: "Import customers", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
     ],
   },
@@ -138,7 +140,6 @@ export const navGroups: NavGroup[] = [
     roles: reportingRoles,
     items: [
       { href: "/reports", ar: "تقارير الأداء", en: "Performance reports", icon: BarChart3, roles: reportingRoles },
-      { href: "/commissions", ar: "تقارير العمولات", en: "Commission reports", icon: Receipt, roles: reportingRoles },
     ],
   },
   {
@@ -166,7 +167,8 @@ export const pageTitles: Record<string, { ar: string; en: string }> = {
   courses: { ar: "الدورات", en: "Courses" },
   trainingCenters: { ar: "مراكز التدريب", en: "Training centers" },
   imports: { ar: "استيراد العملاء", en: "Import customers" },
-  distribution: { ar: "توزيع العملاء", en: "Distribution" },
+  distribution: { ar: "مركز التوزيع", en: "Distribution center" },
+  dataQuality: { ar: "جودة البيانات", en: "Data quality" },
   commissions: { ar: "العمولات", en: "Commissions" },
   reports: { ar: "تقارير الأداء", en: "Performance reports" },
   users: { ar: "المستخدمون والصلاحيات", en: "Users & roles" },
