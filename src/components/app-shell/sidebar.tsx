@@ -42,12 +42,19 @@ export function AppSidebar({
   onClose,
 }: Props) {
   const searchParams = useSearchParams();
-  const [openItems, setOpenItems] = useState<Record<string, boolean>>({ calls: pathname.startsWith("/calls") });
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({
+    calls: pathname.startsWith("/calls"),
+    customerViews: pathname.startsWith("/customers"),
+    reportViews: pathname.startsWith("/reports"),
+  });
 
   useEffect(() => {
-    if (pathname.startsWith("/calls")) {
-      setOpenItems((current) => ({ ...current, calls: true }));
-    }
+    setOpenItems((current) => ({
+      ...current,
+      calls: current.calls || pathname.startsWith("/calls"),
+      customerViews: current.customerViews || pathname.startsWith("/customers"),
+      reportViews: current.reportViews || pathname.startsWith("/reports"),
+    }));
   }, [pathname]);
 
   const visibleGroups = navGroups
@@ -76,7 +83,10 @@ export function AppSidebar({
     for (const [key, value] of itemParams.entries()) {
       const currentValue = searchParams.get(key);
       if (currentValue === null) {
-        if ((key === "filter" && value === "all") || (key === "tab" && value === "incoming")) continue;
+        const defaultMatch =
+          (key === "filter" && value === "all") ||
+          (key === "tab" && (value === "incoming" || value === "sources"));
+        if (defaultMatch) continue;
         return false;
       }
       if (currentValue !== value) return false;
@@ -140,8 +150,8 @@ export function AppSidebar({
 
         {visibleGroups.map((group) => {
           const Icon = group.icon;
-          const expanded = openGroups[group.key] ?? false;
           const groupActive = group.items.some(itemIsActive);
+          const expanded = groupActive || (openGroups[group.key] ?? false);
 
           return (
             <div key={group.key}>
