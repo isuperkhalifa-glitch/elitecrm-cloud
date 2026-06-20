@@ -2,77 +2,23 @@ import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { getEffectiveScope } from "@/lib/auth/effective-scope";
 import { requirePageAccess } from "@/lib/auth/server-guards";
-import { CustomersClient } from "./customers-client";
+import { CustomersOperationsClient } from "./customers-operations-client";
+import {
+  allowedConnections,
+  allowedLeadTypes,
+  allowedStages,
+  allowedStatuses,
+  dateRangeForFollowup,
+  endOfDay,
+  pageSizeOptions,
+  parseCustomerFilters,
+  safeNumber,
+  startOfDay,
+  uniqueText,
+  validDate,
+} from "./customer-operations-server";
 
 type SearchParams = Record<string, string | string[] | undefined>;
-
-const pageSizeOptions = [25, 50, 100];
-const allowedStatuses = new Set(["interested", "not_interested", "need_offer", "missed", "wrong_number", "paid", "busy"]);
-const allowedLeadTypes = new Set(["fresh", "retargeted", "redirected"]);
-
-function firstValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function safeNumber(value: string | string[] | undefined, fallback: number) {
-  const parsed = Number(firstValue(value));
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
-}
-
-function startOfDay(date: Date) {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-}
-
-function endOfDay(date: Date) {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function validDate(value?: string | null) {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function dateRangeForFollowup(filter: string | null, from?: string | null, to?: string | null) {
-  const now = new Date();
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
-
-  if (filter === "overdue") return { lte: now.toISOString() };
-  if (filter === "today") return { gte: todayStart.toISOString(), lte: todayEnd.toISOString() };
-  if (filter === "tomorrow") {
-    const tomorrow = addDays(todayStart, 1);
-    return { gte: tomorrow.toISOString(), lte: endOfDay(tomorrow).toISOString() };
-  }
-  if (filter === "3days") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 3)).toISOString() };
-  if (filter === "7days" || filter === "week") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 7)).toISOString() };
-  if (filter === "month") return { gte: todayStart.toISOString(), lte: endOfDay(addDays(todayStart, 30)).toISOString() };
-
-  if (filter === "custom") {
-    const range: { gte?: string; lte?: string } = {};
-    const fromDate = validDate(from);
-    const toDate = validDate(to);
-    if (fromDate) range.gte = startOfDay(fromDate).toISOString();
-    if (toDate) range.lte = endOfDay(toDate).toISOString();
-    return range;
-  }
-
-  return null;
-}
-
-function cleanSearch(value: string) {
-  return value.replace(/[,%]/g, "").trim();
-}
 
 export default async function CustomersPage({ searchParams }: { searchParams?: Promise<SearchParams> | SearchParams }) {
   const resolved = searchParams ? await searchParams : {};
@@ -81,7 +27,6 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   const role = scope.effectiveRole;
   const scopedUserId = scope.scopedUserId;
   const scopedCompanyId = scope.scopedCompanyId;
-  const actingUserId = scope.previewAsUser && scopedUserId ? scopedUserId : user.id;
   requirePageAccess(role, "customers");
 
   const page = safeNumber(resolved.page, 1);
@@ -89,15 +34,10 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   const pageSize = pageSizeOptions.includes(pageSizeInput) ? pageSizeInput : 50;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const filters = parseCustomerFilters(resolved);
 
-  const q = cleanSearch(firstValue(resolved.q) ?? "");
-  const status = firstValue(resolved.status) ?? "";
-  const owner = firstValue(resolved.owner) ?? "";
-  const leadType = firstValue(resolved.leadType) ?? "";
-  const followup = firstValue(resolved.followup) ?? "";
-  const startDate = firstValue(resolved.startDate) ?? "";
-  const endDate = firstValue(resolved.endDate) ?? "";
-  const course = cleanSearch(firstValue(resolved.course) ?? "");
+  const schemaProbe = await supabase.from("leads").select("connection_type,city,education_level").limit(1);
+  const enhancedSchemaReady = !schemaProbe.error;
 
   let leadsQuery = supabase
     .from("leads")
@@ -108,43 +48,89 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
 
   if (scopedUserId) leadsQuery = leadsQuery.eq("owner_id", scopedUserId);
   else if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
-
   if (scopedCompanyId) leadsQuery = leadsQuery.eq("company_id", scopedCompanyId);
 
-  if (q) {
-    leadsQuery = leadsQuery.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,phone_number.ilike.%${q}%,email.ilike.%${q}%,program.ilike.%${q}%,company_name.ilike.%${q}%`
-    );
+  if (filters.q) {
+    leadsQuery = leadsQuery.or(`full_name.ilike.%${filters.q}%,phone.ilike.%${filters.q}%,phone_number.ilike.%${filters.q}%,email.ilike.%${filters.q}%,program.ilike.%${filters.q}%,company_name.ilike.%${filters.q}%`);
   }
+  if (allowedStatuses.has(filters.status)) leadsQuery = leadsQuery.or(`status.eq.${filters.status},customer_status.eq.${filters.status}`);
+  if (allowedLeadTypes.has(filters.leadType)) leadsQuery = leadsQuery.eq("lead_type", filters.leadType);
+  if (!scopedUserId && filters.owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", filters.owner);
+  if (filters.course) leadsQuery = leadsQuery.or(`program.ilike.%${filters.course}%,course_name.ilike.%${filters.course}%`);
+  if (filters.source) leadsQuery = leadsQuery.eq("source", filters.source);
 
-  if (allowedStatuses.has(status)) leadsQuery = leadsQuery.or(`status.eq.${status},customer_status.eq.${status}`);
-  if (allowedLeadTypes.has(leadType)) leadsQuery = leadsQuery.eq("lead_type", leadType);
-  if (!scopedUserId && owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", owner);
-  if (course) leadsQuery = leadsQuery.or(`program.ilike.%${course}%,course_name.ilike.%${course}%`);
+  const createdFrom = validDate(filters.createdFrom);
+  const createdTo = validDate(filters.createdTo);
+  if (createdFrom) leadsQuery = leadsQuery.gte("created_at", startOfDay(createdFrom).toISOString());
+  if (createdTo) leadsQuery = leadsQuery.lte("created_at", endOfDay(createdTo).toISOString());
 
-  const followupRange = dateRangeForFollowup(followup, startDate, endDate);
+  const followupRange = dateRangeForFollowup(filters.followup, filters.startDate, filters.endDate);
   if (followupRange?.gte) leadsQuery = leadsQuery.gte("next_follow_up_at", followupRange.gte);
   if (followupRange?.lte) leadsQuery = leadsQuery.lte("next_follow_up_at", followupRange.lte);
 
-  const [{ data: leads, count }, { data: profiles }] = await Promise.all([
+  if (allowedConnections.has(filters.connection)) {
+    if (enhancedSchemaReady) leadsQuery = leadsQuery.eq("connection_type", filters.connection);
+    else if (filters.connection === "distributed") leadsQuery = leadsQuery.not("owner_id", "is", null);
+    else if (filters.connection === "ivr") leadsQuery = leadsQuery.ilike("source", "%ivr%");
+    else if (filters.connection === "manual") leadsQuery = leadsQuery.eq("queue_type", "manual");
+    else leadsQuery = leadsQuery.or("lead_type.eq.redirected,redirected_date.not.is.null");
+  }
+
+  if (enhancedSchemaReady && filters.city) leadsQuery = leadsQuery.eq("city", filters.city);
+  if (enhancedSchemaReady && filters.education) leadsQuery = leadsQuery.eq("education_level", filters.education);
+
+  if (allowedStages.has(filters.stage)) {
+    if (filters.stage === "interested_without_deal") {
+      leadsQuery = leadsQuery.or("status.eq.interested,customer_status.eq.interested");
+      leadsQuery = leadsQuery.or("registration_status.is.null,registration_status.neq.registered");
+      leadsQuery = leadsQuery.or("payment_status.is.null,payment_status.neq.paid");
+    } else if (filters.stage === "with_deal") {
+      leadsQuery = leadsQuery.or("registration_status.eq.registered,payment_status.eq.paid,payment_status.eq.partial");
+    } else if (filters.stage === "still_in_sales") {
+      leadsQuery = leadsQuery.or("status.in.(interested,need_offer,busy,missed),customer_status.in.(interested,need_offer,busy,missed)");
+      leadsQuery = leadsQuery.or("payment_status.is.null,payment_status.neq.paid");
+    } else {
+      leadsQuery = leadsQuery.lt("next_follow_up_at", new Date().toISOString());
+      leadsQuery = leadsQuery.or("payment_status.is.null,payment_status.neq.paid");
+    }
+  }
+
+  let optionsQuery = supabase
+    .from("leads")
+    .select(enhancedSchemaReady ? "source,city,education_level" : "source")
+    .limit(5000);
+  if (scopedUserId) optionsQuery = optionsQuery.eq("owner_id", scopedUserId);
+  else if (role === "sales") optionsQuery = optionsQuery.eq("owner_id", user.id);
+  if (scopedCompanyId) optionsQuery = optionsQuery.eq("company_id", scopedCompanyId);
+
+  const [{ data: leads, count }, { data: profiles }, { data: courses }, { data: optionRows }] = await Promise.all([
     leadsQuery,
-    supabase.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name", { ascending: true }),
+    supabase.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name"),
+    supabase.from("courses").select("id,name,name_ar,name_en,status").order("sort_order"),
+    optionsQuery,
   ]);
+
+  const rows = (optionRows ?? []) as unknown as Record<string, unknown>[];
+  const courseOptions = (courses ?? []).map((course) => ({
+    id: course.id,
+    name: course.name_ar ?? course.name ?? course.name_en ?? course.id,
+  }));
 
   return (
     <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
-      <CustomersClient
-        initialLeads={(leads ?? []) as any}
-        profiles={(profiles ?? []) as any}
-        currentUserId={actingUserId}
-        currentUserName={profile?.full_name ?? user.email ?? "\u0627\u0644\u0646\u0638\u0627\u0645"}
-        userEmail={user.email ?? null}
-        fullName={profile?.full_name ?? null}
+      <CustomersOperationsClient
+        initialLeads={(leads ?? []) as never[]}
+        profiles={(profiles ?? []) as never[]}
+        courses={courseOptions}
+        sources={uniqueText(rows, "source")}
+        cities={enhancedSchemaReady ? uniqueText(rows, "city") : []}
+        educationLevels={enhancedSchemaReady ? uniqueText(rows, "education_level") : []}
+        enhancedSchemaReady={enhancedSchemaReady}
         role={role}
         totalCount={count ?? 0}
         page={page}
         pageSize={pageSize}
-        initialFilters={{ q, status, owner, leadType, followup, startDate, endDate, course }}
+        initialFilters={filters}
       />
     </AppShell>
   );
