@@ -32,6 +32,7 @@ export const appRoles: AppRole[] = [
 
 const salesOperations: AppRole[] = ["developer", "admin", "manager", "moderator", "sales"];
 const reportingRoles: AppRole[] = ["developer", "admin", "manager", "finance", "data_analyst"];
+const dataQualityRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
 
 export const routeAccess: Record<string, AppRole[]> = {
   "/dashboard": appRoles,
@@ -43,6 +44,7 @@ export const routeAccess: Record<string, AppRole[]> = {
   "/training-centers": ["developer", "admin", "manager", "data_analyst"],
   "/courses": appRoles,
   "/distribution": ["developer", "admin", "manager", "moderator"],
+  "/data-quality": dataQualityRoles,
   "/imports": ["developer", "admin", "moderator", "marketer"],
   "/commissions": ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
   "/reports": reportingRoles,
@@ -66,7 +68,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Developer",
     summaryAr: "تحكم كامل في النظام والإعدادات والصلاحيات.",
     summaryEn: "Full system control.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/imports", "/commissions", "/reports", "/users", "/settings", "/customize", "/developer"],
+    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/data-quality", "/imports", "/commissions", "/reports", "/users", "/settings", "/customize", "/developer"],
     actionsAr: ["تخصيص النظام", "إدارة المستخدمين", "إدارة كل الطلبات", "إصلاح البيانات"],
     actionsEn: ["Customize system", "Manage users", "Manage all requests", "Fix data"],
   },
@@ -76,7 +78,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "General Manager",
     summaryAr: "يرى كل شيء ويدير التشغيل والفريق.",
     summaryEn: "Full business visibility and operations management.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/imports", "/commissions", "/reports", "/users", "/settings"],
+    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/data-quality", "/imports", "/commissions", "/reports", "/users", "/settings"],
     actionsAr: ["متابعة الكل", "إدارة طلبات الفريق", "توزيع العملاء", "إدارة المستخدمين"],
     actionsEn: ["View all", "Manage team requests", "Assign customers", "Manage users"],
   },
@@ -86,7 +88,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Sales Team Leader",
     summaryAr: "يدير فريق السيلز والتوزيع والمتابعات والطلبات.",
     summaryEn: "Manages sales team, assignment, follow-ups, and requests.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/distribution", "/courses", "/commissions", "/reports"],
+    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/distribution", "/data-quality", "/courses", "/commissions", "/reports"],
     actionsAr: ["إدارة طلبات الفريق", "توزيع العملاء", "تشغيل المكالمات", "متابعة الفريق"],
     actionsEn: ["Manage team requests", "Assign customers", "Run calls", "Monitor team"],
   },
@@ -96,7 +98,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Moderator",
     summaryAr: "يراجع العملاء ويوزعهم ويتعامل مع الطلبات الواردة والصادرة.",
     summaryEn: "Reviews customers, assigns them, and handles internal requests.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/distribution", "/imports"],
+    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/distribution", "/data-quality", "/imports"],
     actionsAr: ["إسناد طلب", "تنفيذ الطلبات", "مراجعة العملاء", "التوزيع"],
     actionsEn: ["Assign request", "Complete requests", "Review customers", "Assign"],
   },
@@ -136,7 +138,7 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Data Analyst",
     summaryAr: "يرى التقارير والطلبات بدون تعديل تشغيلي.",
     summaryEn: "Reads reports and requests without operational editing.",
-    routes: ["/dashboard", "/requests", "/customers", "/training-centers", "/courses", "/commissions", "/reports"],
+    routes: ["/dashboard", "/requests", "/customers", "/data-quality", "/training-centers", "/courses", "/commissions", "/reports"],
     actionsAr: ["عرض الطلبات", "عرض التقارير", "تحليل الأداء"],
     actionsEn: ["View requests", "View reports", "Analyze performance"],
   },
