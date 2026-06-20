@@ -14,7 +14,6 @@ export type PageKey =
   | "users"
   | "settings"
   | "customize"
-  // Legacy routes kept for build compatibility only.
   | "leads"
   | "my-customers"
   | "tasks"
@@ -24,7 +23,6 @@ export type PageKey =
   | "contacts";
 
 export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
-
 export const adminRoles: Role[] = ["developer", "admin"];
 export const operationsRoles: Role[] = ["developer", "admin", "manager", "moderator"];
 export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
@@ -36,8 +34,8 @@ export const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moder
 export const pageAccess: Record<PageKey, Role[]> = {
   dashboard: allRoles,
   customers: allRoles,
-  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance"],
-  courses: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
+  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"],
+  courses: allRoles,
   "training-centers": ["developer", "admin", "manager", "data_analyst"],
   distribution: operationsRoles,
   "data-quality": dataQualityRoles,
@@ -47,7 +45,6 @@ export const pageAccess: Record<PageKey, Role[]> = {
   users: adminRoles,
   settings: adminRoles,
   customize: adminRoles,
-
   leads: intakeRoles,
   "my-customers": salesRoles,
   tasks: salesRoles,

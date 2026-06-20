@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
-import { leadStatusValues, normalizeLeadStatus } from "@/lib/crm/customer-core";
+import { parseLeadStatus } from "@/lib/crm/customer-core";
 
 export async function PUT(
   request: Request,
@@ -10,17 +10,20 @@ export async function PUT(
     const { supabase, user, profile } = await getCurrentUserProfile();
     const { id } = await context.params;
     const body = await request.json();
-    const status = normalizeLeadStatus(String(body.status ?? ""));
+    const status = parseLeadStatus(String(body.status ?? ""));
 
-    if (!leadStatusValues.includes(status)) {
+    if (!status) {
       return NextResponse.json(
         { status: "error", message: "Invalid lead status." },
         { status: 422 }
       );
     }
 
-    let query = supabase.from("leads").select("id,owner_id").eq("id", id).single();
-    const { data: lead, error: leadError } = await query;
+    const { data: lead, error: leadError } = await supabase
+      .from("leads")
+      .select("id,owner_id")
+      .eq("id", id)
+      .single();
 
     if (leadError || !lead) {
       return NextResponse.json(
