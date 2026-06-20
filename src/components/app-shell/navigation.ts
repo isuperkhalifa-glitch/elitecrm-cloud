@@ -82,7 +82,39 @@ const callChildren: NavItem[] = [
   { href: "/calls?filter=redirected", ar: "المحوّلة إليك", en: "Redirected to you", icon: PhoneCall, roles: salesOpsRoles },
 ];
 
+const customerViewChildren: NavItem[] = [
+  { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers?connection=distributed", ar: "العملاء الموزعون", en: "Distributed customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers?connection=ivr", ar: "عملاء الرد الآلي", en: "IVR customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers?connection=manual", ar: "الإدخال اليدوي", en: "Manual customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers?connection=redirected", ar: "العملاء المحوّلون", en: "Redirected customers", icon: UsersRound, roles: allRoles },
+  { href: "/customers?stage=interested_without_deal", ar: "مهتمون بدون تسجيل", en: "Interested without registration", icon: UsersRound, roles: allRoles },
+  { href: "/customers?stage=missed_in_sales", ar: "متابعات متأخرة", en: "Overdue follow-ups", icon: UsersRound, roles: allRoles },
+];
+
+const reportChildren: NavItem[] = [
+  { href: "/reports?tab=sources", ar: "مصادر البيانات", en: "Data sources", icon: BarChart3, roles: reportingRoles },
+  { href: "/reports?tab=distribution", ar: "توزيع البيانات", en: "Data distribution", icon: BarChart3, roles: reportingRoles },
+  { href: "/reports?tab=tasks", ar: "المهام المكتملة", en: "Completed tasks", icon: BarChart3, roles: reportingRoles },
+];
+
 export const navGroups: NavGroup[] = [
+  {
+    key: "students",
+    ar: "الطلاب والتسجيلات",
+    en: "Students & registrations",
+    icon: GraduationCap,
+    roles: [...salesOpsRoles, "finance", "data_analyst"],
+    items: [
+      {
+        href: "/registrations",
+        ar: "التسجيلات والمدفوعات",
+        en: "Registrations & payments",
+        icon: Receipt,
+        roles: [...salesOpsRoles, "finance", "data_analyst"],
+      },
+    ],
+  },
   {
     key: "requests",
     ar: "الطلبات",
@@ -97,28 +129,28 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    key: "sales",
+    ar: "المبيعات والتشغيل",
+    en: "Sales operations",
+    icon: Receipt,
+    roles: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
+    items: [
+      { key: "calls", ar: "مركز المكالمات", en: "Calls center", icon: Headphones, roles: salesOpsRoles, children: callChildren },
+      { href: "/distribution", ar: "التوزيع والطوابير", en: "Distribution & queues", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { href: "/data-quality", ar: "فحص وجودة العملاء", en: "Customer checks & quality", icon: ShieldCheck, roles: dataQualityRoles },
+      { href: "/imports", ar: "استيراد البيانات", en: "Data imports", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
+      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
+    ],
+  },
+  {
     key: "customers",
     ar: "العملاء",
     en: "Customers",
     icon: UsersRound,
     roles: allRoles,
     items: [
-      { href: "/customers", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
-      { href: "/distribution", ar: "مركز التوزيع", en: "Distribution center", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
-      { href: "/data-quality", ar: "جودة البيانات", en: "Data quality", icon: ShieldCheck, roles: dataQualityRoles },
-      { href: "/imports", ar: "استيراد العملاء", en: "Import customers", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
-    ],
-  },
-  {
-    key: "sales",
-    ar: "المبيعات",
-    en: "Sales",
-    icon: Receipt,
-    roles: salesOpsRoles,
-    items: [
-      { key: "calls", ar: "المكالمات", en: "Calls", icon: Headphones, roles: salesOpsRoles, children: callChildren },
-      { href: "/registrations", ar: "التسجيلات والمدفوعات", en: "Registrations & payments", icon: Receipt, roles: [...salesOpsRoles, "finance", "data_analyst"] },
-      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
+      { key: "customerViews", ar: "قوائم العملاء", en: "Customer lists", icon: UsersRound, roles: allRoles, children: customerViewChildren },
+      { href: "/distribution", ar: "نقل وإعادة توزيع العملاء", en: "Transfer & redistribute", icon: Send, roles: ["developer", "admin", "manager", "moderator"] },
     ],
   },
   {
@@ -139,7 +171,7 @@ export const navGroups: NavGroup[] = [
     icon: BarChart3,
     roles: reportingRoles,
     items: [
-      { href: "/reports", ar: "تقارير الأداء", en: "Performance reports", icon: BarChart3, roles: reportingRoles },
+      { key: "reportViews", ar: "مركز التقارير", en: "Reports center", icon: BarChart3, roles: reportingRoles, children: reportChildren },
     ],
   },
   {
@@ -161,16 +193,16 @@ export const pageTitles: Record<string, { ar: string; en: string }> = {
   dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
   calendar: { ar: "التقويم والمتابعات", en: "Calendar & follow-ups" },
   requests: { ar: "مركز الطلبات الداخلية", en: "Internal requests center" },
-  calls: { ar: "المكالمات الواردة", en: "Incoming calls" },
-  customers: { ar: "العملاء", en: "Customers" },
-  registrations: { ar: "التسجيلات والمدفوعات", en: "Registrations & payments" },
+  calls: { ar: "مركز المكالمات", en: "Calls center" },
+  customers: { ar: "مركز العملاء", en: "Customer center" },
+  registrations: { ar: "الطلاب والتسجيلات", en: "Students & registrations" },
   courses: { ar: "الدورات", en: "Courses" },
   trainingCenters: { ar: "مراكز التدريب", en: "Training centers" },
-  imports: { ar: "استيراد العملاء", en: "Import customers" },
-  distribution: { ar: "مركز التوزيع", en: "Distribution center" },
-  dataQuality: { ar: "جودة البيانات", en: "Data quality" },
+  imports: { ar: "استيراد البيانات", en: "Data imports" },
+  distribution: { ar: "التوزيع والطوابير", en: "Distribution & queues" },
+  dataQuality: { ar: "فحص وجودة العملاء", en: "Customer checks & quality" },
   commissions: { ar: "العمولات", en: "Commissions" },
-  reports: { ar: "تقارير الأداء", en: "Performance reports" },
+  reports: { ar: "مركز التقارير", en: "Reports center" },
   users: { ar: "المستخدمون والصلاحيات", en: "Users & roles" },
   settings: { ar: "الإعدادات", en: "Settings" },
   customize: { ar: "تخصيص النظام", en: "Customize" },
