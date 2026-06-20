@@ -124,7 +124,7 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   }));
 
   return (
-    <AppShell titleKey="customers" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
+    <AppShell titleKey="customersAll" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
       <CustomersOperationsClient
         initialLeads={(leads ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
@@ -138,6 +138,12 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
         page={page}
         pageSize={pageSize}
         initialFilters={filters}
+        titleAr="كل العملاء"
+        titleEn="All customers"
+        descriptionAr="قاعدة العملاء الكاملة مع البحث والتصفية والتحويل الجماعي."
+        descriptionEn="The complete customer database with search, filters, and bulk transfer."
+        fixedFilters={{}}
+        lockedFields={[]}
       />
     </AppShell>
   );
