@@ -3,22 +3,33 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const protectedRoutes = [
   "/dashboard",
+  "/calendar",
+  "/requests",
+  "/calls",
   "/customers",
+  "/registrations",
+  "/training-centers",
+  "/courses",
+  "/distribution",
+  "/data-quality",
+  "/imports",
+  "/commissions",
+  "/reports",
+  "/users",
+  "/settings",
+  "/customize",
+  "/developer",
   "/companies",
   "/contacts",
   "/leads",
-  "/deals",
+  "/my-customers",
   "/tasks",
+  "/deals",
   "/invoices",
-  "/commissions",
-  "/users",
-  "/settings",
 ];
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,14 +40,8 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -57,12 +62,14 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.searchParams.set("next", `${path}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 
   if (user && path === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
