@@ -4,7 +4,7 @@ import type { DistributionPoint, SourcePoint, TaskPoint } from "./reports-types"
 
 const palette = ["#0f766e", "#2563eb", "#f59e0b", "#dc2626", "#7c3aed", "#0891b2", "#65a30d", "#ea580c"];
 
-export function SourceDonut({ data, emptyText }: { data: SourcePoint[]; emptyText: string }) {
+export function SourceDonut({ data, emptyText, totalLabel }: { data: SourcePoint[]; emptyText: string; totalLabel: string }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   if (!total) return <EmptyChart text={emptyText} />;
 
@@ -39,7 +39,7 @@ export function SourceDonut({ data, emptyText }: { data: SourcePoint[]; emptyTex
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-black text-slate-800">{total}</span>
-          <span className="text-xs text-slate-500">إجمالي العملاء</span>
+          <span className="text-xs text-slate-500">{totalLabel}</span>
         </div>
       </div>
 
@@ -61,16 +61,24 @@ export function SourceDonut({ data, emptyText }: { data: SourcePoint[]; emptyTex
   );
 }
 
-export function DistributionBars({ data, emptyText }: { data: DistributionPoint[]; emptyText: string }) {
+export function DistributionBars({
+  data,
+  emptyText,
+  labels,
+}: {
+  data: DistributionPoint[];
+  emptyText: string;
+  labels: { fresh: string; retargeted: string; redirected: string };
+}) {
   const max = Math.max(1, ...data.map((item) => item.total));
   if (!data.length) return <EmptyChart text={emptyText} />;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-        <Legend color="#2563eb" label="جديد" />
-        <Legend color="#f59e0b" label="إعادة استهداف" />
-        <Legend color="#7c3aed" label="محوّل" />
+        <Legend color="#2563eb" label={labels.fresh} />
+        <Legend color="#f59e0b" label={labels.retargeted} />
+        <Legend color="#7c3aed" label={labels.redirected} />
       </div>
       <div className="space-y-3">
         {data.map((item) => (
