@@ -44,11 +44,12 @@ export default async function CallsPage({
   }
 
   const enhancedResult = await createLeadQuery(enhancedFields);
-  let leads = (enhancedResult.data ?? []) as Record<string, unknown>[];
+  let leads = (enhancedResult.data ?? []) as unknown as Record<string, unknown>[];
 
   if (enhancedResult.error) {
     const fallback = await createLeadQuery(fallbackFields);
-    leads = ((fallback.data ?? []) as Record<string, unknown>[]).map(normalizeLegacyCall);
+    const fallbackRows = (fallback.data ?? []) as unknown as Record<string, unknown>[];
+    leads = fallbackRows.map(normalizeLegacyCall);
   }
 
   const [{ data: courses }, { data: profiles }] = await Promise.all([
