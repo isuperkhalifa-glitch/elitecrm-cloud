@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, LogOut, Mail, Menu, UserCog, X } from "lucide-react";
 import { AdminEditButton } from "@/components/admin-edit-button";
+import { ActiveScopeBanner, HeaderScopeSwitcher } from "@/components/header-scope-switcher";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useI18n } from "@/components/language-provider";
 import { NotificationBell } from "@/components/notification-bell";
@@ -22,6 +23,12 @@ type AppShellProps = {
 };
 
 type Company = { id: string; name: string };
+
+function readYearCookie() {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/(?:^|; )elitecrm-year=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
 
 export function AppShell({ titleKey, userEmail, fullName, role, children }: AppShellProps) {
   const pathname = usePathname();
@@ -49,13 +56,22 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
 
   useEffect(() => {
     let mounted = true;
+
     async function loadCompanies() {
       const { data } = await supabase.from("companies").select("id,name").order("name");
       if (mounted) setCompanies((data ?? []) as Company[]);
     }
-    loadCompanies();
-    const savedYear = window.localStorage.getItem("elitecrm-v8-year");
-    if (savedYear) setYear(savedYear);
+
+    void loadCompanies();
+
+    const selectedYear = readYearCookie() || window.localStorage.getItem("elitecrm-v8-year") || String(new Date().getFullYear());
+    setYear(selectedYear);
+    window.localStorage.setItem("elitecrm-v8-year", selectedYear);
+    document.cookie = `elitecrm-year=${encodeURIComponent(selectedYear)}; path=/; max-age=31536000; SameSite=Lax`;
+
+    const savedSidebar = window.localStorage.getItem("elitecrm-sidebar-open");
+    if (savedSidebar !== null) setSidebarOpen(savedSidebar === "true");
+
     return () => {
       mounted = false;
     };
@@ -72,17 +88,28 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
     router.refresh();
   }
 
+  function toggleSidebar() {
+    setSidebarOpen((current) => {
+      const next = !current;
+      window.localStorage.setItem("elitecrm-sidebar-open", String(next));
+      return next;
+    });
+  }
+
   function changeCompany(companyId: string) {
     if (!companyId) {
       resetScope();
       window.setTimeout(() => router.refresh(), 0);
       return;
     }
+
     const company = companies.find((item) => item.id === companyId);
+    if (!company) return;
+
     setScope({
       mode: "company",
       targetId: companyId,
-      targetName: company?.name ?? "",
+      targetName: company.name,
       targetRole: "company",
       previewMode: "admin",
     });
@@ -92,6 +119,8 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
   function changeYear(nextYear: string) {
     setYear(nextYear);
     window.localStorage.setItem("elitecrm-v8-year", nextYear);
+    document.cookie = `elitecrm-year=${encodeURIComponent(nextYear)}; path=/; max-age=31536000; SameSite=Lax`;
+    window.setTimeout(() => router.refresh(), 0);
   }
 
   const sidebar = (
@@ -119,7 +148,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
         <div className="flex h-full items-center gap-3 px-4">
           <button
             type="button"
-            onClick={() => setSidebarOpen((value) => !value)}
+            onClick={toggleSidebar}
             className="hidden rounded-md p-2 text-[#29455f] hover:bg-slate-100 lg:inline-flex"
             aria-label={isArabic ? "إظهار أو إخفاء القائمة" : "Toggle sidebar"}
           >
@@ -142,6 +171,8 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
               {isArabic ? pageTitle.ar : pageTitle.en}
             </h1>
           </div>
+
+          <HeaderScopeSwitcher role={role} />
 
           <div className="flex items-center gap-1">
             <button
@@ -208,6 +239,7 @@ export function AppShell({ titleKey, userEmail, fullName, role, children }: AppS
       <main className={`min-h-screen pt-16 transition-[padding] duration-300 ${contentPadding}`}>
         <div className="p-3 md:p-5">
           <AdminEditButton role={role ?? null} />
+          <ActiveScopeBanner />
           {children}
         </div>
       </main>
