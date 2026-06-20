@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { CallsWorkspaceClient } from "./calls-workspace-client";
+import { CallsCenterClient } from "./calls-center-client";
 
 const allowedRoles = new Set(["developer", "admin", "manager", "moderator", "sales"]);
 
@@ -137,7 +137,7 @@ export default async function CallsPage({
       fullName={profile?.full_name ?? null}
       role={role}
     >
-      <CallsWorkspaceClient
+      <CallsCenterClient
         initialLeads={(leads ?? []) as never[]}
         courses={(courses ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
