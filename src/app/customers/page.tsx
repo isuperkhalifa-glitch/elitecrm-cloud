@@ -2,6 +2,8 @@ import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { getEffectiveScope } from "@/lib/auth/effective-scope";
 import { requirePageAccess } from "@/lib/auth/server-guards";
+import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { CustomersOperationsClient } from "./customers-operations-client";
 import {
   allowedConnections,
@@ -22,11 +24,14 @@ type SearchParams = Record<string, string | string[] | undefined>;
 
 export default async function CustomersPage({ searchParams }: { searchParams?: Promise<SearchParams> | SearchParams }) {
   const resolved = searchParams ? await searchParams : {};
-  const { supabase, user, profile } = await getCurrentUserProfile();
+  const { user, profile } = await getCurrentUserProfile();
   const scope = await getEffectiveScope(profile?.role);
   const role = scope.effectiveRole;
   const scopedUserId = scope.scopedUserId;
   const scopedCompanyId = scope.scopedCompanyId;
+  const selectedYear = await getEffectiveYear();
+  const yearRange = yearDateRange(selectedYear);
+  const admin = createAdminClient();
   requirePageAccess(role, "customers");
 
   const page = safeNumber(resolved.page, 1);
@@ -36,12 +41,14 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   const to = from + pageSize - 1;
   const filters = parseCustomerFilters(resolved);
 
-  const schemaProbe = await supabase.from("leads").select("connection_type,city,education_level").limit(1);
+  const schemaProbe = await admin.from("leads").select("connection_type,city,education_level").limit(1);
   const enhancedSchemaReady = !schemaProbe.error;
 
-  let leadsQuery = supabase
+  let leadsQuery = admin
     .from("leads")
     .select("*", { count: "exact" })
+    .gte("created_at", yearRange.from)
+    .lt("created_at", yearRange.to)
     .order("next_follow_up_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -50,9 +57,7 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   else if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
   if (scopedCompanyId) leadsQuery = leadsQuery.eq("company_id", scopedCompanyId);
 
-  if (filters.q) {
-    leadsQuery = leadsQuery.or(`full_name.ilike.%${filters.q}%,phone.ilike.%${filters.q}%,phone_number.ilike.%${filters.q}%,email.ilike.%${filters.q}%,program.ilike.%${filters.q}%,company_name.ilike.%${filters.q}%`);
-  }
+  if (filters.q) leadsQuery = leadsQuery.or(`full_name.ilike.%${filters.q}%,phone.ilike.%${filters.q}%,phone_number.ilike.%${filters.q}%,email.ilike.%${filters.q}%,program.ilike.%${filters.q}%,company_name.ilike.%${filters.q}%`);
   if (allowedStatuses.has(filters.status)) leadsQuery = leadsQuery.or(`status.eq.${filters.status},customer_status.eq.${filters.status}`);
   if (allowedLeadTypes.has(filters.leadType)) leadsQuery = leadsQuery.eq("lead_type", filters.leadType);
   if (!scopedUserId && filters.owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", filters.owner);
@@ -95,9 +100,11 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     }
   }
 
-  let optionsQuery = supabase
+  let optionsQuery = admin
     .from("leads")
     .select(enhancedSchemaReady ? "source,city,education_level" : "source")
+    .gte("created_at", yearRange.from)
+    .lt("created_at", yearRange.to)
     .limit(5000);
   if (scopedUserId) optionsQuery = optionsQuery.eq("owner_id", scopedUserId);
   else if (role === "sales") optionsQuery = optionsQuery.eq("owner_id", user.id);
@@ -105,8 +112,8 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
 
   const [{ data: leads, count }, { data: profiles }, { data: courses }, { data: optionRows }] = await Promise.all([
     leadsQuery,
-    supabase.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name"),
-    supabase.from("courses").select("id,name,name_ar,name_en,status").order("sort_order"),
+    admin.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name"),
+    admin.from("courses").select("id,name,name_ar,name_en,status").order("sort_order"),
     optionsQuery,
   ]);
 
