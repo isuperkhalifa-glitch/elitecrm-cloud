@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getEffectiveScope } from "@/lib/auth/effective-scope";
+import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CallsCenterClient } from "./calls-center-client";
 import { enhancedFields, fallbackFields, normalizeLegacyCall } from "./calls-data";
@@ -12,8 +14,11 @@ export default async function CallsPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   const { user, profile } = await getCurrentUserProfile();
-  const role = profile?.role ?? "sales";
+  const scope = await getEffectiveScope(profile?.role);
+  const role = scope.effectiveRole;
   const params = await searchParams;
+  const selectedYear = await getEffectiveYear();
+  const yearRange = yearDateRange(selectedYear);
 
   if (!allowedRoles.has(role)) {
     return (
@@ -21,7 +26,7 @@ export default async function CallsPage({
         titleKey="calls"
         userEmail={user.email ?? null}
         fullName={profile?.full_name ?? null}
-        role={role}
+        role={profile?.role ?? null}
       >
         <div className="v8-card rounded-md p-8 text-center text-red-600">
           هذه الصفحة غير متاحة لصلاحيتك الحالية.
@@ -31,22 +36,27 @@ export default async function CallsPage({
   }
 
   const admin = createAdminClient();
+  const effectiveUserId = scope.scopedUserId ?? (role === "sales" ? user.id : null);
 
   function createLeadQuery(fields: string) {
     let query = admin
       .from("leads")
       .select(fields)
+      .gte("created_at", yearRange.from)
+      .lt("created_at", yearRange.to)
       .order("created_at", { ascending: false })
       .limit(5000);
 
-    if (role === "sales") query = query.eq("owner_id", user.id);
+    if (effectiveUserId) query = query.eq("owner_id", effectiveUserId);
+    if (scope.scopedCompanyId) query = query.eq("company_id", scope.scopedCompanyId);
     return query;
   }
 
   const enhancedResult = await createLeadQuery(enhancedFields);
+  const enhancedSchemaReady = !enhancedResult.error;
   let leads = (enhancedResult.data ?? []) as unknown as Record<string, unknown>[];
 
-  if (enhancedResult.error) {
+  if (!enhancedSchemaReady) {
     const fallback = await createLeadQuery(fallbackFields);
     const fallbackRows = (fallback.data ?? []) as unknown as Record<string, unknown>[];
     leads = fallbackRows.map(normalizeLegacyCall);
@@ -69,16 +79,16 @@ export default async function CallsPage({
       titleKey="calls"
       userEmail={user.email ?? null}
       fullName={profile?.full_name ?? null}
-      role={role}
+      role={profile?.role ?? null}
     >
       <CallsCenterClient
         initialLeads={leads as never[]}
         courses={(courses ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
-        currentUserId={user.id}
+        currentUserId={effectiveUserId ?? user.id}
         role={role}
         initialFilter={params.filter ?? "all"}
-        enhancedSchemaReady
+        enhancedSchemaReady={enhancedSchemaReady}
       />
     </AppShell>
   );
