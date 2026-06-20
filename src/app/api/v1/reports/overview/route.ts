@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { getEffectiveScope } from "@/lib/auth/effective-scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   completedStatuses,
@@ -20,11 +21,12 @@ const allowedRoles = new Set(["developer", "admin", "manager", "finance", "data_
 export async function GET(request: Request) {
   try {
     const { user, profile } = await getCurrentUserProfile();
-    const role = profile?.role ?? "sales";
-    if (!allowedRoles.has(role)) {
+    const realRole = profile?.role ?? "sales";
+    if (!allowedRoles.has(realRole)) {
       return NextResponse.json({ status: "error", message: "لا تملك صلاحية عرض التقارير." }, { status: 403 });
     }
 
+    const scope = await getEffectiveScope(profile?.role);
     const url = new URL(request.url);
     const now = new Date();
     const defaultFrom = new Date(now);
@@ -44,33 +46,45 @@ export async function GET(request: Request) {
 
     const enhancedLeads = await admin
       .from("leads")
-      .select("id,source,owner_id,created_at,assigned_at,lead_type,connection_type,queue_type,redirected_date,status,customer_status")
+      .select("id,source,owner_id,company_id,created_at,assigned_at,lead_type,connection_type,queue_type,redirected_date,status,customer_status")
       .limit(20000);
 
     let rawLeads = (enhancedLeads.data ?? []) as unknown as Row[];
     if (enhancedLeads.error) {
       const fallback = await admin
         .from("leads")
-        .select("id,source,owner_id,created_at,assigned_at,lead_type,queue_type,redirected_date,status,customer_status")
+        .select("id,source,owner_id,company_id,created_at,assigned_at,lead_type,queue_type,redirected_date,status,customer_status")
         .limit(20000);
       rawLeads = (fallback.data ?? []) as unknown as Row[];
     }
 
     const enhancedTasks = await admin
       .from("tasks")
-      .select("id,status,owner_id,receiver_id,done_at,completed_at,created_at,due_date")
+      .select("id,status,owner_id,receiver_id,related_id,done_at,completed_at,created_at,due_date")
       .limit(20000);
 
     let rawTasks = (enhancedTasks.data ?? []) as unknown as Row[];
     if (enhancedTasks.error) {
       const fallback = await admin
         .from("tasks")
-        .select("id,status,owner_id,completed_at,created_at,due_date")
+        .select("id,status,owner_id,related_id,completed_at,created_at,due_date")
         .limit(20000);
       rawTasks = (fallback.data ?? []) as unknown as Row[];
     }
 
-    const leadRows = rawLeads
+    const scopedLeads = rawLeads.filter((row) => {
+      if (scope.scopedUserId && row.owner_id !== scope.scopedUserId) return false;
+      if (scope.scopedCompanyId && row.company_id !== scope.scopedCompanyId) return false;
+      return true;
+    });
+    const visibleLeadIds = new Set(scopedLeads.map((row) => text(row.id)).filter(Boolean));
+    const scopedTasks = rawTasks.filter((row) => {
+      if (scope.scopedUserId && row.receiver_id !== scope.scopedUserId && row.owner_id !== scope.scopedUserId) return false;
+      if (scope.scopedCompanyId && !visibleLeadIds.has(text(row.related_id))) return false;
+      return true;
+    });
+
+    const leadRows = scopedLeads
       .filter((row) => inRange(dateValue(row, ["created_at"]), from, to))
       .filter((row) => !connection || inferConnection(row) === connection)
       .filter((row) => dataType === "all" || inferLeadType(row) === "fresh");
@@ -81,7 +95,7 @@ export async function GET(request: Request) {
       sourceMap.set(source, (sourceMap.get(source) ?? 0) + 1);
     }
 
-    const distributionRows = rawLeads
+    const distributionRows = scopedLeads
       .filter((row) => inRange(dateValue(row, ["assigned_at", "created_at"]), from, to))
       .filter((row) => !connection || inferConnection(row) === connection)
       .filter((row) => dataType === "all" || inferLeadType(row) === "fresh")
@@ -106,7 +120,7 @@ export async function GET(request: Request) {
       distributionMap.set(ownerId, current);
     }
 
-    const completedTaskRows = rawTasks
+    const completedTaskRows = scopedTasks
       .filter((row) => completedStatuses.has(text(row.status)))
       .filter((row) => inRange(dateValue(row, ["done_at", "completed_at", "due_date", "created_at"]), from, to));
 
