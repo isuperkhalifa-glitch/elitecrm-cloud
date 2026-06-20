@@ -5,6 +5,7 @@ import { requirePageAccess } from "@/lib/auth/server-guards";
 import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CustomersOperationsClient } from "./customers-operations-client";
+import { getCustomerListConfig, type CustomerListView } from "./customer-list-config";
 import {
   allowedConnections,
   allowedLeadTypes,
@@ -19,11 +20,18 @@ import {
   uniqueText,
   validDate,
 } from "./customer-operations-server";
+import { withFixedCustomerFilters } from "./customer-operations-types";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-export default async function CustomersPage({ searchParams }: { searchParams?: Promise<SearchParams> | SearchParams }) {
+type Props = {
+  view: CustomerListView;
+  searchParams?: Promise<SearchParams> | SearchParams;
+};
+
+export async function CustomerListPage({ view, searchParams }: Props) {
   const resolved = searchParams ? await searchParams : {};
+  const config = getCustomerListConfig(view);
   const { user, profile } = await getCurrentUserProfile();
   const scope = await getEffectiveScope(profile?.role);
   const role = scope.effectiveRole;
@@ -39,9 +47,12 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   const pageSize = pageSizeOptions.includes(pageSizeInput) ? pageSizeInput : 50;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-  const filters = parseCustomerFilters(resolved);
+  const filters = withFixedCustomerFilters(parseCustomerFilters(resolved), config.fixedFilters);
 
-  const schemaProbe = await admin.from("leads").select("connection_type,city,education_level").limit(1);
+  const schemaProbe = await admin
+    .from("leads")
+    .select("connection_type,city,education_level")
+    .limit(1);
   const enhancedSchemaReady = !schemaProbe.error;
 
   let leadsQuery = admin
@@ -57,11 +68,19 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   else if (role === "sales") leadsQuery = leadsQuery.eq("owner_id", user.id);
   if (scopedCompanyId) leadsQuery = leadsQuery.eq("company_id", scopedCompanyId);
 
-  if (filters.q) leadsQuery = leadsQuery.or(`full_name.ilike.%${filters.q}%,phone.ilike.%${filters.q}%,phone_number.ilike.%${filters.q}%,email.ilike.%${filters.q}%,program.ilike.%${filters.q}%,company_name.ilike.%${filters.q}%`);
-  if (allowedStatuses.has(filters.status)) leadsQuery = leadsQuery.or(`status.eq.${filters.status},customer_status.eq.${filters.status}`);
+  if (filters.q) {
+    leadsQuery = leadsQuery.or(
+      `full_name.ilike.%${filters.q}%,phone.ilike.%${filters.q}%,phone_number.ilike.%${filters.q}%,email.ilike.%${filters.q}%,program.ilike.%${filters.q}%,company_name.ilike.%${filters.q}%`
+    );
+  }
+  if (allowedStatuses.has(filters.status)) {
+    leadsQuery = leadsQuery.or(`status.eq.${filters.status},customer_status.eq.${filters.status}`);
+  }
   if (allowedLeadTypes.has(filters.leadType)) leadsQuery = leadsQuery.eq("lead_type", filters.leadType);
   if (!scopedUserId && filters.owner && role !== "sales") leadsQuery = leadsQuery.eq("owner_id", filters.owner);
-  if (filters.course) leadsQuery = leadsQuery.or(`program.ilike.%${filters.course}%,course_name.ilike.%${filters.course}%`);
+  if (filters.course) {
+    leadsQuery = leadsQuery.or(`program.ilike.%${filters.course}%,course_name.ilike.%${filters.course}%`);
+  }
   if (filters.source) leadsQuery = leadsQuery.eq("source", filters.source);
 
   const createdFrom = validDate(filters.createdFrom);
@@ -92,7 +111,9 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
     } else if (filters.stage === "with_deal") {
       leadsQuery = leadsQuery.or("registration_status.eq.registered,payment_status.eq.paid,payment_status.eq.partial");
     } else if (filters.stage === "still_in_sales") {
-      leadsQuery = leadsQuery.or("status.in.(interested,need_offer,busy,missed),customer_status.in.(interested,need_offer,busy,missed)");
+      leadsQuery = leadsQuery.or(
+        "status.in.(interested,need_offer,busy,missed),customer_status.in.(interested,need_offer,busy,missed)"
+      );
       leadsQuery = leadsQuery.or("payment_status.is.null,payment_status.neq.paid");
     } else {
       leadsQuery = leadsQuery.lt("next_follow_up_at", new Date().toISOString());
@@ -112,7 +133,11 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
 
   const [{ data: leads, count }, { data: profiles }, { data: courses }, { data: optionRows }] = await Promise.all([
     leadsQuery,
-    admin.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name"),
+    admin
+      .from("profiles")
+      .select("id,full_name,email,role,is_active")
+      .eq("is_active", true)
+      .order("full_name"),
     admin.from("courses").select("id,name,name_ar,name_en,status").order("sort_order"),
     optionsQuery,
   ]);
@@ -124,7 +149,12 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
   }));
 
   return (
-    <AppShell titleKey="customersAll" userEmail={user.email ?? null} fullName={profile?.full_name ?? null} role={profile?.role ?? null}>
+    <AppShell
+      titleKey={config.titleKey}
+      userEmail={user.email ?? null}
+      fullName={profile?.full_name ?? null}
+      role={profile?.role ?? null}
+    >
       <CustomersOperationsClient
         initialLeads={(leads ?? []) as never[]}
         profiles={(profiles ?? []) as never[]}
@@ -138,12 +168,12 @@ export default async function CustomersPage({ searchParams }: { searchParams?: P
         page={page}
         pageSize={pageSize}
         initialFilters={filters}
-        titleAr="كل العملاء"
-        titleEn="All customers"
-        descriptionAr="قاعدة العملاء الكاملة مع البحث والتصفية والتحويل الجماعي."
-        descriptionEn="The complete customer database with search, filters, and bulk transfer."
-        fixedFilters={{}}
-        lockedFields={[]}
+        titleAr={config.titleAr}
+        titleEn={config.titleEn}
+        descriptionAr={config.descriptionAr}
+        descriptionEn={config.descriptionEn}
+        fixedFilters={config.fixedFilters}
+        lockedFields={config.lockedFields}
       />
     </AppShell>
   );
