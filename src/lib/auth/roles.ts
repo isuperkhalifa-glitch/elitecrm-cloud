@@ -10,6 +10,7 @@ export type PageKey =
   | "data-quality"
   | "imports"
   | "commissions"
+  | "reports"
   | "users"
   | "settings"
   | "customize"
@@ -29,7 +30,7 @@ export const operationsRoles: Role[] = ["developer", "admin", "manager", "modera
 export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
 export const intakeRoles: Role[] = ["developer", "admin", "moderator", "marketer"];
 export const financeRoles: Role[] = ["developer", "admin", "finance"];
-export const reportingRoles: Role[] = ["developer", "admin", "manager", "data_analyst"];
+export const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
 export const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
 
 export const pageAccess: Record<PageKey, Role[]> = {
@@ -42,6 +43,7 @@ export const pageAccess: Record<PageKey, Role[]> = {
   "data-quality": dataQualityRoles,
   imports: intakeRoles,
   commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
+  reports: reportingRoles,
   users: adminRoles,
   settings: adminRoles,
   customize: adminRoles,
