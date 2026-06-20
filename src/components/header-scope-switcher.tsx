@@ -144,3 +144,36 @@ export function HeaderScopeSwitcher({ role }: { role?: string | null }) {
     </div>
   );
 }
+
+export function ActiveScopeBanner() {
+  const router = useRouter();
+  const { language } = useI18n();
+  const { scope, resetScope } = useScope();
+
+  if (scope.mode === "all") return null;
+
+  const isArabic = language === "ar";
+  const modeLabel = scope.mode === "user"
+    ? (isArabic ? "المستخدم" : "User")
+    : (isArabic ? "مركز التدريب" : "Training center");
+  const viewLabel = scope.mode === "user" && scope.previewMode === "selected"
+    ? (isArabic ? "معاينة المستخدم" : "User preview")
+    : (isArabic ? "رؤية الأدمن" : "Admin view");
+
+  function clearScope() {
+    resetScope();
+    window.setTimeout(() => router.refresh(), 0);
+  }
+
+  return (
+    <div className="mb-4 flex flex-col gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 md:flex-row md:items-center md:justify-between">
+      <p className="min-w-0 truncate text-sm text-slate-700">
+        <span className="font-bold text-emerald-700">{modeLabel}:</span> {scope.targetName}
+        <span className="mx-2 text-slate-300">|</span>{viewLabel}
+      </p>
+      <button type="button" onClick={clearScope} className="w-fit rounded border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+        {isArabic ? "إلغاء النطاق" : "Clear scope"}
+      </button>
+    </div>
+  );
+}
