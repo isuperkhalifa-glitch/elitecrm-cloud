@@ -22,6 +22,12 @@ alter table public.leads add column if not exists potential numeric(12,2);
 alter table public.leads add column if not exists tasks_count integer;
 alter table public.leads add column if not exists external_created_at timestamptz;
 alter table public.leads add column if not exists external_updated_at timestamptz;
+alter table public.leads add column if not exists assigned_at timestamptz;
+alter table public.leads add column if not exists assigned_by uuid references public.profiles(id) on update cascade on delete set null;
+alter table public.leads add column if not exists last_contact_at timestamptz;
+alter table public.leads add column if not exists last_call_at timestamptz;
+alter table public.leads add column if not exists last_note text;
+alter table public.leads add column if not exists next_follow_up_at timestamptz;
 
 create unique index if not exists leads_external_id_unique
   on public.leads(external_id)
