@@ -1,0 +1,38 @@
+.v8-shell > header .elite-action-button {
+  border-color: var(--v8-border) !important;
+  background: var(--v8-panel-muted) !important;
+  color: var(--v8-heading) !important;
+  border-radius: 0.375rem !important;
+}
+
+.v8-shell > header .elite-action-button:hover {
+  background: var(--v8-panel-soft) !important;
+}
+
+.v8-shell input:focus,
+.v8-shell select:focus,
+.v8-shell textarea:focus {
+  border-color: var(--v8-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--v8-accent) 18%, transparent);
+  outline: none;
+}
+
+.v8-shell table tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.v8-shell table tbody tr:hover {
+  background: color-mix(in srgb, var(--v8-accent) 6%, var(--v8-panel));
+}
+
+.v8-shell button:disabled,
+.v8-shell select:disabled,
+.v8-shell input:disabled {
+  cursor: not-allowed;
+}
+
+@media (max-width: 1279px) {
+  .v8-shell > header h1 {
+    max-width: 18rem;
+  }
+}

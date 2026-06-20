@@ -1,5 +1,6 @@
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
 import { getEffectiveScope } from "@/lib/auth/effective-scope";
+import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DashboardClient } from "./dashboard-client";
 
@@ -9,17 +10,25 @@ export default async function DashboardPage() {
   const role = scope.effectiveRole;
   const scopedUserId = scope.scopedUserId;
   const scopedCompanyId = scope.scopedCompanyId;
+  const selectedYear = await getEffectiveYear();
+  const yearRange = yearDateRange(selectedYear);
   const admin = createAdminClient();
 
   let leadsQuery = admin
     .from("leads")
-    .select("id,full_name,owner_id,company_id,status,customer_status,lead_type,source,created_at,next_follow_up_at,paid_amount");
+    .select("id,full_name,owner_id,company_id,status,customer_status,lead_type,source,created_at,next_follow_up_at,paid_amount")
+    .gte("created_at", yearRange.from)
+    .lt("created_at", yearRange.to);
   let registrationsQuery = admin
     .from("registrations")
-    .select("id,lead_id,sales_id,company_id,status,payment_status,final_price,paid_amount,created_at");
+    .select("id,lead_id,sales_id,company_id,status,payment_status,final_price,paid_amount,created_at")
+    .gte("created_at", yearRange.from)
+    .lt("created_at", yearRange.to);
   let tasksQuery = admin
     .from("tasks")
-    .select("id,title,status,due_date,owner_id,related_id,created_at");
+    .select("id,title,status,due_date,owner_id,related_id,created_at")
+    .gte("created_at", yearRange.from)
+    .lt("created_at", yearRange.to);
 
   if (scopedUserId) {
     leadsQuery = leadsQuery.eq("owner_id", scopedUserId);
@@ -53,6 +62,8 @@ export default async function DashboardPage() {
     admin
       .from("customer_activities")
       .select("id,lead_id,actor_id,actor_name,action,created_at")
+      .gte("created_at", yearRange.from)
+      .lt("created_at", yearRange.to)
       .order("created_at", { ascending: false })
       .limit(3000),
     admin
@@ -61,8 +72,20 @@ export default async function DashboardPage() {
       .eq("is_active", true)
       .order("full_name"),
     admin.from("companies").select("id,name").order("name"),
-    admin.from("call_logs").select("*").order("created_at", { ascending: false }).limit(10000),
-    admin.from("attendance_logs").select("*").order("created_at", { ascending: false }).limit(3000),
+    admin
+      .from("call_logs")
+      .select("*")
+      .gte("created_at", yearRange.from)
+      .lt("created_at", yearRange.to)
+      .order("created_at", { ascending: false })
+      .limit(10000),
+    admin
+      .from("attendance_logs")
+      .select("*")
+      .gte("created_at", yearRange.from)
+      .lt("created_at", yearRange.to)
+      .order("created_at", { ascending: false })
+      .limit(3000),
     admin.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(30),
   ]);
 
