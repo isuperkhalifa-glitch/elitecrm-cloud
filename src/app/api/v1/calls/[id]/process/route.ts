@@ -16,6 +16,19 @@ function dateOrNull(value: unknown) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function deriveConnectionType(lead: {
+  lead_type: string | null;
+  redirected_date: string | null;
+  source: string | null;
+  queue_type: string | null;
+  owner_id: string | null;
+}) {
+  if (lead.lead_type === "redirected" || lead.redirected_date) return "redirected";
+  if ((lead.source ?? "").toLowerCase().includes("ivr")) return "ivr";
+  if (lead.queue_type === "manual") return "manual";
+  return lead.owner_id ? "distributed" : "manual";
+}
+
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -59,7 +72,7 @@ export async function POST(
     const admin = createAdminClient();
     const { data: lead, error: leadError } = await admin
       .from("leads")
-      .select("id,full_name,owner_id,course_id,program,status,customer_status")
+      .select("id,full_name,owner_id,course_id,program,status,customer_status,assigned_by,intake_by,queue_type,lead_type,redirected_date,source,created_at")
       .eq("id", id)
       .single();
 
@@ -91,7 +104,7 @@ export async function POST(
 
     const now = new Date().toISOString();
     const note = String(body.note ?? "").trim() || null;
-    const patch: Record<string, unknown> = {
+    const basePatch: Record<string, unknown> = {
       status: outcome,
       customer_status: outcome,
       call_outcome: outcome,
@@ -104,27 +117,55 @@ export async function POST(
     };
 
     if (courseId) {
-      patch.course_id = courseId;
-      if (courseName) patch.program = courseName;
+      basePatch.course_id = courseId;
+      if (courseName) basePatch.program = courseName;
     }
 
     if (outcome === "wrong_number") {
-      patch.lead_type = "rejected";
-      patch.next_follow_up_at = null;
+      basePatch.lead_type = "rejected";
+      basePatch.next_follow_up_at = null;
     }
 
     if (outcome === "paid") {
-      patch.registration_status = "registered";
-      patch.payment_status = "paid";
-      patch.next_follow_up_at = null;
+      basePatch.registration_status = "registered";
+      basePatch.payment_status = "paid";
+      basePatch.next_follow_up_at = null;
     }
 
-    const { data: updatedLead, error: updateError } = await admin
+    const enhancedPatch: Record<string, unknown> = {
+      ...basePatch,
+      call_sender_id: lead.assigned_by ?? lead.intake_by ?? user.id,
+      call_receiver_id: lead.owner_id ?? user.id,
+      connection_type: deriveConnectionType(lead),
+      system_source: lead.queue_type ?? "manual",
+      received_at: lead.created_at ?? now,
+      call_done_description: note,
+      call_done_at: outcome === "busy" ? null : now,
+      call_deadline_at: outcome === "busy" && nextFollowUp ? nextFollowUp.toISOString() : undefined,
+    };
+
+    if (enhancedPatch.call_deadline_at === undefined) {
+      delete enhancedPatch.call_deadline_at;
+    }
+
+    let updateResult = await admin
       .from("leads")
-      .update(patch)
+      .update(enhancedPatch)
       .eq("id", id)
       .select("*")
       .single();
+
+    if (updateResult.error) {
+      updateResult = await admin
+        .from("leads")
+        .update(basePatch)
+        .eq("id", id)
+        .select("*")
+        .single();
+    }
+
+    const updatedLead = updateResult.data;
+    const updateError = updateResult.error;
 
     if (updateError || !updatedLead) {
       return NextResponse.json(

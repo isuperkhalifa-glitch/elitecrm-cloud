@@ -6,6 +6,7 @@ import {
   Code2,
   FileSpreadsheet,
   GraduationCap,
+  Headphones,
   Inbox,
   PhoneCall,
   Receipt,
@@ -28,11 +29,13 @@ export type Role =
   | "data_analyst";
 
 export type NavItem = {
-  href: string;
+  href?: string;
+  key?: string;
   ar: string;
   en: string;
   icon: LucideIcon;
   roles: Role[];
+  children?: NavItem[];
 };
 
 export type NavGroup = {
@@ -68,6 +71,16 @@ const adminRoles: Role[] = ["developer", "admin"];
 const salesOpsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales"];
 const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
 
+const callChildren: NavItem[] = [
+  { href: "/calls?filter=all", ar: "كل المكالمات", en: "All calls", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=deadline_today", ar: "موعدها اليوم", en: "Deadline today", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=interested", ar: "المهتمون", en: "Interested", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=ivr", ar: "مكالمات الرد الآلي", en: "IVR calls", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=missed", ar: "المكالمات الفائتة", en: "Missed calls", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=received_today", ar: "المستلمة اليوم", en: "Received today", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=redirected", ar: "المحوّلة إليك", en: "Redirected to you", icon: PhoneCall, roles: salesOpsRoles },
+];
+
 export const navGroups: NavGroup[] = [
   {
     key: "requests",
@@ -101,7 +114,7 @@ export const navGroups: NavGroup[] = [
     icon: Receipt,
     roles: salesOpsRoles,
     items: [
-      { href: "/calls", ar: "تشغيل المكالمات", en: "Call workspace", icon: PhoneCall, roles: salesOpsRoles },
+      { key: "calls", ar: "المكالمات", en: "Calls", icon: Headphones, roles: salesOpsRoles, children: callChildren },
       { href: "/registrations", ar: "التسجيلات والمدفوعات", en: "Registrations & payments", icon: Receipt, roles: [...salesOpsRoles, "finance", "data_analyst"] },
       { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
     ],
@@ -147,7 +160,7 @@ export const pageTitles: Record<string, { ar: string; en: string }> = {
   dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
   calendar: { ar: "التقويم والمتابعات", en: "Calendar & follow-ups" },
   requests: { ar: "مركز الطلبات الداخلية", en: "Internal requests center" },
-  calls: { ar: "تشغيل المكالمات", en: "Call workspace" },
+  calls: { ar: "المكالمات الواردة", en: "Incoming calls" },
   customers: { ar: "العملاء", en: "Customers" },
   registrations: { ar: "التسجيلات والمدفوعات", en: "Registrations & payments" },
   courses: { ar: "الدورات", en: "Courses" },
@@ -187,6 +200,6 @@ export function roleLabel(role: Role, isArabic: boolean) {
   return isArabic ? labels[role].ar : labels[role].en;
 }
 
-export function routePath(href: string) {
-  return href.split("?")[0];
+export function routePath(href?: string) {
+  return (href ?? "").split("?")[0];
 }
