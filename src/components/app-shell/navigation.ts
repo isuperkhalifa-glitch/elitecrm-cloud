@@ -17,16 +17,19 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
+import {
+  adminRoles,
+  appRoles,
+  dataQualityRoles,
+  normalizeRole as normalizePermissionRole,
+  reportingRoles,
+  requestCreateRoles,
+  routeAccess,
+  salesOperationsRoles,
+  type AppRole,
+} from "@/lib/auth/permissions";
 
-export type Role =
-  | "developer"
-  | "admin"
-  | "manager"
-  | "moderator"
-  | "marketer"
-  | "sales"
-  | "finance"
-  | "data_analyst";
+export type Role = AppRole;
 
 export type NavItem = {
   href?: string;
@@ -47,55 +50,33 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-export const allRoles: Role[] = [
-  "developer",
-  "admin",
-  "manager",
-  "moderator",
-  "marketer",
-  "sales",
-  "finance",
-  "data_analyst",
-];
-
-const requestCreateRoles: Role[] = [
-  "developer",
-  "admin",
-  "manager",
-  "moderator",
-  "marketer",
-  "sales",
-  "finance",
-];
-const adminRoles: Role[] = ["developer", "admin"];
-const salesOpsRoles: Role[] = ["developer", "admin", "manager", "moderator", "sales"];
-const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
-const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
+export const allRoles = appRoles;
+const salesOpsRoles = salesOperationsRoles;
 
 const callChildren: NavItem[] = [
-  { href: "/calls?filter=all", ar: "كل المكالمات", en: "All calls", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=deadline_today", ar: "موعدها اليوم", en: "Deadline today", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=interested", ar: "المهتمون", en: "Interested", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=ivr", ar: "مكالمات الرد الآلي", en: "IVR calls", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=missed", ar: "المكالمات الفائتة", en: "Missed calls", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=received_today", ar: "المستلمة اليوم", en: "Received today", icon: PhoneCall, roles: salesOpsRoles },
-  { href: "/calls?filter=redirected", ar: "المحوّلة إليك", en: "Redirected to you", icon: PhoneCall, roles: salesOpsRoles },
+  { href: "/calls?filter=all", ar: "كل المكالمات", en: "All calls", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=deadline_today", ar: "موعدها اليوم", en: "Deadline today", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=interested", ar: "المهتمون", en: "Interested", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=ivr", ar: "مكالمات الرد الآلي", en: "IVR calls", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=missed", ar: "المكالمات الفائتة", en: "Missed calls", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=received_today", ar: "المستلمة اليوم", en: "Received today", icon: PhoneCall, roles: routeAccess["/calls"] },
+  { href: "/calls?filter=redirected", ar: "المحوّلة إليك", en: "Redirected to you", icon: PhoneCall, roles: routeAccess["/calls"] },
 ];
 
 const customerViewChildren: NavItem[] = [
-  { href: "/customers/all", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers/assigned", ar: "العملاء الموزعون", en: "Distributed customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers/ivr", ar: "عملاء الرد الآلي", en: "IVR customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers/manual", ar: "الإدخال اليدوي", en: "Manual entry", icon: UsersRound, roles: allRoles },
-  { href: "/customers/redirected", ar: "العملاء المحوّلون", en: "Redirected customers", icon: UsersRound, roles: allRoles },
-  { href: "/customers/interested", ar: "مهتمون بدون تسجيل", en: "Interested without registration", icon: UsersRound, roles: allRoles },
-  { href: "/customers/overdue", ar: "متابعات متأخرة", en: "Overdue follow-ups", icon: UsersRound, roles: allRoles },
+  { href: "/customers/all", ar: "كل العملاء", en: "All customers", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/assigned", ar: "العملاء الموزعون", en: "Distributed customers", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/ivr", ar: "عملاء الرد الآلي", en: "IVR customers", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/manual", ar: "الإدخال اليدوي", en: "Manual entry", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/redirected", ar: "العملاء المحوّلون", en: "Redirected customers", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/interested", ar: "مهتمون بدون تسجيل", en: "Interested without registration", icon: UsersRound, roles: routeAccess["/customers"] },
+  { href: "/customers/overdue", ar: "متابعات متأخرة", en: "Overdue follow-ups", icon: UsersRound, roles: routeAccess["/customers"] },
 ];
 
 const reportChildren: NavItem[] = [
-  { href: "/reports?tab=sources", ar: "مصادر البيانات", en: "Data sources", icon: BarChart3, roles: reportingRoles },
-  { href: "/reports?tab=distribution", ar: "توزيع البيانات", en: "Data distribution", icon: BarChart3, roles: reportingRoles },
-  { href: "/reports?tab=tasks", ar: "المهام المكتملة", en: "Completed tasks", icon: BarChart3, roles: reportingRoles },
+  { href: "/reports?tab=sources", ar: "مصادر البيانات", en: "Data sources", icon: BarChart3, roles: routeAccess["/reports"] },
+  { href: "/reports?tab=distribution", ar: "توزيع البيانات", en: "Data distribution", icon: BarChart3, roles: routeAccess["/reports"] },
+  { href: "/reports?tab=tasks", ar: "المهام المكتملة", en: "Completed tasks", icon: BarChart3, roles: routeAccess["/reports"] },
 ];
 
 export const navGroups: NavGroup[] = [
@@ -104,14 +85,14 @@ export const navGroups: NavGroup[] = [
     ar: "الطلاب والتسجيلات",
     en: "Students & registrations",
     icon: GraduationCap,
-    roles: [...salesOpsRoles, "finance", "data_analyst"],
+    roles: routeAccess["/registrations"],
     items: [
       {
         href: "/registrations",
         ar: "التسجيلات والمدفوعات",
         en: "Registrations & payments",
         icon: Receipt,
-        roles: [...salesOpsRoles, "finance", "data_analyst"],
+        roles: routeAccess["/registrations"],
       },
     ],
   },
@@ -120,11 +101,11 @@ export const navGroups: NavGroup[] = [
     ar: "الطلبات",
     en: "Requests",
     icon: ClipboardList,
-    roles: allRoles,
+    roles: routeAccess["/requests"],
     items: [
       { href: "/requests?tab=assign", ar: "إسناد طلب", en: "Assign request", icon: Send, roles: requestCreateRoles },
-      { href: "/requests?tab=incoming", ar: "الطلبات الواردة", en: "Incoming requests", icon: Inbox, roles: allRoles },
-      { href: "/requests?tab=outgoing", ar: "الطلبات الصادرة", en: "Outgoing requests", icon: Send, roles: allRoles },
+      { href: "/requests?tab=incoming", ar: "الطلبات الواردة", en: "Incoming requests", icon: Inbox, roles: routeAccess["/requests"] },
+      { href: "/requests?tab=outgoing", ar: "الطلبات الصادرة", en: "Outgoing requests", icon: Send, roles: routeAccess["/requests"] },
       { href: "/requests?tab=team", ar: "طلبات الفريق", en: "Team requests", icon: UsersRound, roles: ["developer", "admin", "manager"] },
     ],
   },
@@ -133,13 +114,13 @@ export const navGroups: NavGroup[] = [
     ar: "المبيعات والتشغيل",
     en: "Sales operations",
     icon: Receipt,
-    roles: ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"],
+    roles: allRoles,
     items: [
-      { key: "calls", ar: "مركز المكالمات", en: "Calls center", icon: Headphones, roles: salesOpsRoles, children: callChildren },
-      { href: "/distribution", ar: "التوزيع والطوابير", en: "Distribution & queues", icon: FileSpreadsheet, roles: ["developer", "admin", "manager", "moderator"] },
+      { key: "calls", ar: "مركز المكالمات", en: "Calls center", icon: Headphones, roles: routeAccess["/calls"], children: callChildren },
+      { href: "/distribution", ar: "التوزيع والطوابير", en: "Distribution & queues", icon: FileSpreadsheet, roles: routeAccess["/distribution"] },
       { href: "/data-quality", ar: "فحص وجودة العملاء", en: "Customer checks & quality", icon: ShieldCheck, roles: dataQualityRoles },
-      { href: "/imports", ar: "استيراد البيانات", en: "Data imports", icon: FileSpreadsheet, roles: ["developer", "admin", "moderator", "marketer"] },
-      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: ["developer", "admin", "manager", "sales", "finance", "data_analyst"] },
+      { href: "/imports", ar: "استيراد البيانات", en: "Data imports", icon: FileSpreadsheet, roles: routeAccess["/imports"] },
+      { href: "/commissions", ar: "العمولات", en: "Commissions", icon: BarChart3, roles: routeAccess["/commissions"] },
     ],
   },
   {
@@ -147,10 +128,10 @@ export const navGroups: NavGroup[] = [
     ar: "العملاء",
     en: "Customers",
     icon: UsersRound,
-    roles: allRoles,
+    roles: routeAccess["/customers"],
     items: [
-      { key: "customerViews", ar: "قوائم العملاء", en: "Customer lists", icon: UsersRound, roles: allRoles, children: customerViewChildren },
-      { href: "/distribution", ar: "نقل وإعادة توزيع العملاء", en: "Transfer & redistribute", icon: Send, roles: ["developer", "admin", "manager", "moderator"] },
+      { key: "customerViews", ar: "قوائم العملاء", en: "Customer lists", icon: UsersRound, roles: routeAccess["/customers"], children: customerViewChildren },
+      { href: "/distribution", ar: "نقل وإعادة توزيع العملاء", en: "Transfer & redistribute", icon: Send, roles: routeAccess["/distribution"] },
     ],
   },
   {
@@ -160,8 +141,8 @@ export const navGroups: NavGroup[] = [
     icon: GraduationCap,
     roles: allRoles,
     items: [
-      { href: "/training-centers", ar: "مراكز التدريب", en: "Training centers", icon: Building2, roles: ["developer", "admin", "manager", "data_analyst"] },
-      { href: "/courses", ar: "الدورات", en: "Courses", icon: BookOpen, roles: allRoles },
+      { href: "/training-centers", ar: "مراكز التدريب", en: "Training centers", icon: Building2, roles: routeAccess["/training-centers"] },
+      { href: "/courses", ar: "الدورات", en: "Courses", icon: BookOpen, roles: routeAccess["/courses"] },
     ],
   },
   {
@@ -171,7 +152,7 @@ export const navGroups: NavGroup[] = [
     icon: BarChart3,
     roles: reportingRoles,
     items: [
-      { key: "reportViews", ar: "مركز التقارير", en: "Reports center", icon: BarChart3, roles: reportingRoles, children: reportChildren },
+      { key: "reportViews", ar: "مركز التقارير", en: "Reports center", icon: BarChart3, roles: routeAccess["/reports"], children: reportChildren },
     ],
   },
   {
@@ -181,10 +162,10 @@ export const navGroups: NavGroup[] = [
     icon: Settings,
     roles: adminRoles,
     items: [
-      { href: "/users", ar: "المستخدمون والصلاحيات", en: "Users & roles", icon: UserCog, roles: adminRoles },
-      { href: "/settings", ar: "الإعدادات", en: "Settings", icon: Settings, roles: adminRoles },
-      { href: "/customize", ar: "تخصيص النظام", en: "Customize", icon: ShieldCheck, roles: adminRoles },
-      { href: "/developer", ar: "مركز المطور", en: "Developer center", icon: Code2, roles: ["developer"] },
+      { href: "/users", ar: "المستخدمون والصلاحيات", en: "Users & roles", icon: UserCog, roles: routeAccess["/users"] },
+      { href: "/settings", ar: "الإعدادات", en: "Settings", icon: Settings, roles: routeAccess["/settings"] },
+      { href: "/customize", ar: "تخصيص النظام", en: "Customize", icon: ShieldCheck, roles: routeAccess["/customize"] },
+      { href: "/developer", ar: "مركز المطور", en: "Developer center", icon: Code2, roles: routeAccess["/developer"] },
     ],
   },
 ];
@@ -217,14 +198,7 @@ export const pageTitles: Record<string, { ar: string; en: string }> = {
 };
 
 export function normalizeRole(value?: string | null): Role {
-  if (value === "developer") return "developer";
-  if (value === "admin") return "admin";
-  if (value === "manager") return "manager";
-  if (value === "moderator") return "moderator";
-  if (value === "marketer") return "marketer";
-  if (value === "finance") return "finance";
-  if (value === "data_analyst") return "data_analyst";
-  return "sales";
+  return normalizePermissionRole(value);
 }
 
 export function roleLabel(role: Role, isArabic: boolean) {

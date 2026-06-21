@@ -1,4 +1,19 @@
-export type Role = "developer" | "admin" | "manager" | "moderator" | "marketer" | "sales" | "finance" | "data_analyst";
+import {
+  adminRoles,
+  appRoles,
+  canAccessRoute,
+  dataQualityRoles,
+  financeRoles,
+  intakeRoles,
+  isAppRole,
+  normalizeRole,
+  operationsRoles,
+  reportingRoles,
+  routeAccess,
+  type AppRole,
+} from "@/lib/auth/permissions";
+
+export type Role = AppRole;
 
 export type PageKey =
   | "dashboard"
@@ -22,58 +37,46 @@ export type PageKey =
   | "companies"
   | "contacts";
 
-export const allRoles: Role[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
-export const adminRoles: Role[] = ["developer", "admin"];
-export const operationsRoles: Role[] = ["developer", "admin", "manager", "moderator"];
-export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
-export const intakeRoles: Role[] = ["developer", "admin", "moderator", "marketer"];
-export const financeRoles: Role[] = ["developer", "admin", "finance"];
-export const reportingRoles: Role[] = ["developer", "admin", "manager", "finance", "data_analyst"];
-export const dataQualityRoles: Role[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
-
-export const pageAccess: Record<PageKey, Role[]> = {
-  dashboard: allRoles,
-  customers: allRoles,
-  registrations: ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"],
-  courses: allRoles,
-  "training-centers": ["developer", "admin", "manager", "data_analyst"],
-  distribution: operationsRoles,
-  "data-quality": dataQualityRoles,
-  imports: intakeRoles,
-  commissions: ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
-  reports: reportingRoles,
-  users: adminRoles,
-  settings: adminRoles,
-  customize: adminRoles,
-  leads: intakeRoles,
-  "my-customers": salesRoles,
-  tasks: salesRoles,
-  deals: salesRoles,
-  invoices: ["developer", "admin", "manager", "finance", "sales"],
-  companies: ["developer", "admin", "manager", "data_analyst"],
-  contacts: ["developer", "admin", "manager"],
+const pageRoutes: Record<PageKey, string> = {
+  dashboard: "/dashboard",
+  customers: "/customers",
+  registrations: "/registrations",
+  courses: "/courses",
+  "training-centers": "/training-centers",
+  distribution: "/distribution",
+  "data-quality": "/data-quality",
+  imports: "/imports",
+  commissions: "/commissions",
+  reports: "/reports",
+  users: "/users",
+  settings: "/settings",
+  customize: "/customize",
+  leads: "/leads",
+  "my-customers": "/my-customers",
+  tasks: "/tasks",
+  deals: "/deals",
+  invoices: "/invoices",
+  companies: "/companies",
+  contacts: "/contacts",
 };
 
-export function normalizeRole(role?: string | null): Role {
-  if (role === "developer") return "developer";
-  if (role === "admin") return "admin";
-  if (role === "manager") return "manager";
-  if (role === "moderator") return "moderator";
-  if (role === "marketer") return "marketer";
-  if (role === "finance") return "finance";
-  if (role === "data_analyst") return "data_analyst";
-  return "sales";
-}
+export const allRoles = appRoles;
+export { adminRoles, operationsRoles, intakeRoles, financeRoles, reportingRoles, dataQualityRoles, normalizeRole };
+export const salesRoles: Role[] = ["developer", "admin", "manager", "sales"];
+
+export const pageAccess: Record<PageKey, Role[]> = Object.fromEntries(
+  Object.entries(pageRoutes).map(([pageKey, route]) => [pageKey, routeAccess[route] ?? []])
+) as Record<PageKey, Role[]>;
 
 export function canAccessPage(role: string | null | undefined, pageKey: PageKey) {
-  return pageAccess[pageKey].includes(normalizeRole(role));
+  return canAccessRoute(role, pageRoutes[pageKey]);
 }
 
 export function isAdmin(role: string | null | undefined) {
-  const normalized = normalizeRole(role);
+  const normalized = isAppRole(role) ? role : null;
   return normalized === "developer" || normalized === "admin";
 }
 
 export function isRole(value: string): value is Role {
-  return allRoles.includes(value as Role);
+  return isAppRole(value);
 }

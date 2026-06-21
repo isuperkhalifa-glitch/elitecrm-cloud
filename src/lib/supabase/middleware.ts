@@ -28,6 +28,42 @@ const protectedRoutes = [
   "/invoices",
 ];
 
+const writeMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isSelectedUserPreview(request: NextRequest) {
+  const rawValue = request.cookies.get("elitecrm-scope")?.value;
+  if (!rawValue) return false;
+
+  const candidates = [rawValue];
+  try {
+    candidates.unshift(decodeURIComponent(rawValue));
+  } catch {
+    // Keep the raw cookie value as a fallback.
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as {
+        mode?: string;
+        targetId?: string;
+        previewMode?: string;
+      };
+
+      if (
+        parsed.mode === "user" &&
+        parsed.previewMode === "selected" &&
+        Boolean(parsed.targetId)
+      ) {
+        return true;
+      }
+    } catch {
+      // Try the next representation.
+    }
+  }
+
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -64,6 +100,21 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("next", `${path}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
+  }
+
+  if (
+    user &&
+    path.startsWith("/api/") &&
+    writeMethods.has(request.method) &&
+    isSelectedUserPreview(request)
+  ) {
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "معاينة المستخدم للعرض فقط. ارجع إلى رؤية الأدمن لتنفيذ أي تعديل.",
+      },
+      { status: 403 }
+    );
   }
 
   if (user && path === "/login") {
