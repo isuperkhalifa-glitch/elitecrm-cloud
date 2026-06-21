@@ -14,7 +14,17 @@ export async function PUT(
 
     if (!status) {
       return NextResponse.json(
-        { status: "error", message: "Invalid lead status." },
+        { status: "error", message: "حالة العميل غير صحيحة." },
+        { status: 422 }
+      );
+    }
+
+    if (status === "paid") {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "لا يمكن تسجيل السداد من حالة العميل. أنشئ تسجيلًا وحدّث المبلغ المدفوع من صفحة التسجيلات.",
+        },
         { status: 422 }
       );
     }
@@ -27,51 +37,43 @@ export async function PUT(
 
     if (leadError || !lead) {
       return NextResponse.json(
-        { status: "error", message: "Lead not found." },
+        { status: "error", message: "العميل غير موجود أو خارج نطاق صلاحيتك." },
         { status: 404 }
       );
     }
 
-    const role = profile?.role ?? "sales";
     const canUpdate =
-      ["admin", "manager", "moderator", "finance"].includes(role) ||
+      ["developer", "admin", "manager", "moderator"].includes(profile.role) ||
       lead.owner_id === user.id;
 
     if (!canUpdate) {
       return NextResponse.json(
-        { status: "error", message: "Not allowed." },
+        { status: "error", message: "لا تملك صلاحية تعديل حالة هذا العميل." },
         { status: 403 }
       );
     }
 
-    const patch: Record<string, unknown> = {
-      status,
-      customer_status: status,
-      status_updated_at: new Date().toISOString(),
-    };
-
-    if (status === "paid") {
-      patch.registration_status = "registered";
-      patch.payment_status = "paid";
-    }
-
     const { data, error } = await supabase
       .from("leads")
-      .update(patch)
+      .update({
+        status,
+        customer_status: status,
+        status_updated_at: new Date().toISOString(),
+      })
       .eq("id", id)
       .select("*")
       .single();
 
     if (error || !data) {
       return NextResponse.json(
-        { status: "error", message: error?.message ?? "Unable to update lead." },
+        { status: "error", message: error?.message ?? "تعذر تحديث حالة العميل." },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
       status: "success",
-      message: "Lead status updated successfully.",
+      message: "تم تحديث حالة العميل بنجاح.",
       data,
     });
   } catch (error) {
