@@ -30,29 +30,34 @@ export const appRoles: AppRole[] = [
   "data_analyst",
 ];
 
-const salesOperations: AppRole[] = ["developer", "admin", "manager", "moderator", "sales"];
-const reportingRoles: AppRole[] = ["developer", "admin", "manager", "finance", "data_analyst"];
-const dataQualityRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
+export const adminRoles: AppRole[] = ["developer", "admin"];
+export const operationsRoles: AppRole[] = ["developer", "admin", "manager", "moderator"];
+export const salesOperationsRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "sales"];
+export const intakeRoles: AppRole[] = ["developer", "admin", "moderator", "marketer"];
+export const financeRoles: AppRole[] = ["developer", "admin", "finance"];
+export const reportingRoles: AppRole[] = ["developer", "admin", "manager", "finance", "data_analyst"];
+export const dataQualityRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "data_analyst"];
+export const requestCreateRoles: AppRole[] = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance"];
 
 export const routeAccess: Record<string, AppRole[]> = {
   "/dashboard": appRoles,
-  "/calendar": salesOperations,
+  "/calendar": salesOperationsRoles,
   "/requests": appRoles,
-  "/calls": salesOperations,
+  "/calls": salesOperationsRoles,
   "/customers": appRoles,
-  "/registrations": ["developer", "admin", "manager", "moderator", "sales", "finance"],
+  "/registrations": ["developer", "admin", "manager", "moderator", "sales", "finance", "data_analyst"],
   "/training-centers": ["developer", "admin", "manager", "data_analyst"],
   "/courses": appRoles,
-  "/distribution": ["developer", "admin", "manager", "moderator"],
+  "/distribution": operationsRoles,
   "/data-quality": dataQualityRoles,
-  "/imports": ["developer", "admin", "moderator", "marketer"],
+  "/imports": intakeRoles,
   "/commissions": ["developer", "admin", "manager", "finance", "sales", "data_analyst"],
   "/reports": reportingRoles,
-  "/users": ["developer", "admin"],
-  "/customize": ["developer", "admin"],
-  "/settings": ["developer", "admin"],
+  "/users": adminRoles,
+  "/customize": adminRoles,
+  "/settings": adminRoles,
   "/developer": ["developer"],
-  "/leads": ["developer", "admin", "moderator", "marketer"],
+  "/leads": intakeRoles,
   "/my-customers": ["developer", "admin", "manager", "sales"],
   "/tasks": ["developer", "admin", "manager", "sales"],
   "/deals": ["developer", "admin", "manager", "sales", "finance"],
@@ -61,14 +66,13 @@ export const routeAccess: Record<string, AppRole[]> = {
   "/contacts": ["developer", "admin", "manager"],
 };
 
-export const permissionDefinitions: PermissionDefinition[] = [
+const permissionDefinitionBase: Omit<PermissionDefinition, "routes">[] = [
   {
     role: "developer",
     labelAr: "مطور النظام",
     labelEn: "Developer",
     summaryAr: "تحكم كامل في النظام والإعدادات والصلاحيات.",
     summaryEn: "Full system control.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/data-quality", "/imports", "/commissions", "/reports", "/users", "/settings", "/customize", "/developer"],
     actionsAr: ["تخصيص النظام", "إدارة المستخدمين", "إدارة كل الطلبات", "إصلاح البيانات"],
     actionsEn: ["Customize system", "Manage users", "Manage all requests", "Fix data"],
   },
@@ -78,7 +82,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "General Manager",
     summaryAr: "يرى كل شيء ويدير التشغيل والفريق.",
     summaryEn: "Full business visibility and operations management.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/training-centers", "/courses", "/distribution", "/data-quality", "/imports", "/commissions", "/reports", "/users", "/settings"],
     actionsAr: ["متابعة الكل", "إدارة طلبات الفريق", "توزيع العملاء", "إدارة المستخدمين"],
     actionsEn: ["View all", "Manage team requests", "Assign customers", "Manage users"],
   },
@@ -88,7 +91,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Sales Team Leader",
     summaryAr: "يدير فريق السيلز والتوزيع والمتابعات والطلبات.",
     summaryEn: "Manages sales team, assignment, follow-ups, and requests.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/distribution", "/data-quality", "/courses", "/commissions", "/reports"],
     actionsAr: ["إدارة طلبات الفريق", "توزيع العملاء", "تشغيل المكالمات", "متابعة الفريق"],
     actionsEn: ["Manage team requests", "Assign customers", "Run calls", "Monitor team"],
   },
@@ -98,7 +100,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Moderator",
     summaryAr: "يراجع العملاء ويوزعهم ويتعامل مع الطلبات الواردة والصادرة.",
     summaryEn: "Reviews customers, assigns them, and handles internal requests.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/distribution", "/data-quality", "/imports"],
     actionsAr: ["إسناد طلب", "تنفيذ الطلبات", "مراجعة العملاء", "التوزيع"],
     actionsEn: ["Assign request", "Complete requests", "Review customers", "Assign"],
   },
@@ -108,7 +109,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Marketer",
     summaryAr: "يضيف ويستورد العملاء ويتابع المصادر والطلبات الداخلية.",
     summaryEn: "Adds and imports customers, tracks sources, and handles requests.",
-    routes: ["/dashboard", "/requests", "/customers", "/imports", "/courses"],
     actionsAr: ["إسناد طلب", "تنفيذ الطلبات", "إضافة عملاء", "استيراد"],
     actionsEn: ["Assign request", "Complete requests", "Add customers", "Import"],
   },
@@ -118,7 +118,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Sales",
     summaryAr: "يشغل قائمة اتصالاته ويتابع عملاءه وينفذ الطلبات المسندة إليه.",
     summaryEn: "Runs assigned calls, follows customers, and completes assigned requests.",
-    routes: ["/dashboard", "/calendar", "/requests", "/calls", "/customers", "/registrations", "/commissions"],
     actionsAr: ["إسناد طلب", "تنفيذ الطلبات", "تسجيل نتيجة المكالمة", "تسجيل العميل"],
     actionsEn: ["Assign request", "Complete requests", "Save call result", "Register customer"],
   },
@@ -128,7 +127,6 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Finance",
     summaryAr: "يراجع المدفوعات والعمولات ويتعامل مع الطلبات الداخلية.",
     summaryEn: "Reviews payments and commissions and handles internal requests.",
-    routes: ["/dashboard", "/requests", "/customers", "/registrations", "/commissions", "/reports"],
     actionsAr: ["إسناد طلب", "تنفيذ الطلبات", "تحديث الدفع", "مراجعة العمولات"],
     actionsEn: ["Assign request", "Complete requests", "Update payments", "Review commissions"],
   },
@@ -138,28 +136,37 @@ export const permissionDefinitions: PermissionDefinition[] = [
     labelEn: "Data Analyst",
     summaryAr: "يرى التقارير والطلبات بدون تعديل تشغيلي.",
     summaryEn: "Reads reports and requests without operational editing.",
-    routes: ["/dashboard", "/requests", "/customers", "/data-quality", "/training-centers", "/courses", "/commissions", "/reports"],
     actionsAr: ["عرض الطلبات", "عرض التقارير", "تحليل الأداء"],
     actionsEn: ["View requests", "View reports", "Analyze performance"],
   },
 ];
 
+export const permissionDefinitions: PermissionDefinition[] = permissionDefinitionBase.map((definition) => ({
+  ...definition,
+  routes: Object.entries(routeAccess)
+    .filter(([, roles]) => roles.includes(definition.role))
+    .map(([route]) => route),
+}));
+
+export function isAppRole(role?: string | null): role is AppRole {
+  return appRoles.includes(role as AppRole);
+}
+
+export function resolveRole(role?: string | null): AppRole | null {
+  return isAppRole(role) ? role : null;
+}
+
 export function normalizeRole(role?: string | null): AppRole {
-  if (role === "developer") return "developer";
-  if (role === "admin") return "admin";
-  if (role === "manager") return "manager";
-  if (role === "moderator") return "moderator";
-  if (role === "marketer") return "marketer";
-  if (role === "finance") return "finance";
-  if (role === "data_analyst") return "data_analyst";
-  return "sales";
+  return resolveRole(role) ?? "sales";
 }
 
 export function canAccessRoute(role: string | null | undefined, pathname: string) {
-  const normalized = normalizeRole(role);
+  const resolvedRole = resolveRole(role);
+  if (!resolvedRole) return false;
+
   const entry = Object.entries(routeAccess).find(
     ([route]) => pathname === route || pathname.startsWith(route + "/")
   );
   if (!entry) return true;
-  return entry[1].includes(normalized);
+  return entry[1].includes(resolvedRole);
 }
