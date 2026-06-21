@@ -1,6 +1,17 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const validRoles = new Set([
+  "developer",
+  "admin",
+  "manager",
+  "moderator",
+  "marketer",
+  "sales",
+  "finance",
+  "data_analyst",
+]);
+
 export async function getCurrentUserProfile() {
   const supabase = await createClient();
 
@@ -10,15 +21,20 @@ export async function getCurrentUserProfile() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id,email,full_name,role,is_active")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (profile?.is_active === false) {
+  if (
+    profileError ||
+    !profile ||
+    profile.is_active === false ||
+    !validRoles.has(String(profile.role ?? ""))
+  ) {
     await supabase.auth.signOut();
-    redirect("/login");
+    redirect("/login?error=account_not_configured");
   }
 
   return {

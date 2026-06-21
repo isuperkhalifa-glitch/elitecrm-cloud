@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/get-current-user-profile";
+import { cleanupIncompleteUser } from "@/lib/auth/cleanup-incomplete-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const allowedRoles = ["developer", "admin", "manager", "moderator", "marketer", "sales", "finance", "data_analyst"];
@@ -7,7 +8,7 @@ const selectColumns = "id,email,full_name,role,is_active,created_at";
 
 async function requireAdmin() {
   const { user, profile } = await getCurrentUserProfile();
-  if (!["developer", "admin"].includes(profile?.role ?? "")) {
+  if (!["developer", "admin"].includes(profile.role)) {
     return {
       user,
       blocked: NextResponse.json({ error: "إدارة المستخدمين متاحة للمدير العام أو مطور النظام فقط." }, { status: 403 }),
@@ -54,6 +55,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "صلاحية غير صحيحة." }, { status: 400 });
     }
 
+    if (role === "developer") {
+      return NextResponse.json({ error: "إنشاء مطور نظام جديد غير متاح من واجهة التطبيق." }, { status: 403 });
+    }
+
     if (password.length < 8) {
       return NextResponse.json({ error: "كلمة المرور لازم تكون 8 أحرف على الأقل." }, { status: 400 });
     }
@@ -76,8 +81,15 @@ export async function POST(request: Request) {
       .select(selectColumns)
       .single();
 
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 });
+    if (profileError || !savedProfile) {
+      const cleanupError = await cleanupIncompleteUser(admin, data.user.id);
+      const suffix = cleanupError
+        ? " تعذر حذف حساب الدخول غير المكتمل؛ راجع Supabase Auth فورًا."
+        : " تم حذف حساب الدخول غير المكتمل تلقائيًا.";
+      return NextResponse.json(
+        { error: `${profileError?.message ?? "تعذر إنشاء ملف المستخدم."}${suffix}` },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ user: savedProfile });
@@ -103,6 +115,9 @@ export async function PATCH(request: Request) {
 
     if (typeof body.role === "string") {
       if (!allowedRoles.includes(body.role)) return NextResponse.json({ error: "صلاحية غير صحيحة." }, { status: 400 });
+      if (body.role === "developer") {
+        return NextResponse.json({ error: "لا يمكن ترقية مستخدم إلى مطور النظام من واجهة التطبيق." }, { status: 403 });
+      }
       patch.role = body.role;
     }
 
