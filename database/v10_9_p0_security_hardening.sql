@@ -93,7 +93,10 @@ create trigger notifications_guard_owner_update
 before update on public.notifications
 for each row execute function public.guard_notification_owner_update();
 
--- Payments: remove the historical authenticated-for-all policy.
+-- Payments: normalize historical table shapes before rebuilding security policies.
+alter table public.payments
+  add column if not exists created_by uuid references public.profiles(id) on update cascade on delete set null;
+
 alter table public.payments enable row level security;
 
 do $$
