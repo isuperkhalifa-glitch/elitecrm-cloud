@@ -1,0 +1,29 @@
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+.elite-date-input {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+  color-scheme: light;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="datetime-local"],
+html[data-theme="dark"] input[type="time"],
+html[data-theme="dark"] .elite-date-input {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.elite-date-input:disabled {
+  cursor: not-allowed;
+}
