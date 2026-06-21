@@ -51,7 +51,7 @@ export async function CustomerListPage({ view, searchParams }: Props) {
 
   const schemaProbe = await admin
     .from("leads")
-    .select("connection_type,city,education_level")
+    .select("connection_type,queue_type,redirected_date,city,education_level")
     .limit(1);
   const enhancedSchemaReady = !schemaProbe.error;
 
@@ -93,11 +93,23 @@ export async function CustomerListPage({ view, searchParams }: Props) {
   if (followupRange?.lte) leadsQuery = leadsQuery.lte("next_follow_up_at", followupRange.lte);
 
   if (allowedConnections.has(filters.connection)) {
-    if (enhancedSchemaReady) leadsQuery = leadsQuery.eq("connection_type", filters.connection);
-    else if (filters.connection === "distributed") leadsQuery = leadsQuery.not("owner_id", "is", null);
-    else if (filters.connection === "ivr") leadsQuery = leadsQuery.ilike("source", "%ivr%");
-    else if (filters.connection === "manual") leadsQuery = leadsQuery.eq("queue_type", "manual");
-    else leadsQuery = leadsQuery.or("lead_type.eq.redirected,redirected_date.not.is.null");
+    if (filters.connection === "redirected") {
+      leadsQuery = leadsQuery.not("redirected_date", "is", null);
+    } else {
+      // A row with an execution timestamp belongs only to the redirected bucket.
+      leadsQuery = leadsQuery.is("redirected_date", null);
+
+      if (filters.connection === "distributed") {
+        if (enhancedSchemaReady) leadsQuery = leadsQuery.eq("connection_type", "distributed");
+        else leadsQuery = leadsQuery.not("owner_id", "is", null);
+      } else if (filters.connection === "ivr") {
+        if (enhancedSchemaReady) leadsQuery = leadsQuery.or("connection_type.eq.ivr,source.ilike.%ivr%");
+        else leadsQuery = leadsQuery.ilike("source", "%ivr%");
+      } else if (filters.connection === "manual") {
+        if (enhancedSchemaReady) leadsQuery = leadsQuery.or("connection_type.eq.manual,queue_type.eq.manual");
+        else leadsQuery = leadsQuery.eq("queue_type", "manual");
+      }
+    }
   }
 
   if (enhancedSchemaReady && filters.city) leadsQuery = leadsQuery.eq("city", filters.city);
