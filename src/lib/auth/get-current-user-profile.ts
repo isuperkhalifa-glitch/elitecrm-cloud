@@ -27,13 +27,12 @@ export async function getCurrentUserProfile() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const invalidProfile =
+  if (
     profileError ||
     !profile ||
     profile.is_active === false ||
-    !validRoles.has(String(profile.role ?? ""));
-
-  if (invalidProfile) {
+    !validRoles.has(String(profile.role ?? ""))
+  ) {
     await supabase.auth.signOut();
     redirect("/login?error=account_not_configured");
   }
