@@ -135,24 +135,26 @@ export function NotificationBell() {
         return;
       }
 
-      let result = await supabase
+      const enhancedResult = await supabase
         .from("notifications")
         .select(fullFields)
         .eq("user_id", id)
         .order("created_at", { ascending: false })
         .limit(30);
 
-      if (result.error) {
-        result = await supabase
+      let rows: unknown[] = enhancedResult.data ?? [];
+      if (enhancedResult.error) {
+        const fallbackResult = await supabase
           .from("notifications")
           .select(basicFields)
           .eq("user_id", id)
           .order("created_at", { ascending: false })
           .limit(30);
+        rows = fallbackResult.data ?? [];
       }
 
       if (!mounted) return;
-      setNotifications((result.data ?? []) as NotificationItem[]);
+      setNotifications(rows as NotificationItem[]);
       setLoading(false);
     }
 
@@ -223,11 +225,9 @@ export function NotificationBell() {
   function titleFor(item: NotificationItem) {
     if (item.title?.trim()) return item.title;
     const entity = entityLabel(item);
-    const action = item.action === "assigned"
-      ? isArabic ? "تم الإسناد" : "Assigned"
-      : item.action === "created"
-        ? isArabic ? "تم الإنشاء" : "Created"
-        : isArabic ? "تحديث جديد" : "New update";
+    let action = isArabic ? "تحديث جديد" : "New update";
+    if (item.action === "assigned") action = isArabic ? "تم الإسناد" : "Assigned";
+    if (item.action === "created") action = isArabic ? "تم الإنشاء" : "Created";
     return isArabic ? `${action} — ${entity}` : `${entity} — ${action}`;
   }
 
