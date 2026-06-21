@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 import {
   Activity,
   Database,
@@ -21,14 +20,24 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { t, dir, language } = useI18n();
   const isArabic = language === "ar";
 
-  const [email, setEmail] = useState("admin@elitecrm.local");
-  const [password, setPassword] = useState("Admin@12345");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("error");
+    if (reason === "account_not_configured") {
+      setError(
+        isArabic
+          ? "الحساب غير مفعّل أو لم يتم تجهيزه بصلاحية صحيحة. تواصل مع مدير النظام."
+          : "This account is inactive or is missing a valid role. Contact the system administrator."
+      );
+    }
+  }, [isArabic]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,13 +47,13 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
-      if (error) {
-        setError(error.message || t("loginError"));
+      if (loginError) {
+        setError(loginError.message || t("loginError"));
         setLoading(false);
         return;
       }
@@ -57,7 +66,13 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = "/customers";
+      const requestedPath = new URLSearchParams(window.location.search).get("next");
+      const safePath =
+        requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+          ? requestedPath
+          : "/customers";
+
+      window.location.href = safePath;
     } catch (err) {
       setError(err instanceof Error ? err.message : t("loginError"));
       setLoading(false);
@@ -188,6 +203,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     type="email"
+                    autoComplete="username"
                     required
                     dir="ltr"
                   />
@@ -203,6 +219,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     type="password"
+                    autoComplete="current-password"
                     required
                     dir="ltr"
                   />
