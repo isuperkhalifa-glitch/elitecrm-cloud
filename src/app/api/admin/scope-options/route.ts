@@ -12,8 +12,15 @@ export async function GET() {
 
     const admin = createAdminClient();
     const [profiles, companies] = await Promise.all([
-      admin.from("profiles").select("id,full_name,email,role,is_active").eq("is_active", true).order("full_name"),
-      admin.from("companies").select("id,name,status").neq("status", "archived").order("name"),
+      admin
+        .from("profiles")
+        .select("id,full_name,email,role,is_active")
+        .eq("is_active", true)
+        .order("full_name"),
+      admin
+        .from("companies")
+        .select("id,name,status")
+        .order("name"),
     ]);
 
     if (profiles.error) return NextResponse.json({ error: profiles.error.message }, { status: 400 });
@@ -21,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json({
       profiles: profiles.data ?? [],
-      companies: companies.data ?? [],
+      companies: (companies.data ?? []).filter((item) => item.status !== "archived"),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
