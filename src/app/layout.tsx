@@ -4,6 +4,7 @@ import "./globals.css";
 import "./v8-theme.css";
 import "./v9-fixes.css";
 import "./v10-premium.css";
+import "./date-inputs.css";
 import { I18nProvider } from "@/components/language-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TiltProvider } from "@/components/tilt-provider";

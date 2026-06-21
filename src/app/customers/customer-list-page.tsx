@@ -5,6 +5,7 @@ import { requirePageAccess } from "@/lib/auth/server-guards";
 import { getEffectiveYear, yearDateRange } from "@/lib/filters/effective-year";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CustomersOperationsClient } from "./customers-operations-client";
+import { ManualLeadEntryForm } from "./manual-lead-entry-form";
 import { getCustomerListConfig, type CustomerListView } from "./customer-list-config";
 import {
   allowedConnections,
@@ -51,7 +52,7 @@ export async function CustomerListPage({ view, searchParams }: Props) {
 
   const schemaProbe = await admin
     .from("leads")
-    .select("connection_type,queue_type,redirected_date,city,education_level")
+    .select("entry_source,connection_type,queue_type,redirected_date,city,education_level")
     .limit(1);
   const enhancedSchemaReady = !schemaProbe.error;
 
@@ -96,7 +97,6 @@ export async function CustomerListPage({ view, searchParams }: Props) {
     if (filters.connection === "redirected") {
       leadsQuery = leadsQuery.not("redirected_date", "is", null);
     } else {
-      // A row with an execution timestamp belongs only to the redirected bucket.
       leadsQuery = leadsQuery.is("redirected_date", null);
 
       if (filters.connection === "distributed") {
@@ -106,7 +106,7 @@ export async function CustomerListPage({ view, searchParams }: Props) {
         if (enhancedSchemaReady) leadsQuery = leadsQuery.or("connection_type.eq.ivr,source.ilike.%ivr%");
         else leadsQuery = leadsQuery.ilike("source", "%ivr%");
       } else if (filters.connection === "manual") {
-        if (enhancedSchemaReady) leadsQuery = leadsQuery.or("connection_type.eq.manual,queue_type.eq.manual");
+        if (enhancedSchemaReady) leadsQuery = leadsQuery.eq("entry_source", "manual");
         else leadsQuery = leadsQuery.eq("queue_type", "manual");
       }
     }
@@ -143,14 +143,21 @@ export async function CustomerListPage({ view, searchParams }: Props) {
   else if (role === "sales") optionsQuery = optionsQuery.eq("owner_id", user.id);
   if (scopedCompanyId) optionsQuery = optionsQuery.eq("company_id", scopedCompanyId);
 
-  const [{ data: leads, count }, { data: profiles }, { data: courses }, { data: optionRows }] = await Promise.all([
+  const [
+    { data: leads, count },
+    { data: profiles },
+    { data: courses },
+    { data: companies },
+    { data: optionRows },
+  ] = await Promise.all([
     leadsQuery,
     admin
       .from("profiles")
       .select("id,full_name,email,role,is_active")
       .eq("is_active", true)
       .order("full_name"),
-    admin.from("courses").select("id,name,name_ar,name_en,status").order("sort_order"),
+    admin.from("courses").select("id,name,name_ar,name_en,status,company_id").order("sort_order"),
+    admin.from("companies").select("id,name").order("name"),
     optionsQuery,
   ]);
 
@@ -158,6 +165,11 @@ export async function CustomerListPage({ view, searchParams }: Props) {
   const courseOptions = (courses ?? []).map((course) => ({
     id: course.id,
     name: course.name_ar ?? course.name ?? course.name_en ?? course.id,
+  }));
+  const manualCourseOptions = (courses ?? []).map((course) => ({
+    id: course.id,
+    name: course.name_ar ?? course.name ?? course.name_en ?? course.id,
+    company_id: course.company_id ?? null,
   }));
 
   return (
@@ -167,26 +179,40 @@ export async function CustomerListPage({ view, searchParams }: Props) {
       fullName={profile?.full_name ?? null}
       role={profile?.role ?? null}
     >
-      <CustomersOperationsClient
-        initialLeads={(leads ?? []) as never[]}
-        profiles={(profiles ?? []) as never[]}
-        courses={courseOptions}
-        sources={uniqueText(rows, "source")}
-        cities={enhancedSchemaReady ? uniqueText(rows, "city") : []}
-        educationLevels={enhancedSchemaReady ? uniqueText(rows, "education_level") : []}
-        enhancedSchemaReady={enhancedSchemaReady}
-        role={role}
-        totalCount={count ?? 0}
-        page={page}
-        pageSize={pageSize}
-        initialFilters={filters}
-        titleAr={config.titleAr}
-        titleEn={config.titleEn}
-        descriptionAr={config.descriptionAr}
-        descriptionEn={config.descriptionEn}
-        fixedFilters={config.fixedFilters}
-        lockedFields={config.lockedFields}
-      />
+      <div className="space-y-5">
+        {view === "manual" ? (
+          <ManualLeadEntryForm
+            companies={(companies ?? []) as never[]}
+            courses={manualCourseOptions}
+            profiles={(profiles ?? []) as never[]}
+            currentUserId={user.id}
+            role={role}
+            scopedCompanyId={scopedCompanyId}
+            scopedUserId={scopedUserId}
+          />
+        ) : null}
+
+        <CustomersOperationsClient
+          initialLeads={(leads ?? []) as never[]}
+          profiles={(profiles ?? []) as never[]}
+          courses={courseOptions}
+          sources={uniqueText(rows, "source")}
+          cities={enhancedSchemaReady ? uniqueText(rows, "city") : []}
+          educationLevels={enhancedSchemaReady ? uniqueText(rows, "education_level") : []}
+          enhancedSchemaReady={enhancedSchemaReady}
+          role={role}
+          totalCount={count ?? 0}
+          page={page}
+          pageSize={pageSize}
+          initialFilters={filters}
+          titleAr={config.titleAr}
+          titleEn={config.titleEn}
+          descriptionAr={config.descriptionAr}
+          descriptionEn={config.descriptionEn}
+          fixedFilters={config.fixedFilters}
+          lockedFields={config.lockedFields}
+        />
+      </div>
     </AppShell>
   );
 }

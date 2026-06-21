@@ -11,15 +11,27 @@ alter table public.leads add column if not exists pending_operation_dist boolean
 alter table public.leads add column if not exists redirected_date timestamptz;
 alter table public.leads add column if not exists queue_type text default 'manual';
 alter table public.leads add column if not exists connection_type text;
+alter table public.leads add column if not exists entry_source text default 'system';
 alter table public.leads add column if not exists assigned_at timestamptz;
 alter table public.leads add column if not exists assigned_by uuid references public.profiles(id) on update cascade on delete set null;
 alter table public.leads add column if not exists status_updated_at timestamptz;
 
 alter table public.leads alter column operation_status set default 'ready_for_distribution';
 alter table public.leads alter column pending_operation_dist set default false;
+alter table public.leads alter column entry_source set default 'system';
 
 alter table public.import_batches add column if not exists new_fresh_inserted integer not null default 0;
 alter table public.import_batches add column if not exists duplicates_inserted_as_retargeted integer not null default 0;
+
+update public.leads
+set entry_source = case
+  when import_batch_id is not null then 'upload'
+  when queue_type = 'manual' and redirected_date is null then 'manual'
+  else coalesce(nullif(entry_source, ''), 'system')
+end
+where entry_source is null
+   or btrim(entry_source) = ''
+   or entry_source = 'system';
 
 -- Redirected is a distribution bucket, not a lead type.
 update public.leads
@@ -77,6 +89,7 @@ begin
     new.redirected_date := null;
     new.connection_type := null;
     new.queue_type := 'retargeting';
+    new.entry_source := 'upload';
 
     insert into public.leads
     select new.*;
@@ -85,6 +98,8 @@ begin
   end if;
 
   if tg_op = 'INSERT' and new.import_batch_id is not null and phone_key <> '' then
+    new.entry_source := 'upload';
+
     select exists (
       select 1
       from public.leads existing
@@ -228,3 +243,6 @@ create index if not exists leads_retargeting_pool_idx
 create index if not exists leads_redirected_date_idx
   on public.leads(redirected_date desc)
   where redirected_date is not null;
+
+create index if not exists leads_entry_source_idx
+  on public.leads(entry_source, created_at desc);

@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
+import { NativeDateInput } from "@/components/native-date-input";
 import {
   followupOptions,
   leadTypeOptions,
@@ -243,38 +244,36 @@ export function CustomerOperationsFilters({
           ) : null}
 
           <Field label={tx("تاريخ الإنشاء من", "Created from")}>
-            <input
-              type="date"
+            <NativeDateInput
               value={filters.createdFrom}
-              onChange={(event) => onSetFilter("createdFrom", event.target.value)}
-              className="v8-input w-full rounded border px-3 py-2.5 text-sm"
+              onChange={(value) => onSetFilter("createdFrom", value)}
+              ariaLabel={tx("فتح تقويم بداية تاريخ الإنشاء", "Open created-from date picker")}
             />
           </Field>
           <Field label={tx("تاريخ الإنشاء إلى", "Created to")}>
-            <input
-              type="date"
+            <NativeDateInput
               value={filters.createdTo}
-              onChange={(event) => onSetFilter("createdTo", event.target.value)}
-              className="v8-input w-full rounded border px-3 py-2.5 text-sm"
+              min={filters.createdFrom || undefined}
+              onChange={(value) => onSetFilter("createdTo", value)}
+              ariaLabel={tx("فتح تقويم نهاية تاريخ الإنشاء", "Open created-to date picker")}
             />
           </Field>
 
           {filters.followup === "custom" && !locked.has("followup") ? (
             <>
               <Field label={tx("المتابعة من", "Follow-up from")}>
-                <input
-                  type="date"
+                <NativeDateInput
                   value={filters.startDate}
-                  onChange={(event) => onSetFilter("startDate", event.target.value)}
-                  className="v8-input w-full rounded border px-3 py-2.5 text-sm"
+                  onChange={(value) => onSetFilter("startDate", value)}
+                  ariaLabel={tx("فتح تقويم بداية المتابعة", "Open follow-up-from date picker")}
                 />
               </Field>
               <Field label={tx("المتابعة إلى", "Follow-up to")}>
-                <input
-                  type="date"
+                <NativeDateInput
                   value={filters.endDate}
-                  onChange={(event) => onSetFilter("endDate", event.target.value)}
-                  className="v8-input w-full rounded border px-3 py-2.5 text-sm"
+                  min={filters.startDate || undefined}
+                  onChange={(value) => onSetFilter("endDate", value)}
+                  ariaLabel={tx("فتح تقويم نهاية المتابعة", "Open follow-up-to date picker")}
                 />
               </Field>
             </>
