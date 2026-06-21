@@ -15,10 +15,13 @@ alter table public.leads add column if not exists assigned_at timestamptz;
 alter table public.leads add column if not exists assigned_by uuid references public.profiles(id) on update cascade on delete set null;
 alter table public.leads add column if not exists status_updated_at timestamptz;
 
+alter table public.leads alter column operation_status set default 'ready_for_distribution';
+alter table public.leads alter column pending_operation_dist set default false;
+
 alter table public.import_batches add column if not exists new_fresh_inserted integer not null default 0;
 alter table public.import_batches add column if not exists duplicates_inserted_as_retargeted integer not null default 0;
 
--- redirected is a distribution bucket, not a lead type.
+-- Redirected is a distribution bucket, not a lead type.
 update public.leads
 set lead_type = 'retargeted'
 where lead_type = 'redirected';
@@ -132,6 +135,46 @@ drop trigger if exists leads_prepare_import on public.leads;
 create trigger leads_prepare_import
 before insert or update on public.leads
 for each row execute function public.prepare_imported_lead();
+
+-- The current distribution endpoint already updates owner_id. This trigger
+-- converts that existing action into a real redirection execution when the row
+-- is retargeted, without auto-distributing it during upload.
+create or replace function public.apply_distribution_state()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.owner_id is not null and new.owner_id is distinct from old.owner_id then
+    new.assigned_at := coalesce(new.assigned_at, now());
+    new.pending_operation_dist := false;
+    new.operation_status := 'distributed';
+
+    if new.lead_type = 'retargeted' then
+      new.redirected_date := now();
+      new.connection_type := 'redirected';
+      new.queue_type := 'retargeting';
+    else
+      new.connection_type := 'distributed';
+    end if;
+  elsif new.owner_id is null and old.owner_id is not null then
+    if new.lead_type = 'retargeted' and new.redirected_date is null then
+      new.pending_operation_dist := true;
+      new.operation_status := 'pending_operation_dist';
+      new.connection_type := null;
+    else
+      new.operation_status := 'ready_for_distribution';
+      new.connection_type := 'manual';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists leads_apply_distribution_state on public.leads;
+create trigger leads_apply_distribution_state
+before update of owner_id on public.leads
+for each row execute function public.apply_distribution_state();
 
 create or replace function public.track_import_batch_summary()
 returns trigger
