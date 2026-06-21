@@ -11,6 +11,7 @@ Run these files once in Supabase SQL Editor, in this exact order:
 7. `v10_6_write_permissions.sql`
 8. `v10_6_read_scope.sql`
 9. `v10_7_developer_role_guard_v2.sql`
+10. `v10_8_notifications_engine.sql`
 
 Superseded drafts:
 
