@@ -57,7 +57,7 @@ export function HeaderScopeSwitcher({ role }: { role?: string | null }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const isArabic = language === "ar";
-  const canUse = role === "developer" || role === "admin";
+  const canUse = role === "developer" || role === "admin" || scope.mode !== "all";
   const tx = (ar: string, en: string) => (isArabic ? ar : en);
 
   useEffect(() => {
@@ -209,17 +209,15 @@ export function HeaderScopeSwitcher({ role }: { role?: string | null }) {
       {open ? (
         <div className={`elite-system-view-panel ${isArabic ? "left-0" : "right-0"}`}>
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                  <Eye className="h-4 w-4" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-black text-slate-800">{tx("عرض النظام", "System view")}</h3>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {tx("اعرض البيانات حسب المستخدم أو المركز.", "Filter data by user or center.")}
-                  </p>
-                </div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <Eye className="h-4 w-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-black text-slate-800">{tx("عرض النظام", "System view")}</h3>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {tx("اعرض البيانات حسب المستخدم أو المركز.", "Filter data by user or center.")}
+                </p>
               </div>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
