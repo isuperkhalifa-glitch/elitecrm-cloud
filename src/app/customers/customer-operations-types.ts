@@ -16,6 +16,10 @@ export type CustomerLead = {
   course_id?: string | null;
   lead_type?: string | null;
   connection_type?: string | null;
+  queue_type?: string | null;
+  operation_status?: string | null;
+  pending_operation_dist?: boolean | null;
+  redirected_date?: string | null;
   city?: string | null;
   education_level?: string | null;
   next_follow_up_at?: string | null;
@@ -86,7 +90,9 @@ export const statusOptions = [
   "busy",
 ];
 
-export const leadTypeOptions = ["fresh", "retargeted", "redirected", "rejected"];
+// Redirected is determined by redirected_date and belongs to the connection
+// bucket. It is intentionally not a lead_type value.
+export const leadTypeOptions = ["fresh", "retargeted", "rejected"];
 
 export const followupOptions = [
   { value: "", ar: "كل المتابعات", en: "All follow-ups" },
