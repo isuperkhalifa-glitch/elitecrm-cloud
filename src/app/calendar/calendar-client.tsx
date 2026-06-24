@@ -33,6 +33,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/components/language-provider";
+import { NativeDateInput } from "@/components/native-date-input";
 
 type LeadEvent = {
   id: string;
@@ -686,6 +687,14 @@ export function CalendarClient({
     setSelected(dateKey(now));
   }
 
+  function goToDate(value: string) {
+    if (!value) return;
+    const target = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(target.getTime())) return;
+    setSelected(value);
+    setCursor(target);
+  }
+
   function refresh() {
     setRefreshing(true);
     router.refresh();
@@ -1121,6 +1130,15 @@ export function CalendarClient({
             >
               {tx("اليوم", "Today")}
             </button>
+
+            <div className="min-w-[190px] flex-1 sm:flex-none">
+              <NativeDateInput
+                value={selected}
+                onChange={goToDate}
+                ariaLabel={tx("اختيار تاريخ التقويم", "Choose calendar date")}
+                className="h-10 py-2"
+              />
+            </div>
 
             <button
               type="button"
@@ -1838,21 +1856,11 @@ function EventModal({
             <span className="v8-heading mb-2 block text-sm font-semibold">
               {tx("التاريخ والوقت", "Date and time")}
             </span>
-            <input
+            <NativeDateInput
               type="datetime-local"
               value={form.dueDate}
-              onChange={(event) =>
-                updateField(
-                  "dueDate",
-                  event.target.value
-                )
-              }
-              className="w-full rounded border px-3 py-2.5 text-sm"
-              style={{
-                borderColor: "var(--v8-border)",
-                background:
-                  "var(--v8-panel-muted)",
-              }}
+              onChange={(value) => updateField("dueDate", value)}
+              ariaLabel={tx("اختيار تاريخ ووقت الحدث", "Choose event date and time")}
             />
           </label>
         </div>

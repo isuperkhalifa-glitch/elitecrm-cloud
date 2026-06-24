@@ -1,4 +1,4 @@
-﻿name: EliteCRM Audit
+name: EliteCRM Audit
 
 on:
   push:
