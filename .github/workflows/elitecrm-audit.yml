@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   build:
     name: Build and Type Check
@@ -17,26 +14,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
-
-      - name: Apply targeted theme and calendar patch
-        if: github.event_name == 'pull_request' && github.head_ref == 'fix/theme-calendar-date-picker'
-        run: python scripts/apply-theme-calendar-fix.py
-
-      - name: Commit targeted patch
-        if: github.event_name == 'pull_request' && github.head_ref == 'fix/theme-calendar-date-picker'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/calendar/calendar-client.tsx src/app/v8-theme.css
-          if git diff --cached --quiet; then
-            echo "No generated changes"
-          else
-            git commit -m "fix: synchronize theme colors and add calendar date picker"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
