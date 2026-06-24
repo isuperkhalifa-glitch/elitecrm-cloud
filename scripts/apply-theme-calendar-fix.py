@@ -1,0 +1,233 @@
+from pathlib import Path
+
+calendar_path = Path("src/app/calendar/calendar-client.tsx")
+calendar = calendar_path.read_text(encoding="utf-8")
+
+import_anchor = 'import { useI18n } from "@/components/language-provider";\n'
+if "NativeDateInput" not in calendar:
+    assert import_anchor in calendar, "Calendar import anchor not found"
+    calendar = calendar.replace(
+        import_anchor,
+        import_anchor + 'import { NativeDateInput } from "@/components/native-date-input";\n',
+        1,
+    )
+
+today_anchor = '''  function goToday() {
+    const now = new Date();
+    setCursor(now);
+    setSelected(dateKey(now));
+  }
+'''
+if "function goToDate(value: string)" not in calendar:
+    assert today_anchor in calendar, "goToday anchor not found"
+    calendar = calendar.replace(
+        today_anchor,
+        today_anchor
+        + '''
+  function goToDate(value: string) {
+    if (!value) return;
+    const target = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(target.getTime())) return;
+    setSelected(value);
+    setCursor(target);
+  }
+''',
+        1,
+    )
+
+toolbar_anchor = '''            <button
+              type="button"
+              onClick={goToday}
+              className="v8-button rounded px-3 py-2 text-sm"
+            >
+              {tx("اليوم", "Today")}
+            </button>
+
+            <button
+              type="button"
+              onClick={refresh}
+'''
+if 'ariaLabel={tx("اختيار تاريخ التقويم"' not in calendar:
+    assert toolbar_anchor in calendar, "Calendar toolbar anchor not found"
+    calendar = calendar.replace(
+        toolbar_anchor,
+        '''            <button
+              type="button"
+              onClick={goToday}
+              className="v8-button rounded px-3 py-2 text-sm"
+            >
+              {tx("اليوم", "Today")}
+            </button>
+
+            <div className="min-w-[190px] flex-1 sm:flex-none">
+              <NativeDateInput
+                value={selected}
+                onChange={goToDate}
+                ariaLabel={tx("اختيار تاريخ التقويم", "Choose calendar date")}
+                className="h-10 py-2"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={refresh}
+''',
+        1,
+    )
+
+modal_anchor = '''            <input
+              type="datetime-local"
+              value={form.dueDate}
+              onChange={(event) =>
+                updateField(
+                  "dueDate",
+                  event.target.value
+                )
+              }
+              className="w-full rounded border px-3 py-2.5 text-sm"
+              style={{
+                borderColor: "var(--v8-border)",
+                background:
+                  "var(--v8-panel-muted)",
+              }}
+            />
+'''
+if 'ariaLabel={tx("اختيار تاريخ ووقت الحدث"' not in calendar:
+    assert modal_anchor in calendar, "Event modal date anchor not found"
+    calendar = calendar.replace(
+        modal_anchor,
+        '''            <NativeDateInput
+              type="datetime-local"
+              value={form.dueDate}
+              onChange={(value) => updateField("dueDate", value)}
+              ariaLabel={tx("اختيار تاريخ ووقت الحدث", "Choose event date and time")}
+            />
+''',
+        1,
+    )
+
+calendar_path.write_text(calendar, encoding="utf-8")
+
+css_path = Path("src/app/v8-theme.css")
+css = css_path.read_text(encoding="utf-8")
+marker = "/* V10.11 Theme Compatibility Layer */"
+if marker not in css:
+    css += r'''
+
+/* V10.11 Theme Compatibility Layer */
+html[data-theme="light"],
+html[data-theme="dark"] {
+  --background: var(--v8-page);
+  --foreground: var(--v8-text);
+}
+
+.v8-shell,
+.v8-shell * {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
+
+.v8-input,
+.v8-shell input,
+.v8-shell select,
+.v8-shell textarea {
+  border-color: var(--v8-border);
+  background-color: var(--v8-panel-muted);
+  color: var(--v8-text);
+}
+
+.v8-shell input::placeholder,
+.v8-shell textarea::placeholder {
+  color: var(--v8-text-soft);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .v8-shell :is(
+  .text-gray-950, .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600,
+  .text-zinc-950, .text-zinc-900, .text-zinc-800, .text-zinc-700, .text-zinc-600,
+  .text-neutral-950, .text-neutral-900, .text-neutral-800, .text-neutral-700, .text-neutral-600,
+  .text-stone-950, .text-stone-900, .text-stone-800, .text-stone-700, .text-stone-600
+) {
+  color: var(--v8-text) !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(
+  .text-slate-300,
+  .text-gray-500, .text-gray-400, .text-gray-300,
+  .text-zinc-500, .text-zinc-400, .text-zinc-300,
+  .text-neutral-500, .text-neutral-400, .text-neutral-300,
+  .text-stone-500, .text-stone-400, .text-stone-300
+) {
+  color: var(--v8-text-soft) !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(
+  .bg-gray-50, .bg-gray-100, .bg-gray-200,
+  .bg-zinc-50, .bg-zinc-100, .bg-zinc-200,
+  .bg-neutral-50, .bg-neutral-100, .bg-neutral-200,
+  .bg-stone-50, .bg-stone-100, .bg-stone-200
+) {
+  background-color: var(--v8-panel-muted) !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(
+  .border-gray-100, .border-gray-200, .border-gray-300,
+  .border-zinc-100, .border-zinc-200, .border-zinc-300,
+  .border-neutral-100, .border-neutral-200, .border-neutral-300,
+  .border-stone-100, .border-stone-200, .border-stone-300
+) {
+  border-color: var(--v8-border) !important;
+}
+
+html[data-theme="dark"] .v8-shell [class~="bg-emerald-50"],
+html[data-theme="dark"] .v8-shell [class~="bg-emerald-100"],
+html[data-theme="dark"] .v8-shell [class~="bg-emerald-50/70"] {
+  background-color: color-mix(in srgb, #10b981 18%, var(--v8-panel)) !important;
+}
+
+html[data-theme="dark"] .v8-shell [class~="bg-red-50"],
+html[data-theme="dark"] .v8-shell [class~="bg-red-100"] {
+  background-color: color-mix(in srgb, #ef4444 18%, var(--v8-panel)) !important;
+}
+
+html[data-theme="dark"] .v8-shell [class~="bg-amber-50"],
+html[data-theme="dark"] .v8-shell [class~="bg-amber-100"] {
+  background-color: color-mix(in srgb, #f59e0b 18%, var(--v8-panel)) !important;
+}
+
+html[data-theme="dark"] .v8-shell [class~="bg-sky-50"],
+html[data-theme="dark"] .v8-shell [class~="bg-sky-100"],
+html[data-theme="dark"] .v8-shell [class~="bg-blue-50"],
+html[data-theme="dark"] .v8-shell [class~="bg-blue-100"] {
+  background-color: color-mix(in srgb, #38bdf8 18%, var(--v8-panel)) !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(.text-emerald-700, .text-emerald-800, .text-emerald-900) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(.text-red-700, .text-red-800, .text-red-900) {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(.text-amber-700, .text-amber-800, .text-amber-900) {
+  color: #fcd34d !important;
+}
+
+html[data-theme="dark"] .v8-shell :is(.text-sky-700, .text-sky-800, .text-sky-900, .text-blue-700, .text-blue-800, .text-blue-900) {
+  color: #7dd3fc !important;
+}
+
+html[data-theme="dark"] .v8-shell table,
+html[data-theme="dark"] .v8-shell td,
+html[data-theme="dark"] .v8-shell th {
+  border-color: var(--v8-border);
+}
+
+html[data-theme="dark"] .v8-shell .hover\:bg-slate-50:hover,
+html[data-theme="dark"] .v8-shell .hover\:bg-gray-50:hover {
+  background-color: var(--v8-panel-soft) !important;
+}
+'''
+    css_path.write_text(css, encoding="utf-8")
